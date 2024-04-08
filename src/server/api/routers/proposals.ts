@@ -3,7 +3,7 @@ import { z } from "zod";
 import { createTRPCRouter, publicProcedure } from "~/server/api/trpc";
 import { proposal } from "~/server/db/schema";
 
-export const postRouter = createTRPCRouter({
+export const proposalRouter = createTRPCRouter({
   create: publicProcedure
     .input(z.object({ name: z.string().min(1) }))
     .mutation(async ({ ctx, input }) => {
@@ -19,7 +19,7 @@ export const postRouter = createTRPCRouter({
 
   getLatest: publicProcedure.query(({ ctx }) => {
     return ctx.db.query.proposal.findFirst({
-      orderBy: (posts, { desc }) => [desc(posts.createdAt)],
+      orderBy: (proposals, { desc }) => [desc(proposals.createdAt)],
     });
   }),
 });
