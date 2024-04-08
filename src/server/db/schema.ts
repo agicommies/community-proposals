@@ -3,7 +3,6 @@
 
 import { sql } from "drizzle-orm";
 import {
-  index,
   pgTableCreator,
   serial,
   timestamp,
@@ -16,19 +15,16 @@ import {
  *
  * @see https://orm.drizzle.team/docs/goodies#multi-project-schema
  */
-export const createTable = pgTableCreator((name) => `community-proposals_${name}`);
+export const createTable = pgTableCreator((name) => `${name}`);
 
-export const posts = createTable(
-  "post",
-  {
-    id: serial("id").primaryKey(),
-    name: varchar("name", { length: 256 }),
-    createdAt: timestamp("created_at")
-      .default(sql`CURRENT_TIMESTAMP`)
-      .notNull(),
-    updatedAt: timestamp("updatedAt"),
-  },
-  (example) => ({
-    nameIndex: index("name_idx").on(example.name),
-  })
-);
+export const proposal = createTable("proposal", {
+  id: serial("id").primaryKey(),
+  proposer: varchar("proposer", { length: 256 }),
+  data: varchar("data", { length: 256 }),
+  votes_for: serial("votes_for"),
+  votes_against: serial("votes_against"),
+  netuid: serial("netuid"),
+  createdAt: timestamp("created_at")
+    .default(sql`CURRENT_TIMESTAMP`)
+    .notNull(),
+});
