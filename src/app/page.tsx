@@ -1,7 +1,7 @@
 import { proposalMockList } from "~/utils/proposalMockList";
 import { Container } from "./_components/container";
-import { ProposalListHeader } from "./_components/proposalListHeader";
-import { ProposalCard } from "./_components/proposalCard";
+import { ProposalListHeader } from "./_components/proposal-list-header";
+import { ProposalCard } from "./_components/proposal-card";
 
 export default function HomePage() {
 
