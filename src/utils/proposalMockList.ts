@@ -2,14 +2,14 @@ export const proposalMockList = [
   {
     id: '1',
     active: true,
-    voted: "FAVOR",
+    voted: "FAVORABLE",
     title: '[ARFC] Risk Parameters for DAI Update',
     description: `This proposal aims to update the risk parameters for the DAI stablecoin across all Aave deployments. MakerDAO's recent aggressive actions with their D3M program have resulted in a significant increase in the "D3M" credit line for DAI, growing from 0 to predicted 600 million DAI within less than a month. With the potential extension of this credit line to 1 billion DAI in the near term, the unpredictability of future governance decisions by MakerDAO raises concerns regarding the inherent risk nature of DAI as collateral.`,
     startDate: 'Tue Apr 02 2024 13:53:58 GMT+1000 (Australian Eastern Standard Time)',
     endDate: 'Tue Apr 09 2024 00:53:58 GMT+1000 (Australian Eastern Standard Time)',
     by: 'xtg1724.lens',
     totalStake: '1107.45',
-    proposalResult: 'PENDING',
+    proposalResult: 'ONGOING',
     favorablePercentage: 50
   },
   {
@@ -46,8 +46,8 @@ export type ProposalList = {
   voted: string;
   title: string;
   description: string;
-  startDate: string;
-  endDate: Date | null;
+  startDate: Date | string;
+  endDate: Date | string | null;
   by: string;
   totalStake: string;
   proposalResult: string;
