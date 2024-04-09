@@ -7,8 +7,8 @@ export const VoteCard = () => {
   const [vote, setVote] = useState("UNVOTED")
 
   const handleVotePreference = (value: TVote) => {
-    if (vote === "UNVOTED" || vote !== value) return (setVote(value), console.log(value))
-    if (vote === value) return (setVote("UNVOTED"), console.log("UNVOTED"))
+    if (vote === "UNVOTED" || vote !== value) return setVote(value)
+    if (vote === value) return setVote("UNVOTED")
   }
 
   return (
