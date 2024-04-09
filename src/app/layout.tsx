@@ -5,8 +5,8 @@ import { Header } from "./_components/header";
 import { TRPCReactProvider } from "~/trpc/react";
 
 export const metadata = {
-  title: "Community Validator",
-  description: "comrads.ai community validator",
+  title: "Community Proposal",
+  // description: "comrads.ai community validator",
   icons: [{ rel: "icon", url: "/logo.svg" }],
 };
 
