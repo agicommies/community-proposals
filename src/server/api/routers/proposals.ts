@@ -1,7 +1,14 @@
 import { z } from "zod";
-
-import { createTRPCRouter, publicProcedure } from "~/server/api/trpc";
 import { proposal } from "~/server/db/schema";
+import { createTRPCRouter, publicProcedure } from "~/server/api/trpc";
+
+import { ApiPromise } from "@polkadot/api";
+import { WsProvider } from "@polkadot/rpc-provider";
+
+const provider = new WsProvider("wss://commune.api.onfinality.io/public-ws");
+const api = await ApiPromise.create({ provider });
+
+const proposals = await api.query.subspaceModule?.proposals?.entries();
 
 export const proposalRouter = createTRPCRouter({
   create: publicProcedure
@@ -21,5 +28,9 @@ export const proposalRouter = createTRPCRouter({
     return ctx.db.query.proposal.findFirst({
       orderBy: (proposals, { desc }) => [desc(proposals.createdAt)],
     });
+  }),
+
+  getAll: publicProcedure.query(() => {
+    return proposals;
   }),
 });

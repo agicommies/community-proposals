@@ -3,6 +3,8 @@ import { Container } from "./_components/container";
 import { ProposalListHeader } from "./_components/proposal-list-header";
 import { ProposalCard } from "./_components/proposal-card";
 
+// import { api } from "~/trpc/server";
+
 export default function HomePage() {
 
   const stakedVotes = 5107.45
@@ -19,8 +21,16 @@ export default function HomePage() {
               )
             })}
           </div>
+
+          {/* <CrudShowcase /> */}
         </Container>
       </div>
     </main>
   );
 }
+
+// async function CrudShowcase() {
+//   const latestProposal = await api.proposal.getAll();
+
+//   return <div className="w-full max-w-xs"></div>;
+// }
