@@ -9,7 +9,7 @@ import { TRPCReactProvider } from "~/trpc/react";
 
 export const metadata = {
   title: "Community Proposal",
-  // description: "comrads.ai community validator",
+  description: "Vote on community proposals",
   icons: [{ rel: "icon", url: "/logo.svg" }],
 };
 
