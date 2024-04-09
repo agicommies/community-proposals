@@ -1,6 +1,5 @@
 import { proposalMockList } from "~/utils/proposalMockList";
 import { Container } from "../../_components/container";
-import { ChevronRightIcon } from "@heroicons/react/20/solid";
 import { format } from "date-fns";
 import { type TVote, VoteLabel } from "~/app/_components/vote-label";
 import { StatusLabel } from "~/app/_components/status-label";
