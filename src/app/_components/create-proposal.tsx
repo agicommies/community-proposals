@@ -1,27 +1,23 @@
 "use client";
 
 import { XMarkIcon } from "@heroicons/react/20/solid";
-import { useRouter } from "next/navigation";
+// import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { usePolkadot } from "~/polkadot";
 
-import { api } from "~/trpc/react";
-
 export function CreateProposal() {
-  const router = useRouter();
-  const { selectedAccount, isConnected } = usePolkadot();
+  // const router = useRouter();
+  const { isConnected } = usePolkadot();
 
   const [modalOpen, setModalOpen] = useState(false);
   const toggleModalMenu = () => setModalOpen(!modalOpen);
 
-  const [data, setData] = useState("");
+  const [title, setTitle] = useState("");
+  const [body, setBody] = useState("");
 
-  const createProposal = api.proposal.create.useMutation({
-    onSuccess: () => {
-      router.refresh();
-      setData("");
-    },
-  });
+  // onSuccess: () => {
+  //   router.refresh();
+  // };
 
   return (
     <>
@@ -67,30 +63,29 @@ export function CreateProposal() {
                 <form
                   onSubmit={(e) => {
                     e.preventDefault();
-                    createProposal.mutate({
-                      proposer: String(selectedAccount),
-                      data,
-                    });
                   }}
-                  className="flex flex-col gap-2 p-6"
+                  className="flex flex-col gap-3 p-6"
                 >
+                  <input
+                    type="text"
+                    placeholder="Your proposal title here..."
+                    value={title}
+                    onChange={(e) => setTitle(e.target.value)}
+                    className="w-full rounded-xl bg-gray-100 px-4 py-2 dark:bg-dark dark:text-white"
+                  />
                   <textarea
                     placeholder="Your proposal here..."
-                    value={data}
+                    value={body}
                     rows={5}
-                    onChange={(e) => setData(e.target.value)}
+                    onChange={(e) => setBody(e.target.value)}
                     className="w-full rounded-xl bg-gray-100 px-4 py-2 dark:bg-dark dark:text-white"
                   />
                   <button
                     type="submit"
                     className="rounded-xl bg-gray-100 p-3 font-semibold text-black transition hover:bg-gray-200 dark:bg-dark dark:text-white dark:hover:bg-blue-950"
-                    disabled={createProposal.isPending || !isConnected}
+                    disabled={!isConnected}
                   >
-                    {createProposal.isPending
-                      ? "Submitting..."
-                      : isConnected
-                        ? "Submit"
-                        : "Connect Wallet to Submit"}
+                    {isConnected ? "Submit" : "Connect Wallet to Submit"}
                   </button>
                 </form>
               </main>
