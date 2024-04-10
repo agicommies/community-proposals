@@ -31,6 +31,8 @@ interface PolkadotContextType {
   accounts: InjectedAccountWithMeta[];
   selectedAccount: InjectedAccountWithMeta | undefined;
 
+  proposalList: unknown;
+
   handleConnect: () => void;
   addStake: (args: AddStaking) => void;
   removeStake: (args: AddStaking) => void;
@@ -50,6 +52,7 @@ export const PolkadotProvider: React.FC<PolkadotProviderProps> = ({
   wsEndpoint,
 }) => {
   const [api, setApi] = useState<ApiPromise | null>(null);
+  const [proposalList, setProposalList] = useState<unknown>([]);
   const [isInitialized, setIsInitialized] = useState<boolean>(false);
   const [accounts, setAccounts] = useState<InjectedAccountWithMeta[]>([]);
   const [isConnected, setIsConnected] = useState(false);
@@ -73,6 +76,9 @@ export const PolkadotProvider: React.FC<PolkadotProviderProps> = ({
     const provider = new WsProvider(wsEndpoint);
     const newApi = await ApiPromise.create({ provider });
     setApi(newApi);
+    await newApi?.query.subspaceModule?.proposals?.entries().then((result) => {
+      setProposalList(result);
+    });
     setIsInitialized(true);
   }
 
@@ -178,6 +184,7 @@ export const PolkadotProvider: React.FC<PolkadotProviderProps> = ({
         isConnected,
         isInitialized,
         selectedAccount,
+        proposalList,
 
         addStake,
         removeStake,

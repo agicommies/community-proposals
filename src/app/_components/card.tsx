@@ -1,38 +1,38 @@
 type TCardProps = {
-  children: React.ReactNode
-  className?: string
-}
+  children: React.ReactNode;
+  className?: string;
+};
 
 const CardRoot = (props: TCardProps) => {
   const { children, className } = props;
   return (
-    <div className={`border border-black dark:border-white dark:text-white dark:bg-dark rounded-xl dark:shadow-custom-dark shadow-custom ${className}`}>
+    <div
+      className={`rounded-xl border border-black bg-white shadow-custom dark:border-white dark:bg-dark dark:text-white dark:shadow-custom-dark ${className}`}
+    >
       {children}
     </div>
-  )
-}
+  );
+};
 
 const CardHeader = (props: TCardProps) => {
   const { children, className } = props;
   return (
-    <div className={`relative flex items-center justify-center lg:justify-start w-full px-6 py-3 border-b border-black md:flex-row dark:border-white rounded-t-xl ${className}`}>
-      <div className="absolute w-full h-full bg-[url('/grid-bg.svg')] bg-cover top-0 left-0 opacity-20 rounded-t-xl" />
+    <div
+      className={`relative flex w-full items-center justify-center rounded-t-xl border-b border-black px-6 py-3 md:flex-row lg:justify-start dark:border-white ${className}`}
+    >
+      <div className="absolute left-0 top-0 h-full w-full rounded-t-xl bg-cover opacity-20 dark:bg-dark dark:bg-[url('/grid-bg.svg')]" />
       {children}
     </div>
-  )
-}
+  );
+};
 
 const CardBody = (props: TCardProps) => {
   const { children, className } = props;
-  return (
-    <div className={`p-6 ${className}`}>
-      {children}
-    </div>
-  )
-}
+  return <div className={`p-6 ${className}`}>{children}</div>;
+};
 
 export const Card = {
   Root: CardRoot,
   Header: CardHeader,
-  Body: CardBody
-}
+  Body: CardBody,
+};
