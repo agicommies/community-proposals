@@ -109,34 +109,38 @@ export const PolkadotProvider: React.FC<PolkadotProviderProps> = ({
     if (api) {
       console.log("Fetching proposals");
 
-      get_all_stake_out(api).then(({ stake_map_total, stake_map_per_net }) => {
-        console.log(stake_map_total);
-        //handle_stake_maps(stake_map_total, stake_map_per_net);
-        // TODO: Store stake data and re-render proposals
-      }).catch((e) => {
-        console.error("Error fetching stake maps:", e);
-      });
-
-      get_proposals(api).then((proposals) => {
-        console.log("Proposals:", proposals);
-        setProposals(proposals);
-        setIsProposalLoading(false);
-        const bodies = proposals.map((proposal) => ({ Loading: proposal }));
-        setProposalBody(bodies);
-        handle_proposals(proposals, (id, body) => {
-          setProposalBody((prev) => {
-            const new_arr = [...prev];
-            new_arr[id] = body;
-            console.log("New proposal body array:", new_arr);
-            return new_arr;
-          });
-        }).catch((e) => {
-          console.error("Error fetching proposals:", e);
-          setIsProposalLoading(false);
+      get_all_stake_out(api)
+        .then(({ stake_map_total, stake_map_per_net }) => {
+          console.log(stake_map_total);
+          //handle_stake_maps(stake_map_total, stake_map_per_net);
+          // TODO: Store stake data and re-render proposals
+        })
+        .catch((e) => {
+          console.error("Error fetching stake maps:", e);
         });
-      }).catch((e) => {
-        console.error("Error fetching proposals:", e);
-      });
+
+      get_proposals(api)
+        .then((proposals) => {
+          console.log("Proposals:", proposals);
+          setProposals(proposals);
+          setIsProposalLoading(false);
+          const bodies = proposals.map((proposal) => ({ Loading: proposal }));
+          setProposalBody(bodies);
+          handle_proposals(proposals, (id, body) => {
+            setProposalBody((prev) => {
+              const new_arr = [...prev];
+              new_arr[id] = body;
+              console.log("New proposal body array:", new_arr);
+              return new_arr;
+            });
+          }).catch((e) => {
+            console.error("Error fetching proposals:", e);
+            setIsProposalLoading(false);
+          });
+        })
+        .catch((e) => {
+          console.error("Error fetching proposals:", e);
+        });
     }
   }, [api]);
 
@@ -233,6 +237,7 @@ export const PolkadotProvider: React.FC<PolkadotProviderProps> = ({
 
         addVoting,
         handleConnect,
+        // createNewProposal,
       }}
     >
       <WalletModal
