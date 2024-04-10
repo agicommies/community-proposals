@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { CreateProposal } from "./create-proposal";
 
 type ProposalListHeaderProps = {
   stakedVotes: string | number;
@@ -31,12 +32,7 @@ export const ProposalListHeader = (props: ProposalListHeaderProps) => {
         </div>
 
         <div className="flex w-full min-w-max lg:w-auto lg:pl-3">
-          <Link
-            href="create-proposal"
-            className="min-w-auto shadow-custom-blue w-full rounded-xl border-2 border-blue-500 px-4 py-2 text-blue-500 lg:w-auto dark:bg-light-dark"
-          >
-            New proposal
-          </Link>
+          <CreateProposal />
         </div>
       </div>
     </div>
