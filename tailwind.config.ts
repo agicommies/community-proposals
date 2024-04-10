@@ -19,6 +19,21 @@ export default {
         "custom-orange": "0px 4px 0 0 rgba(249,115,22,1)",
         "custom-orange-clicked": "0px 2px 0 0 rgba(249,115,22,1)",
       },
+      animation: {
+        "fade-in-down": "fade-in-down 0.6s ease-in-out",
+      },
+      keyframes: {
+        "fade-in-down": {
+          "0%": {
+            opacity: "0",
+            transform: "translateY(-20px)",
+          },
+          "100%": {
+            opacity: "1",
+            transform: "translateY(0)",
+          },
+        },
+      },
     },
   },
   darkMode: "selector",

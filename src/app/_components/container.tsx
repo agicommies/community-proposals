@@ -1,6 +1,6 @@
 export function Container({ children }: { children: React.ReactNode }) {
   return (
-    <div className="flex justify-center mx-4">
+    <div className="animate-fade-in-down mx-4 flex justify-center">
       <section className="w-full max-w-6xl">{children}</section>
     </div>
   );

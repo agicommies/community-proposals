@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import Image from "next/image";
 import { useState } from "react";
 
@@ -40,15 +41,13 @@ export function Header() {
       </div>
 
       <header className="sticky top-0 z-40 flex w-full flex-wrap items-center justify-between bg-white p-4 shadow-md dark:bg-light-dark">
-        <div className="mr-3 flex flex-shrink-0 items-center">
+        <Link href="/" className="mr-3 flex flex-shrink-0 items-center gap-3">
           <Image
             src="/logo.svg"
             alt="Community Validator"
             width={35}
             height={35}
           />
-        </div>
-        <>
           <div className="hidden w-full flex-grow items-center md:w-auto lg:block">
             <div className="flex gap-3 xl:gap-6">
               <h1 className="text-xl font-bold xl:text-2xl dark:text-white">
@@ -61,6 +60,9 @@ export function Header() {
               </h1>
             </div>
           </div>
+        </Link>
+
+        <>
           <div className="hidden md:flex md:flex-row md:gap-3">
             <PolkadotButton />
             <DarkModeToggle />

@@ -23,7 +23,7 @@ export function WalletModal({
   return (
     <div
       role="dialog"
-      className={`fixed inset-0 z-50 ${open ? "block" : "hidden"}`}
+      className={`fixed inset-0 z-50 ${open ? "block" : "hidden"} animate-fade-in-down`}
     >
       {/* Backdrop */}
       <div className="absolute inset-0 bg-dark opacity-80" />
