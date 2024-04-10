@@ -4,7 +4,12 @@ import { createTRPCRouter, publicProcedure } from "~/server/api/trpc";
 
 export const proposalRouter = createTRPCRouter({
   create: publicProcedure
-    .input(z.object({ name: z.string().min(1) }))
+    .input(
+      z.object({
+        proposer: z.string(),
+        data: z.string(),
+      }),
+    )
     .mutation(async ({ ctx, input }) => {
       // await ctx.db.insert(proposal).values({
       //   id: 1,
