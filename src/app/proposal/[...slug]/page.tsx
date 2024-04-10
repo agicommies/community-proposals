@@ -1,3 +1,5 @@
+export const runtime = 'edge'
+
 import { proposalMockList } from "~/utils/proposalMockList";
 import { Container } from "../../_components/container";
 import { format } from "date-fns";
