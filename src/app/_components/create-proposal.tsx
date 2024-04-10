@@ -9,7 +9,7 @@ import { api } from "~/trpc/react";
 
 export function CreateProposal() {
   const router = useRouter();
-  const { selectedAccount } = usePolkadot();
+  const { selectedAccount, isConnected } = usePolkadot();
 
   const [modalOpen, setModalOpen] = useState(false);
   const toggleModalMenu = () => setModalOpen(!modalOpen);
@@ -44,7 +44,7 @@ export function CreateProposal() {
           <div className="flex min-h-full items-center justify-center p-4 text-center">
             <div className="relative w-[100%] max-w-5xl transform overflow-hidden rounded-3xl border-2 border-zinc-800 bg-white text-left shadow-custom dark:border-white dark:bg-light-dark dark:shadow-custom-dark">
               {/* Modal Header */}
-              <div className="flex flex-col items-center justify-between gap-3 border-b-2 border-zinc-800 bg-[url(/grids.svg)] bg-cover bg-center bg-no-repeat p-6 md:flex-row dark:border-white">
+              <div className="flex items-center justify-between gap-3 border-b-2 border-zinc-800 bg-[url(/grids.svg)] bg-cover bg-center bg-no-repeat p-6 md:flex-row dark:border-white">
                 <div className="flex flex-col items-center md:flex-row">
                   <h3
                     className="pl-2 text-xl font-bold leading-6 dark:text-white"
@@ -84,9 +84,13 @@ export function CreateProposal() {
                   <button
                     type="submit"
                     className="rounded-xl bg-gray-100 p-3 font-semibold text-black transition hover:bg-gray-200 dark:bg-dark dark:text-white dark:hover:bg-blue-950"
-                    disabled={createProposal.isPending}
+                    disabled={createProposal.isPending || !isConnected}
                   >
-                    {createProposal.isPending ? "Submitting..." : "Submit"}
+                    {createProposal.isPending
+                      ? "Submitting..."
+                      : isConnected
+                        ? "Submit"
+                        : "Connect Wallet to Submit"}
                   </button>
                 </form>
               </main>
