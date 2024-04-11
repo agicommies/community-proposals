@@ -132,7 +132,6 @@ export const PROPOSAL_SHEMA = z
 
 export function parse_proposal(value_raw: Codec): Proposal | null {
   const value = value_raw.toPrimitive();
-  console.log(value);
   const validated = PROPOSAL_SHEMA.safeParse(value);
   if (!validated.success) {
     console.error(validated.error.issues);
