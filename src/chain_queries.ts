@@ -1,12 +1,15 @@
 import { ApiPromise, WsProvider } from "@polkadot/api";
 import type { Codec } from "@polkadot/types/types";
+import repl from "repl";
 import { z } from "zod";
 
 import type { Proposal, ProposalStatus, SS58Address } from "./types";
 
 export type DoubleMap<K1, K2, V> = Map<K1, Map<K2, V>>;
 
-export const ADDRESS_SCHEMA = z.string().transform((value) => value as SS58Address); // TODO: validate SS58 address
+export const ADDRESS_SCHEMA = z
+  .string()
+  .transform((value) => value as SS58Address); // TODO: validate SS58 address
 
 export const PROPOSAL_SHEMA = z
   .object({
@@ -14,7 +17,7 @@ export const PROPOSAL_SHEMA = z
     proposer: ADDRESS_SCHEMA,
     expirationBlock: z.number(),
     data: z.object({
-      custom: z.string().trim().url(),
+      custom: z.string(),
     }),
     // TODO: cast to SS58 address
     proposalStatus: z
@@ -50,7 +53,6 @@ export function parse_proposal(value_raw: Codec): Proposal | null {
   }
 }
 
-import repl from "repl";
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export function do_repl(context: any) {
   const my_repl = repl.start("> ");
