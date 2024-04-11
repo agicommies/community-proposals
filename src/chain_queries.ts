@@ -14,7 +14,7 @@ export const PROPOSAL_SHEMA = z
     proposer: ADDRESS_SCHEMA,
     expirationBlock: z.number(),
     data: z.object({
-      custom: z.string().trim().url(),
+      custom: z.string(),
     }),
     // TODO: cast to SS58 address
     proposalStatus: z
@@ -250,4 +250,4 @@ async function _test() {
   process.exit();
 }
 
-// await _test();
+await _test();
