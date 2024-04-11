@@ -118,6 +118,7 @@ export const PolkadotProvider: React.FC<PolkadotProviderProps> = ({
           setProposalBody((prev) => {
             const new_arr = [...prev];
             new_arr[id] = body;
+            console.log("New proposal body array:", new_arr);
             return new_arr;
           });
         }).catch((e) => {

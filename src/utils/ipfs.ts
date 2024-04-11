@@ -30,4 +30,4 @@ async function _test() {
     .then((data) => console.log(data));
 }
 
-await _test();
+// await _test();

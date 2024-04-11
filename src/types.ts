@@ -16,7 +16,7 @@ export type ProposalBody = Enum<{
     netuid: number;
     params: null;
   };
-}>;
+}> & { vote_data?: unknown };
 
 // == Custom Proposal Extra Data ==
 
