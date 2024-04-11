@@ -3,14 +3,43 @@ import type { Enum, Tagged } from "rustie";
 import { z } from "zod";
 export type SS58Address = Tagged<string, "SS58Address">;
 
+// == Proposal Body on Interface ==
+
+export type ProposalBody = Enum<{
+  Loading: Proposal;
+  Custom: {
+    metadata: CustomProposalMetadata;
+    netuid: number | null;
+  };
+  GlobalParams: null;
+  SubnetParams: {
+    netuid: number;
+    params: null;
+  };
+}>;
+
+// == Custom Proposal Extra Data ==
+
+export interface CustomProposalMetadata {
+  title?: string;
+  body?: string; // Markdown description
+}
+
+export const CUSTOM_PROPOSAL_METADATA_SCHEMA = z.object({
+  title: z.string().optional(),
+  body: z.string().optional(),
+});
+
+assert<
+  Extends<
+    z.infer<typeof CUSTOM_PROPOSAL_METADATA_SCHEMA>,
+    CustomProposalMetadata
+  >
+>();
+
 // == Proposal ==
 
 export type ProposalStatus = "Pending" | "Accepted" | "Refused" | "Expired";
-
-export interface ProposalMetadata {
-  title: string;
-  body: string; // Markdown description
-}
 
 /*
 pub enum ProposalData<T: Config> {
@@ -27,42 +56,62 @@ pub enum ProposalData<T: Config> {
 }
 */
 export type ProposalData = Enum<{
-  Custom: string;
-  GlobalParams: null;
-  SubnetParams: { netuid: number; params: null };
-  SubnetCustom: { netuid: number; data: string };
+  custom: string;
+  globalParams: unknown;
+  subnetParams: { netuid: number; params: unknown };
+  subnetCustom: { netuid: number; data: string };
 }>;
 
 export interface Proposal {
   id: number;
   proposer: SS58Address; // TODO: SS58 address validation
-  proposalStatus: ProposalStatus;
+  status: ProposalStatus;
   expirationBlock: number;
   votesFor: SS58Address[];
   votesAgainst: SS58Address[];
   finalizationBlock: number | null;
-  data: {
-    custom: string;
-  };
+  data: ProposalData;
 }
 
 export const ADDRESS_SCHEMA = z
   .string()
   .transform((value) => value as SS58Address); // TODO: validate SS58 address
 
+export const PROPOSAL_DATA_SCHEMA = z.union([
+  z.object({
+    custom: z.string(),
+  }),
+  z.object({
+    globalParams: z.object({}), // TODO: globalParams validation
+  }),
+  z.object({
+    subnetParams: z.object({
+      netuid: z.number(),
+      params: z.object({}), // TODO: subnetParams validation
+    }),
+  }),
+  z.object({
+    subnetCustom: z.object({
+      netuid: z.number(),
+      data: z.string(),
+    }),
+  }),
+]);
+
+assert<Extends<z.infer<typeof PROPOSAL_DATA_SCHEMA>, ProposalData>>();
+
 export const PROPOSAL_SHEMA = z
   .object({
     id: z.number(),
     proposer: ADDRESS_SCHEMA,
     expirationBlock: z.number(),
-    data: z.object({
-      custom: z.string(),
-    }),
+    data: PROPOSAL_DATA_SCHEMA,
     // TODO: cast to SS58 address
-    proposalStatus: z
+    status: z
       .string()
       .refine(
-        (value) => ["Pending", "Accepted", "Refused"].includes(value),
+        (value) =>
+          ["Pending", "Accepted", "Refused", "Expired"].includes(value),
         "Invalid proposal status",
       )
       .transform((value) => value as ProposalStatus),
@@ -72,7 +121,7 @@ export const PROPOSAL_SHEMA = z
     finalizationBlock: z.number().nullable(),
   })
   .superRefine((value, ctx) => {
-    if (value.proposalStatus === "Accepted") {
+    if (value.status === "Accepted" && value.finalizationBlock == null) {
       ctx.addIssue({
         code: "custom",
         message:
@@ -83,6 +132,7 @@ export const PROPOSAL_SHEMA = z
 
 export function parse_proposal(value_raw: Codec): Proposal | null {
   const value = value_raw.toPrimitive();
+  console.log(value);
   const validated = PROPOSAL_SHEMA.safeParse(value);
   if (!validated.success) {
     console.error(validated.error.issues);

@@ -3,15 +3,16 @@
 
 import React, { createContext, useContext, useEffect, useState } from "react";
 
+import { ApiPromise, WsProvider } from "@polkadot/api";
 import {
   type InjectedAccountWithMeta,
   type InjectedExtension,
 } from "@polkadot/extension-inject/types";
-import { ApiPromise, WsProvider } from "@polkadot/api";
 
 import { WalletModal } from "~/app/_components/wallet-modal";
-import { type Proposal, type ProposalMetadata } from "~/types";
 import { get_proposals } from "~/chain_queries";
+import { handle_proposals } from "~/proposals";
+import type { Proposal, ProposalBody } from "~/types";
 
 interface AddVoting {
   vote: boolean;
@@ -34,10 +35,9 @@ interface PolkadotContextType {
 
   blockNumber: number;
   proposals: Proposal[];
-  proposalBody: ProposalMetadata[];
+  proposalBody: ProposalBody[];
 
   isProposalLoading: boolean;
-  isProposalBodyLoading: boolean;
 
   handleConnect: () => void;
   addVoting: (args: AddVoting) => void;
@@ -67,11 +67,11 @@ export const PolkadotProvider: React.FC<PolkadotProviderProps> = ({
   const [isConnected, setIsConnected] = useState(false);
   const [accounts, setAccounts] = useState<InjectedAccountWithMeta[]>([]);
   const [blockNumber, setBlockNumber] = useState(0);
+
   const [proposals, setProposals] = useState<Proposal[]>([]);
   const [isProposalLoading, setIsProposalLoading] = useState(true);
+  const [proposalBody, setProposalBody] = useState<ProposalBody[]>([]);
 
-  const [proposalBody, setProposalBody] = useState<ProposalMetadata[]>([]);
-  const [isProposalBodyLoading, setIsProposalBodyLoading] = useState(true);
   const [openModal, setOpenModal] = useState(false);
 
   async function loadPolkadotApi() {
@@ -107,15 +107,29 @@ export const PolkadotProvider: React.FC<PolkadotProviderProps> = ({
 
   useEffect(() => {
     if (api) {
-      void get_proposals(api)
-        .then((response) => {
-          setProposals(response);
-        })
-        .then(() => {
+      console.log("Fetching proposals");
+      get_proposals(api).then((proposals) => {
+        console.log("Proposals:", proposals);
+        setProposals(proposals);
+        setIsProposalLoading(false);
+        const bodies = proposals.map((proposal) => ({ Loading: proposal }));
+        setProposalBody(bodies);
+        handle_proposals(proposals, (id, body) => {
+          setProposalBody((prev) => {
+            const new_arr = [...prev];
+            new_arr[id] = body;
+            return new_arr;
+          });
+        }).catch((e) => {
+          console.error("Error fetching proposals:", e);
           setIsProposalLoading(false);
         });
+      }).catch((e) => {
+        console.error("Error fetching proposals:", e);
+      });
     }
   }, [api]);
+
   // async function fetchProposalBody() {
   //   if (!api) return;
 
@@ -204,10 +218,8 @@ export const PolkadotProvider: React.FC<PolkadotProviderProps> = ({
 
         blockNumber,
         proposals,
-        proposalBody,
-
         isProposalLoading,
-        isProposalBodyLoading,
+        proposalBody,
 
         addVoting,
         handleConnect,
