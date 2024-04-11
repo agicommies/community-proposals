@@ -10,6 +10,7 @@ import {
 import { ApiPromise, WsProvider } from "@polkadot/api";
 
 import { WalletModal } from "~/app/_components/wallet-modal";
+import { build_ipfs_gateway_url, parse_ipfs_uri } from "~/utils/ipfs";
 
 interface AddVoting {
   vote: boolean;
@@ -32,6 +33,10 @@ interface PolkadotContextType {
 
   blockNumber: number;
   proposals: unknown;
+  proposalBody: unknown;
+
+  isProposalLoading: boolean;
+  isProposalBodyLoading: boolean;
 
   handleConnect: () => void;
   addVoting: (args: AddVoting) => void;
@@ -63,6 +68,10 @@ export const PolkadotProvider: React.FC<PolkadotProviderProps> = ({
 
   const [blockNumber, setBlockNumber] = useState(0);
   const [proposals, setProposals] = useState<unknown>([]);
+  const [proposalBody, setProposalBody] = useState<unknown>([]);
+
+  const [isProposalLoading, setIsProposalLoading] = useState(true);
+  const [isProposalBodyLoading, setIsProposalBodyLoading] = useState(true);
 
   const [openModal, setOpenModal] = useState(false);
 
@@ -99,10 +108,28 @@ export const PolkadotProvider: React.FC<PolkadotProviderProps> = ({
       });
 
       void api.query.subspaceModule?.proposals?.entries().then((result) => {
-        setProposals(result);
+        return setProposals(result);
       });
+
+      setIsProposalLoading(false);
     }
   }, [api]);
+
+  async function ProposalData() {
+    const cid = parse_ipfs_uri(
+      "ipfs://bafkreideif2rljo42bmvuzqurbozhj55pvfkbwak42oadssk2w46y3a4pe", // this should be replaced by kelvin function
+    );
+    const url = build_ipfs_gateway_url(cid);
+
+    await fetch(url)
+      .then((res) => res.json())
+      .then((data) => setProposalBody(data))
+      .then(() => setIsProposalBodyLoading(false));
+  }
+
+  useEffect(() => {
+    void ProposalData();
+  }, []);
 
   async function handleConnect() {
     if (!polkadotApi.web3Enable || !polkadotApi.web3Accounts) return;
@@ -123,8 +150,6 @@ export const PolkadotProvider: React.FC<PolkadotProviderProps> = ({
     setIsConnected(true);
     setOpenModal(false);
   }
-
-  console.log(api?.tx.subspaceModule);
 
   async function addVoting({ vote, proposalId, callback }: AddVoting) {
     if (
@@ -163,6 +188,10 @@ export const PolkadotProvider: React.FC<PolkadotProviderProps> = ({
 
         blockNumber,
         proposals,
+        proposalBody,
+
+        isProposalLoading,
+        isProposalBodyLoading,
 
         addVoting,
         handleConnect,
