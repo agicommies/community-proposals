@@ -1,56 +1,7 @@
 import { ApiPromise, WsProvider } from "@polkadot/api";
-import type { Codec } from "@polkadot/types/types";
-import { z } from "zod";
-
-import type { Proposal, ProposalStatus, SS58Address } from "./types";
+import { parse_proposal, type Proposal } from "./types";
 
 export type DoubleMap<K1, K2, V> = Map<K1, Map<K2, V>>;
-
-export const ADDRESS_SCHEMA = z
-  .string()
-  .transform((value) => value as SS58Address); // TODO: validate SS58 address
-
-export const PROPOSAL_SHEMA = z
-  .object({
-    id: z.number(),
-    proposer: ADDRESS_SCHEMA,
-    expirationBlock: z.number(),
-    data: z.object({
-      custom: z.string(),
-    }),
-    // TODO: cast to SS58 address
-    proposalStatus: z
-      .string()
-      .refine(
-        (value) => ["Pending", "Accepted", "Refused"].includes(value),
-        "Invalid proposal status",
-      )
-      .transform((value) => value as ProposalStatus),
-    votesFor: z.array(ADDRESS_SCHEMA),
-    votesAgainst: z.array(ADDRESS_SCHEMA),
-    proposalCost: z.number(),
-    finalizationBlock: z.number().nullable(),
-  })
-  .superRefine((value, ctx) => {
-    if (value.proposalStatus === "Accepted") {
-      ctx.addIssue({
-        code: "custom",
-        message:
-          "Proposal status is 'Accepted', but no finalization block was found",
-      });
-    }
-  });
-
-export function parse_proposal(value_raw: Codec): Proposal | null {
-  const value = value_raw.toPrimitive();
-  const validated = PROPOSAL_SHEMA.safeParse(value);
-  if (!validated.success) {
-    console.error(validated.error.issues);
-    return null;
-  } else {
-    return validated.data;
-  }
-}
 
 export async function get_all_stake(
   api: ApiPromise,
