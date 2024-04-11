@@ -49,33 +49,20 @@ export function do_repl(context: any) {
         // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-member-access
         my_repl.context[key] = context[key]
     }
-    my_repl.on("exit", () => {
-        process.exit()
+    const prom = new Promise<null>((resolve, reject) => {
+        my_repl.on("exit", () => {
+            resolve(null)
+        })
+        my_repl.on("error", (err) => {
+            reject(err)
+        })
     })
-    return my_repl
+    return prom
 }
 
-async function _test() {
-    const ws_endpoint = "wss://testnet-commune-api-node-0.communeai.net"
-
-    const provider = new WsProvider(ws_endpoint);
-    const api = await ApiPromise.create({ provider });
-
-    const proposals = await api.query.subspaceModule?.proposals?.entries()
-    if (!proposals) throw new Error("No proposals found")
-
-    for (const proposal_item of proposals) {
-        if (!Array.isArray(proposal_item) || proposal_item.length != 2) {
-            console.error("Invalid proposal item:", proposal_item)
-            continue
-        }
-        const [_key_raw, value_raw] = proposal_item
-        const proposal = parse_proposal(value_raw)
-        console.log(proposal)
-    }
-
+export async function get_all_stake(api: ApiPromise): Promise<Map<string, bigint>> {
     const stake_items = await api.query.subspaceModule?.stake?.entries()
-    if (!stake_items) throw new Error("No stakes found")
+    if (stake_items == null) throw new Error("Query to `stake` returned nullish")
 
     const stake_map = new Map<string, bigint>()
 
@@ -83,15 +70,13 @@ async function _test() {
     let max_addr
 
     for (const stake_item of stake_items) {
-        if (!Array.isArray(stake_item) || stake_item.length != 2) {
-            console.error("Invalid stake item:", stake_item)
-            continue
-        }
+        if (!Array.isArray(stake_item) || stake_item.length != 2)
+            throw new Error(`Invalid stake item '${stake_item.toString()}'`)
         const [key_raw, value_raw] = stake_item
         const stake = BigInt(value_raw.toPrimitive() as string)
 
         const [n_raw, address_raw] = key_raw.args
-        if (n_raw == null || address_raw == null) throw new Error("Invalid stake storage key")
+        if (n_raw == null || address_raw == null) throw new Error("stake storage key is nullish")
 
         const n = n_raw.toPrimitive()  // TODO: I don't even know what `n` is. netuid?
         const address = address_raw.toHuman()
@@ -110,18 +95,79 @@ async function _test() {
             const old_stake = stake_map.get(address) ?? 0n
             stake_map.set(address, old_stake + stake)
         }
-        // do_repl({ api, key, key_raw, address }); break
+    }
+    console.log("Max stake key:", max_addr, max_stake)
+    return stake_map
+}
+
+async function get_all_stake_out(api: ApiPromise): Promise<Map<string, bigint>> {
+    const stake_to_items = await api.query.subspaceModule?.stakeTo?.entries()
+    if (stake_to_items == null) throw new Error("Query to stakeTo returned nullish")
+
+    const stake_map = new Map<number, Map<string, bigint>>()
+    const stake_map_total = new Map<string, bigint>()
+
+    for (const stake_to_item of stake_to_items) {
+        if (!Array.isArray(stake_to_item) || stake_to_item.length != 2)
+            throw new Error(`Invalid stakeTo item '${stake_to_item.toString()}'`)
+        const [key_raw, value_raw] = stake_to_item
+
+        const [netuid_raw, from_addr_raw] = key_raw.args
+        if (netuid_raw == null || from_addr_raw == null) throw new Error("stakeTo storage key is nullish")
+
+        const netuid = netuid_raw.toPrimitive()  // TODO: I don't even know what `n` is. netuid?
+        const from_addr = from_addr_raw.toHuman()
+
+        if (typeof netuid !== "number") throw new Error("Invalid stakeTo storage key (netuid)")
+        if (typeof from_addr !== "string") throw new Error("Invalid stakeTo storage key (from_addr)")
+
+        await do_repl({ api, key: key_raw, key_raw, value_raw })
+        break
     }
 
-    console.log(stake_map)
-    console.log(max_addr, max_stake)
+    return stake_map
+}
 
-    const votes = ["5FpoUNprfkaR7FY9mGUrNK88YNim1fpQ118VkeAieE8GBFjr"]
-    for (const vote_addr of votes) {
-        const stake = stake_map.get(vote_addr)
-        if (stake == null) throw new Error("Key not found")
-        console.log(vote_addr, stake)
+async function get_proposals(api: ApiPromise): Promise<Proposal[]> {
+    const proposals_raw = await api.query.subspaceModule?.proposals?.entries()
+    if (!proposals_raw) throw new Error("No proposals found")
+
+    const proposals = []
+    for (const proposal_item of proposals_raw) {
+        if (!Array.isArray(proposal_item) || proposal_item.length != 2) {
+            console.error("Invalid proposal item:", proposal_item)
+            continue
+        }
+        const [_key_raw, value_raw] = proposal_item
+        const proposal = parse_proposal(value_raw)
+        if (proposal == null) throw new Error("Invalid proposal")
+        proposals.push(proposal)
     }
+    return proposals
+}
+
+async function _test() {
+    const ws_endpoint = "wss://testnet-commune-api-node-0.communeai.net"
+
+    const provider = new WsProvider(ws_endpoint);
+    const api = await ApiPromise.create({ provider });
+
+    const proposals = await get_proposals(api)
+    console.log(proposals)
+
+    const stake_map = await get_all_stake_out(api)
+    // console.log(stake_map)
+
+    // for (const proposal of proposals) {
+    //     const votes = proposal.votesFor
+    //     for (const vote_addr of votes) {
+    //         const stake = stake_map.get(vote_addr)
+    //         if (stake == null) throw new Error("Key not found")
+    //         console.log(vote_addr, stake)
+    //     }
+    // }
+
+    process.exit()
 }
 
 await _test()
