@@ -1,6 +1,5 @@
 import { ApiPromise, WsProvider } from "@polkadot/api";
 import type { Codec } from "@polkadot/types/types";
-import repl from "repl";
 import { z } from "zod";
 
 import type { Proposal, ProposalStatus, SS58Address } from "./types";
@@ -51,24 +50,6 @@ export function parse_proposal(value_raw: Codec): Proposal | null {
   } else {
     return validated.data;
   }
-}
-
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-export function do_repl(context: any) {
-  const my_repl = repl.start("> ");
-  for (const key in context) {
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-member-access
-    my_repl.context[key] = context[key];
-  }
-  const prom = new Promise<null>((resolve, reject) => {
-    my_repl.on("exit", () => {
-      resolve(null);
-    });
-    my_repl.on("error", (err) => {
-      reject(err);
-    });
-  });
-  return prom;
 }
 
 export async function get_all_stake(
