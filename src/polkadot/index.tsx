@@ -10,7 +10,7 @@ import {
 } from "@polkadot/extension-inject/types";
 
 import { WalletModal } from "~/app/_components/wallet-modal";
-import { get_proposals } from "~/chain_queries";
+import { get_all_stake_out, get_proposals } from "~/chain_queries";
 import { handle_proposals } from "~/proposals";
 import type { Proposal, ProposalBody } from "~/types";
 
@@ -108,6 +108,15 @@ export const PolkadotProvider: React.FC<PolkadotProviderProps> = ({
   useEffect(() => {
     if (api) {
       console.log("Fetching proposals");
+
+      get_all_stake_out(api).then(({ stake_map_total, stake_map_per_net }) => {
+        console.log(stake_map_total);
+        //handle_stake_maps(stake_map_total, stake_map_per_net);
+        // TODO: Store stake data and re-render proposals
+      }).catch((e) => {
+        console.error("Error fetching stake maps:", e);
+      });
+
       get_proposals(api).then((proposals) => {
         console.log("Proposals:", proposals);
         setProposals(proposals);
