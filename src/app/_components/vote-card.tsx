@@ -1,11 +1,12 @@
 "use client";
+
 import { useState } from "react";
 import { Card } from "./card";
 import { type TVote } from "./vote-label";
 import { usePolkadot } from "~/polkadot";
 
 export const VoteCard = () => {
-  const { isConnected, addStake } = usePolkadot();
+  const { isConnected, addVoting } = usePolkadot();
 
   const [vote, setVote] = useState("UNVOTED");
 
@@ -15,9 +16,9 @@ export const VoteCard = () => {
   };
 
   const handleVote = () => {
-    addStake({
-      validator: "5CXiWwsS76H2vwroWu4SvdAS3kxprb7aFtqWLxxZC5FNhYri",
-      amount: String(1), // make this dynamic
+    addVoting({
+      proposalId: 1,
+      vote: vote === "FAVORABLE" ? true : false,
     });
   };
 

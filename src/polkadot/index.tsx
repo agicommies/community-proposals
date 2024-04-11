@@ -11,9 +11,9 @@ import { ApiPromise, WsProvider } from "@polkadot/api";
 
 import { WalletModal } from "~/app/_components/wallet-modal";
 
-interface AddStaking {
-  amount: string;
-  validator: string;
+interface AddVoting {
+  vote: boolean;
+  proposalId: number;
   callback?: () => void;
 }
 
@@ -25,17 +25,16 @@ interface PolkadotApiState {
 
 interface PolkadotContextType {
   api: ApiPromise | null;
-  blockNumber: number;
   isConnected: boolean;
   isInitialized: boolean;
   accounts: InjectedAccountWithMeta[];
   selectedAccount: InjectedAccountWithMeta | undefined;
 
-  proposalList: unknown;
+  blockNumber: number;
+  proposals: unknown;
 
   handleConnect: () => void;
-  addStake: (args: AddStaking) => void;
-  removeStake: (args: AddStaking) => void;
+  addVoting: (args: AddVoting) => void;
 }
 
 const PolkadotContext = createContext<PolkadotContextType | undefined>(
@@ -52,33 +51,36 @@ export const PolkadotProvider: React.FC<PolkadotProviderProps> = ({
   wsEndpoint,
 }) => {
   const [api, setApi] = useState<ApiPromise | null>(null);
-  const [proposalList, setProposalList] = useState<unknown>([]);
-  const [isInitialized, setIsInitialized] = useState<boolean>(false);
-  const [accounts, setAccounts] = useState<InjectedAccountWithMeta[]>([]);
-  const [isConnected, setIsConnected] = useState(false);
-  const [openModal, setOpenModal] = useState(false);
-  const [blockNumber, setBlockNumber] = useState(0);
   const [polkadotApi, setPolkadotApi] = useState<PolkadotApiState>({
     web3Accounts: null,
     web3Enable: null,
     web3FromAddress: null,
   });
 
+  const [isInitialized, setIsInitialized] = useState<boolean>(false);
+  const [isConnected, setIsConnected] = useState(false);
+  const [accounts, setAccounts] = useState<InjectedAccountWithMeta[]>([]);
+
+  const [blockNumber, setBlockNumber] = useState(0);
+  const [proposals, setProposals] = useState<unknown>([]);
+
+  const [openModal, setOpenModal] = useState(false);
+
   async function loadPolkadotApi() {
     const { web3Accounts, web3Enable, web3FromAddress } = await import(
       "@polkadot/extension-dapp"
     );
+
     setPolkadotApi({
       web3Accounts,
       web3Enable,
       web3FromAddress,
     });
+
     const provider = new WsProvider(wsEndpoint);
     const newApi = await ApiPromise.create({ provider });
+
     setApi(newApi);
-    await newApi?.query.subspaceModule?.proposals?.entries().then((result) => {
-      setProposalList(result);
-    });
     setIsInitialized(true);
   }
 
@@ -94,6 +96,10 @@ export const PolkadotProvider: React.FC<PolkadotProviderProps> = ({
     if (api) {
       void api.rpc.chain.subscribeNewHeads((header) => {
         setBlockNumber(header.number.toNumber());
+      });
+
+      void api.query.subspaceModule?.proposals?.entries().then((result) => {
+        setProposals(result);
       });
     }
   }, [api]);
@@ -112,82 +118,53 @@ export const PolkadotProvider: React.FC<PolkadotProviderProps> = ({
   const [selectedAccount, setSelectedAccount] =
     useState<InjectedAccountWithMeta>();
 
-  async function addStake({ validator, amount, callback }: AddStaking) {
-    if (
-      !api ||
-      !selectedAccount ||
-      !polkadotApi.web3FromAddress ||
-      !api.tx.subspaceModule?.addStake
-    )
-      return;
-
-    const injector = await polkadotApi.web3FromAddress(selectedAccount.address);
-
-    const amt = Math.floor(Number(amount) * 10 ** 9);
-
-    api.tx.subspaceModule
-      .addStake(0, validator, amt)
-      .signAndSend(selectedAccount.address, { signer: injector.signer })
-      .then((response) => {
-        console.log("Transaction Submitted");
-        console.log(response);
-        callback?.();
-      })
-      .catch((err) => {
-        // TODO toast error
-        console.log(err);
-      });
-  }
-
-  async function removeStake({ validator, amount, callback }: AddStaking) {
-    if (
-      !api ||
-      !selectedAccount ||
-      !polkadotApi.web3FromAddress ||
-      !api.tx.subspaceModule?.removeStake
-    )
-      return;
-
-    const injector = await polkadotApi.web3FromAddress(selectedAccount.address);
-
-    const amt = Math.floor(Number(amount) * 10 ** 9);
-
-    api.tx.subspaceModule
-      .removeStake(0, validator, amt)
-      .signAndSend(selectedAccount.address, {
-        signer: injector.signer,
-      })
-      .then((response) => {
-        // TODO toast success
-        console.log("Transaction Submitted");
-        console.log(response);
-        callback?.();
-      })
-      .catch((err) => {
-        // TODO toast error
-        console.log(err);
-      });
-  }
-
   async function handleWalletSelections(wallet: InjectedAccountWithMeta) {
     setSelectedAccount(wallet);
     setIsConnected(true);
     setOpenModal(false);
   }
 
+  console.log(api?.tx.subspaceModule);
+
+  async function addVoting({ vote, proposalId, callback }: AddVoting) {
+    if (
+      !api ||
+      !selectedAccount ||
+      !polkadotApi.web3FromAddress ||
+      !api.tx.subspaceModule?.voteProposal
+    )
+      return;
+
+    const injector = await polkadotApi.web3FromAddress(selectedAccount.address);
+
+    api.tx.subspaceModule
+      .voteProposal(proposalId, vote) // what is sopposed to be here?
+      .signAndSend(selectedAccount.address, { signer: injector.signer })
+      .then((response) => {
+        console.log("Vote Submitted");
+        console.log(response);
+        callback?.();
+      })
+      .catch((err) => {
+        // TODO toast error
+        console.log(err);
+      });
+  }
+
   return (
     <PolkadotContext.Provider
       value={{
         api,
-        accounts,
-        blockNumber,
         isConnected,
         isInitialized,
-        selectedAccount,
-        proposalList,
 
-        addStake,
-        removeStake,
+        accounts,
+        selectedAccount,
+
+        blockNumber,
+        proposals,
+
+        addVoting,
         handleConnect,
       }}
     >
