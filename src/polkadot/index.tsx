@@ -9,8 +9,10 @@ import {
 } from "@polkadot/extension-inject/types";
 import { ApiPromise, WsProvider } from "@polkadot/api";
 
+import { get_proposals } from "~/chain_queries";
+import { type ProposalMetadata, type Proposal } from "~/types";
+// import { build_ipfs_gateway_url, parse_ipfs_uri } from "~/utils/ipfs";
 import { WalletModal } from "~/app/_components/wallet-modal";
-import { build_ipfs_gateway_url, parse_ipfs_uri } from "~/utils/ipfs";
 
 interface AddVoting {
   vote: boolean;
@@ -32,8 +34,8 @@ interface PolkadotContextType {
   selectedAccount: InjectedAccountWithMeta | undefined;
 
   blockNumber: number;
-  proposals: unknown;
-  proposalBody: unknown;
+  proposals: Proposal[];
+  proposalBody: ProposalMetadata[];
 
   isProposalLoading: boolean;
   isProposalBodyLoading: boolean;
@@ -65,12 +67,12 @@ export const PolkadotProvider: React.FC<PolkadotProviderProps> = ({
   const [isInitialized, setIsInitialized] = useState<boolean>(false);
   const [isConnected, setIsConnected] = useState(false);
   const [accounts, setAccounts] = useState<InjectedAccountWithMeta[]>([]);
-
   const [blockNumber, setBlockNumber] = useState(0);
-  const [proposals, setProposals] = useState<unknown>([]);
-  const [proposalBody, setProposalBody] = useState<unknown>([]);
 
+  const [proposals, setProposals] = useState<Proposal[]>([]);
   const [isProposalLoading, setIsProposalLoading] = useState(true);
+
+  const [proposalBody, setProposalBody] = useState<ProposalMetadata[]>([]);
   const [isProposalBodyLoading, setIsProposalBodyLoading] = useState(true);
 
   const [openModal, setOpenModal] = useState(false);
@@ -95,11 +97,8 @@ export const PolkadotProvider: React.FC<PolkadotProviderProps> = ({
 
   useEffect(() => {
     void loadPolkadotApi();
-    return () => {
-      void api?.disconnect();
-    };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [wsEndpoint]);
+  }, []);
 
   useEffect(() => {
     if (api) {
@@ -107,29 +106,47 @@ export const PolkadotProvider: React.FC<PolkadotProviderProps> = ({
         setBlockNumber(header.number.toNumber());
       });
 
-      void api.query.subspaceModule?.proposals?.entries().then((result) => {
-        return setProposals(result);
-      });
-
-      setIsProposalLoading(false);
+      void get_proposals(api)
+        .then((response) => {
+          setProposals(response);
+        })
+        .then(() => {
+          setIsProposalLoading(false);
+        });
     }
-  }, [api]);
+  }, [api, proposals]);
 
-  async function ProposalData() {
-    const cid = parse_ipfs_uri(
-      "ipfs://bafkreideif2rljo42bmvuzqurbozhj55pvfkbwak42oadssk2w46y3a4pe", // this should be replaced by kelvin function
-    );
-    const url = build_ipfs_gateway_url(cid);
+  // async function fetchProposalBody() {
+  //   if (!api) return;
 
-    await fetch(url)
-      .then((res) => res.json())
-      .then((data) => setProposalBody(data))
-      .then(() => setIsProposalBodyLoading(false));
-  }
+  //   const proposalBody = await Promise.all(
+  //     proposals.map(async (proposal) => {
+  //       const { data } = proposal;
+  //       const { custom } = data;
 
-  useEffect(() => {
-    void ProposalData();
-  }, []);
+  //       const cid = parse_ipfs_uri(custom);
+  //       const ipfsUrl = build_ipfs_gateway_url(cid);
+
+  //       const response = await fetch(ipfsUrl);
+  //       const body = await response.text();
+
+  //       return {
+  //         title: proposal.id.toString(),
+  //         body,
+  //       };
+  //     }),
+  //   );
+
+  //   setProposalBody(proposalBody);
+  //   setIsProposalBodyLoading(false);
+  // }
+
+  // useEffect(() => {
+  //   if (proposals.length > 0) {
+  //     void fetchProposalBody();
+  //   }
+  //   // eslint-disable-next-line react-hooks/exhaustive-deps
+  // }, [proposals]);
 
   async function handleConnect() {
     if (!polkadotApi.web3Enable || !polkadotApi.web3Accounts) return;
