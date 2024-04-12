@@ -41,9 +41,6 @@ interface PolkadotContextType {
   proposal: Proposal[];
   isProposalLoading: boolean;
 
-  proposalBody: ProposalBody[];
-  isProposalBodyLoading: boolean;
-
   handleConnect: () => void;
   addVoting: (args: AddVoting) => void;
 }
@@ -77,9 +74,6 @@ export const PolkadotProvider: React.FC<PolkadotProviderProps> = ({
   const [proposal, setProposal] = useState<Proposal[]>([]);
   const [isProposalLoading, setIsProposalLoading] = useState(true);
 
-  const [proposalBody, setProposalBody] = useState<ProposalBody[]>([]);
-  const [isProposalBodyLoading, setIsProposalBodyLoading] = useState(true);
-
   const [openModal, setOpenModal] = useState(false);
 
   async function loadPolkadotApi() {
@@ -96,6 +90,7 @@ export const PolkadotProvider: React.FC<PolkadotProviderProps> = ({
     setApi(newApi);
     setIsInitialized(true);
   }
+
   useEffect(() => {
     void loadPolkadotApi();
 
@@ -106,28 +101,26 @@ export const PolkadotProvider: React.FC<PolkadotProviderProps> = ({
   }, [wsEndpoint]);
 
   useEffect(() => {
+    console.log(wsEndpoint, 'useEffect do wsEndpoint')
+  }, [wsEndpoint])
+
+  useEffect(() => {
+    console.log(api, 'useEffect da api')
     if (api) {
       void api.rpc.chain.subscribeNewHeads((header) => {
         setBlockNumber(header.number.toNumber());
       });
-    }
-  }, [api]);
 
-  useEffect(() => {
-    if (api) {
       get_proposals(api)
         .then((proposals) => {
-          setProposal(proposals);
-
           const bodies = proposals.map((proposal) => ({ Loading: proposal }));
 
           match(bodies[0] as ProposalBody)({
             Loading: function () {
-              setIsProposalLoading(false);
+              setIsProposalLoading(true);
             },
             Custom: function () {
               console.log("Custom");
-              setIsProposalBodyLoading(false);
             },
             GlobalParams: function (v: null): unknown {
               return console.log("Global params:", v);
@@ -140,16 +133,20 @@ export const PolkadotProvider: React.FC<PolkadotProviderProps> = ({
             },
           });
 
-          setProposalBody(bodies);
+          let updatedProposalsList: unknown = []
+
           handle_proposals(proposals, (id, body) => {
-            setProposalBody((prev) => {
-              const new_arr = [...prev];
-              new_arr[id] = body;
-              return new_arr;
-            });
+            const formattedProposal = {
+              ...proposals[id],
+              content: body
+            }
+            updatedProposalsList.push(formattedProposal)
           }).catch((e) => {
             console.error("Error fetching proposals:", e);
           });
+
+          setProposal(updatedProposalsList)
+          setIsProposalLoading(false)
         })
         .catch((e) => {
           console.error("Error fetching proposals:", e);
@@ -214,9 +211,6 @@ export const PolkadotProvider: React.FC<PolkadotProviderProps> = ({
 
         proposal,
         isProposalLoading,
-
-        proposalBody,
-        isProposalBodyLoading,
 
         addVoting,
         handleConnect,
