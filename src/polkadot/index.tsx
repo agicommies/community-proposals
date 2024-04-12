@@ -41,6 +41,7 @@ interface PolkadotContextType {
 
   handleConnect: () => void;
   addVoting: (args: AddVoting) => void;
+  createNewProposal: (args: string) => void;
 }
 
 const PolkadotContext = createContext<PolkadotContextType | undefined>(
@@ -144,38 +145,6 @@ export const PolkadotProvider: React.FC<PolkadotProviderProps> = ({
     }
   }, [api]);
 
-  // async function fetchProposalBody() {
-  //   if (!api) return;
-
-  //   const proposalBody = await Promise.all(
-  //     proposals.map(async (proposal) => {
-  //       const { data } = proposal;
-  //       const { custom } = data;
-
-  //       const cid = parse_ipfs_uri(custom);
-  //       const ipfsUrl = build_ipfs_gateway_url(cid);
-
-  //       const response = await fetch(ipfsUrl);
-  //       const body = await response.text();
-
-  //       return {
-  //         title: proposal.id.toString(),
-  //         body,
-  //       };
-  //     }),
-  //   );
-
-  //   setProposalBody(proposalBody);
-  //   setIsProposalBodyLoading(false);
-  // }
-
-  // useEffect(() => {
-  //   if (proposals.length > 0) {
-  //     void fetchProposalBody();
-  //   }
-  //   // eslint-disable-next-line react-hooks/exhaustive-deps
-  // }, [proposals]);
-
   async function handleConnect() {
     if (!polkadotApi.web3Enable || !polkadotApi.web3Accounts) return;
     const extensions = await polkadotApi.web3Enable("Community Validator");
@@ -220,6 +189,28 @@ export const PolkadotProvider: React.FC<PolkadotProviderProps> = ({
       });
   }
 
+  async function createNewProposal(data: string) {
+    if (
+      !api ||
+      !selectedAccount ||
+      !polkadotApi.web3FromAddress ||
+      !api.tx.subspaceModule?.addCustomProposal
+    )
+      return;
+
+    const injector = await polkadotApi.web3FromAddress(selectedAccount.address);
+    api.tx.subspaceModule
+      .addCustomProposal(data)
+      .signAndSend(selectedAccount.address, { signer: injector.signer })
+      .then(() => {
+        window.location.reload();
+      })
+      .catch((err) => {
+        // TODO toast error
+        console.log(err);
+      });
+  }
+
   return (
     <PolkadotContext.Provider
       value={{
@@ -237,7 +228,7 @@ export const PolkadotProvider: React.FC<PolkadotProviderProps> = ({
 
         addVoting,
         handleConnect,
-        // createNewProposal,
+        createNewProposal,
       }}
     >
       <WalletModal

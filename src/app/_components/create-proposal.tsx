@@ -7,17 +7,13 @@ import { usePolkadot } from "~/polkadot";
 
 export function CreateProposal() {
   // const router = useRouter();
-  const { isConnected } = usePolkadot();
+  const { isConnected, createNewProposal } = usePolkadot();
 
   const [modalOpen, setModalOpen] = useState(false);
   const toggleModalMenu = () => setModalOpen(!modalOpen);
 
   const [title, setTitle] = useState("");
   const [body, setBody] = useState("");
-
-  // onSuccess: () => {
-  //   router.refresh();
-  // };
 
   return (
     <>
@@ -63,6 +59,7 @@ export function CreateProposal() {
                 <form
                   onSubmit={(e) => {
                     e.preventDefault();
+                    createNewProposal(`{title: ${title}, body: ${body}}`);
                   }}
                   className="flex flex-col gap-3 p-6"
                 >
