@@ -12,8 +12,9 @@ import { type ProposalState } from "~/types";
 import { type ProposalStakeInfo } from "~/proposals";
 import { assert } from "tsafe";
 import { format_token } from "~/utils";
+import ProposalExpandedCard from "./proposal-expanded-card";
 
-type ProposalCardProps = {
+export type ProposalCardProps = {
   proposal: ProposalState;
   stake_info: ProposalStakeInfo | null;
 };
@@ -236,14 +237,8 @@ export const ProposalCard = (props: ProposalCardProps) => {
           {isProposalLoading && (
             <span className="flex w-4/12 animate-pulse rounded-lg bg-gray-700 py-2.5" />
           )}
-          {!isProposalLoading && (
-            <Link
-              href={`/proposal/${proposal.id}`}
-              className="text-blue-500 hover:text-blue-400 hover:underline"
-            >
-              Click to access proposal {"->"}
-            </Link>
-          )}
+          {/* pass props here */}
+          {!isProposalLoading && <ProposalExpandedCard />}
         </div>
       </Card.Body>
     </Card.Root>
