@@ -12,6 +12,7 @@ import { type ProposalStakeInfo } from "~/proposals";
 import { assert } from "tsafe";
 import { bigint_division, format_token } from "~/utils";
 import ProposalExpandedCard from "./proposal-expanded-card";
+import MarkdownPreview from "@uiw/react-markdown-preview";
 
 export type ProposalCardProps = {
   proposal: ProposalState;
@@ -158,9 +159,9 @@ export const ProposalCard = (props: ProposalCardProps) => {
         {!isProposalLoading && (
           <div className="pb-2 md:pb-6">
             {/* Renders text body keeping line breaks */}
-            <p className="whitespace-pre-wrap">
-              {proposal?.custom_data?.body}
-            </p>
+            <div className="rounded-xl bg-black p-3">
+              <MarkdownPreview source={String(proposal?.custom_data?.body)} />
+            </div>
           </div>
         )}
 

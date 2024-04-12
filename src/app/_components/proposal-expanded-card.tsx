@@ -18,6 +18,7 @@ import { type ProposalStakeInfo } from "~/proposals";
 import { bigint_division, format_token } from "~/utils";
 import { assert } from "tsafe";
 import { XMarkIcon } from "@heroicons/react/20/solid";
+import MarkdownPreview from "@uiw/react-markdown-preview";
 
 function handle_favorable_percent(favorable_percent: number) {
   const againstPercentage = 100 - favorable_percent;
@@ -173,7 +174,11 @@ export default function ProposalExpandedCard(props: ProposalCardProps) {
                           </h3>
                         </Card.Header>
                         <Card.Body>
-                          <p>{proposal.custom_data.body}</p>
+                          <div className="rounded-xl bg-black p-3">
+                            <MarkdownPreview
+                              source={String(proposal.custom_data.body)}
+                            />
+                          </div>
                         </Card.Body>
                       </>
                     )}
