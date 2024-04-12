@@ -4,8 +4,13 @@ import { createTRPCRouter, publicProcedure } from "~/server/api/trpc";
 
 export const proposalRouter = createTRPCRouter({
   create: publicProcedure
-    .input(z.object({ name: z.string().min(1) }))
-    .mutation(async ({ ctx, input }) => {
+    .input(
+      z.object({
+        proposer: z.string(),
+        data: z.string(),
+      }),
+    )
+    .mutation(async ({ /*ctx, input*/ }) => {
       // await ctx.db.insert(proposal).values({
       //   id: 1,
       //   proposer: input.name,
@@ -16,7 +21,7 @@ export const proposalRouter = createTRPCRouter({
       // });
     }),
 
-  getLatest: publicProcedure.query(({ ctx }) => {
+  getLatest: publicProcedure.query(({ /*ctx*/ }) => {
     // return ctx.db.query.proposal.findFirst({
     //   orderBy: (proposals, { desc }) => [desc(proposals.createdAt)],
     // });

@@ -34,7 +34,7 @@ export default function HomePage() {
                   const stake_map =
                     netuid != null
                       ? stake_data.stake_out.per_addr_per_net.get(netuid) ??
-                        new Map<string, number>()
+                        new Map<string, bigint>()
                       : stake_data.stake_out.per_addr;
                   proposal_stake_info = compute_votes(
                     stake_map,

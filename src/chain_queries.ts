@@ -8,10 +8,10 @@ export interface StakeData {
   block_number: number;
   block_hash_hex: string;
   stake_out: {
-    total: number;
-    per_addr: Map<string, number>;
-    per_net: Map<number, number>;
-    per_addr_per_net: Map<number, Map<string, number>>;
+    total: bigint;
+    per_addr: Map<string, bigint>;
+    per_net: Map<number, bigint>;
+    per_addr_per_net: Map<number, Map<string, bigint>>;
   };
 }
 

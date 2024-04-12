@@ -11,7 +11,7 @@ import {
 } from "@polkadot/extension-inject/types";
 
 import { WalletModal } from "~/app/_components/wallet-modal";
-import { type StakeData, get_all_stake_out, get_proposals } from "~/chain_queries";
+import { get_all_stake_out, get_proposals, type StakeData } from "~/chain_queries";
 import { handle_custom_proposals } from "~/proposals";
 import type { ProposalState } from "~/types";
 import { is_not_null } from "~/utils";
@@ -42,6 +42,7 @@ interface PolkadotContextType {
 
   handleConnect: () => void;
   addVoting: (args: AddVoting) => void;
+  createNewProposal: (args: string) => void;
 }
 
 const PolkadotContext = createContext<PolkadotContextType | undefined>(
@@ -207,6 +208,28 @@ export const PolkadotProvider: React.FC<PolkadotProviderProps> = ({
       });
   }
 
+  async function createNewProposal(data: string) {
+    if (
+      !api ||
+      !selectedAccount ||
+      !polkadotApi.web3FromAddress ||
+      !api.tx.subspaceModule?.addCustomProposal
+    )
+      return;
+
+    const injector = await polkadotApi.web3FromAddress(selectedAccount.address);
+    api.tx.subspaceModule
+      .addCustomProposal(data)
+      .signAndSend(selectedAccount.address, { signer: injector.signer })
+      .then(() => {
+        window.location.reload();
+      })
+      .catch((err) => {
+        // TODO toast error
+        console.log(err);
+      });
+  }
+
   return (
     <PolkadotContext.Provider
       value={{
@@ -223,6 +246,7 @@ export const PolkadotProvider: React.FC<PolkadotProviderProps> = ({
 
         addVoting,
         handleConnect,
+        createNewProposal,
       }}
     >
       <WalletModal

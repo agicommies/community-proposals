@@ -1,5 +1,8 @@
 import { Skeleton } from "./skeleton";
 
+import Link from "next/link";
+import { CreateProposal } from "./create-proposal";
+
 type ProposalListHeaderProps = {
   user_stake_weight: number | null;
 };
@@ -38,9 +41,7 @@ export const ProposalListHeader = (props: ProposalListHeaderProps) => {
         </div>
 
         <div className="flex w-full min-w-max lg:w-auto lg:pl-3">
-          <button className="min-w-auto w-full rounded-xl border-2 border-blue-500 px-4 py-2 text-blue-500 shadow-custom-blue lg:w-auto dark:bg-light-dark">
-            New proposal
-          </button>
+          <CreateProposal />
         </div>
       </div>
     </div>
