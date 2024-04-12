@@ -1,17 +1,17 @@
 "use client";
-import { Label } from "./label";
 import { intlFormatDistance } from "date-fns";
 import Image from "next/image";
-import { type TVote, VoteLabel } from "./vote-label";
-import { StatusLabel, type TProposalStatus } from "./status-label";
-import { Card } from "./card";
-import { Skeleton } from "./skeleton";
 import { match } from "rustie";
-import { type ProposalState } from "~/types";
-import { type ProposalStakeInfo } from "~/proposals";
 import { assert } from "tsafe";
-import { bigint_division, format_token } from "~/utils";
+import { type ProposalStakeInfo } from "~/proposals";
+import { type ProposalState } from "~/types";
+import { bigint_division, format_token, small_address } from "~/utils";
+import { Card } from "./card";
+import { Label } from "./label";
 import ProposalExpandedCard from "./proposal-expanded-card";
+import { Skeleton } from "./skeleton";
+import { StatusLabel, type TProposalStatus } from "./status-label";
+import { VoteLabel, type TVote } from "./vote-label";
 import MarkdownPreview from "@uiw/react-markdown-preview";
 
 export type ProposalCardProps = {
@@ -182,10 +182,10 @@ export const ProposalCard = (props: ProposalCardProps) => {
             </div>
           )}
           {!isProposalLoading && (
-            <div className="w-[200px] space-x-2 pb-4 text-gray-500 md:pb-0">
+            <div className="w-[240px] space-x-2 pb-4 text-gray-500 md:pb-0">
               {/* <span className="">By {proposal.expirationBlock}</span> */}
               <span className="line-clamp-1 block w-full truncate">
-                By {proposal.proposer}
+                posted by {small_address(proposal.proposer)}
               </span>
             </div>
           )}

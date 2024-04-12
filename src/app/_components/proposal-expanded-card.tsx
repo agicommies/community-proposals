@@ -3,22 +3,29 @@
 export const runtime = "edge";
 
 import { format } from "date-fns";
-import { type TVote, VoteLabel } from "~/app/_components/vote-label";
-import { StatusLabel } from "~/app/_components/status-label";
-import { Card } from "~/app/_components/card";
 import Image from "next/image";
-import { CopyToClipboard } from "~/app/_components/copy-to-clipboard";
+import { Card } from "~/app/_components/card";
+// import { CopyToClipboard } from "~/app/_components/copy-to-clipboard";
+import { StatusLabel } from "~/app/_components/status-label";
+import { VoteLabel, type TVote } from "~/app/_components/vote-label";
 
+import { useState } from "react";
 import { VoteCard } from "~/app/_components/vote-card";
 import { Container } from "./container";
 import { type ProposalCardProps } from "./proposal-card";
-import { useState } from "react";
+
+import { XMarkIcon } from "@heroicons/react/20/solid";
+import { assert } from "tsafe";
+import { type ProposalStakeInfo } from "~/proposals";
+import { bigint_division, format_token, small_address } from "~/utils";
 import { Label } from "./label";
 import { type ProposalStakeInfo } from "~/proposals";
 import { bigint_division, format_token } from "~/utils";
 import { assert } from "tsafe";
 import { XMarkIcon } from "@heroicons/react/20/solid";
 import MarkdownPreview from "@uiw/react-markdown-preview";
+
+import { Skeleton } from "./skeleton";
 
 function handle_favorable_percent(favorable_percent: number) {
   const againstPercentage = 100 - favorable_percent;
@@ -77,6 +84,7 @@ function render_vote_data(stake_info: ProposalStakeInfo) {
   const { stake_for, stake_against, stake_voted, stake_total } = stake_info;
 
   const favorable_percent = bigint_division(stake_for, stake_voted) * 100;
+  const against_percent = bigint_division(stake_against, stake_voted) * 100;
 
   return (
     <>
@@ -85,7 +93,7 @@ function render_vote_data(stake_info: ProposalStakeInfo) {
         <div className="flex items-center gap-2 divide-x">
           <span className="text-xs">{format_token(stake_for)} COMAI</span>
           <span className="pl-2 text-sm font-semibold text-green-500">
-            {favorablePercentage.toFixed(2)}%
+            {favorable_percent.toFixed(2)}%
           </span>
         </div>
       </div>
@@ -93,16 +101,16 @@ function render_vote_data(stake_info: ProposalStakeInfo) {
         <div
           className={`rounded-3xl bg-green-400 py-2`}
           style={{
-            width: `${favorablePercentage.toFixed(0)}%`,
+            width: `${favorable_percent.toFixed(0)}%`,
           }}
         />
       </div>
       <div className="mt-8 flex justify-between">
         <span className="font-semibold">Against</span>
         <div className="flex items-center gap-2 divide-x">
-          <span className="text-xs">{votesAgainst} COMAI</span>
+          <span className="text-xs">{format_token(stake_against)} COMAI</span>
           <span className="pl-2 text-sm font-semibold text-red-500">
-            {againstPercentage.toFixed(2)}%
+            {against_percent.toFixed(2)}%
           </span>
         </div>
       </div>
@@ -110,7 +118,7 @@ function render_vote_data(stake_info: ProposalStakeInfo) {
         <div
           className={`rounded-3xl bg-red-400 py-2`}
           style={{
-            width: `${againstPercentage.toFixed(0)}%`,
+            width: `${against_percent.toFixed(0)}%`,
           }}
         />
       </div>
@@ -125,9 +133,7 @@ export default function ProposalExpandedCard(props: ProposalCardProps) {
   const { proposal, stake_info } = props;
 
   const voted: TVote = "UNVOTED";
-  const title = proposal.custom_data?.title;
-  const body = proposal.custom_data?.body;
-  const share_pathname = `/proposal/${proposal.id}`;
+  // const share_pathname = `/proposal/${proposal.id}`; // TODO
 
   return (
     <>
@@ -187,9 +193,24 @@ export default function ProposalExpandedCard(props: ProposalCardProps) {
                   <div className="w-full space-y-6 lg:w-4/12">
                     <Card.Root>
                       <Card.Header>
-                        <h3 className="text-base font-semibold">Information</h3>
+                        <h3 className="text-base font-semibold">Info</h3>
                       </Card.Header>
                       <Card.Body className="flex flex-col space-y-4">
+                        {/* Proposal ID */}
+                        <span className="flex items-center text-sm">
+                          <Image
+                            src="/dev-icon.svg"
+                            height={21}
+                            width={21}
+                            alt="author icon"
+                            className="mr-2"
+                          />
+                          {proposal.id}
+                          <span className="ml-1 text-xs text-gray-600">
+                            | Proposal ID
+                          </span>
+                        </span>
+
                         <span className="flex items-center text-sm">
                           <Image
                             src="/id-icon.svg"
@@ -198,9 +219,9 @@ export default function ProposalExpandedCard(props: ProposalCardProps) {
                             alt="author icon"
                             className="mr-2"
                           />
-                          {proposal.proposer.slice(0, 26)}...
+                          {small_address(proposal.proposer)}
                           <span className="ml-1 text-xs text-gray-600">
-                            | Post Author
+                            | Proposal Author
                           </span>
                         </span>
 
@@ -218,7 +239,8 @@ export default function ProposalExpandedCard(props: ProposalCardProps) {
                           </span>
                         </span>
 
-                        <span className="flex items-center text-sm">
+                        {/* TODO */}
+                        {/* <span className="flex items-center text-sm">
                           <Image
                             src="/chain-icon.svg"
                             height={20}
@@ -228,27 +250,13 @@ export default function ProposalExpandedCard(props: ProposalCardProps) {
                           />
                           <CopyToClipboard content={share_pathname}>
                             <span className="underline hover:text-blue-500">
-                              Share this post
+                              Share this proposal
                             </span>
                           </CopyToClipboard>
                           <span className="ml-1 text-xs text-gray-600">
                             | URL
                           </span>
-                        </span>
-
-                        <span className="flex items-center text-sm">
-                          <Image
-                            src="/dev-icon.svg"
-                            height={21}
-                            width={21}
-                            alt="author icon"
-                            className="mr-2"
-                          />
-                          {proposal.id}
-                          <span className="ml-1 text-xs text-gray-600">
-                            | Post ID
-                          </span>
-                        </span>
+                        </span> */}
                       </Card.Body>
                     </Card.Root>
 
@@ -260,7 +268,12 @@ export default function ProposalExpandedCard(props: ProposalCardProps) {
                           Current results
                         </h3>
                       </Card.Header>
-                      <Card.Body></Card.Body>
+                      <Card.Body>
+                        {stake_info && render_vote_data(stake_info)}
+                        {!stake_info && (
+                          <Skeleton className="w-full rounded-3xl py-2.5" />
+                        )}
+                      </Card.Body>
                     </Card.Root>
                   </div>
                 </div>

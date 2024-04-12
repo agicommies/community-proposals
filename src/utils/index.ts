@@ -1,5 +1,8 @@
 export const is_not_null = <T>(item: T | null): item is T => item !== null;
 
+export const small_address = (address: string) =>
+  address.slice(0, 8) + "…" + address.slice(-8);
+
 export function from_nano(nano: number | bigint): number {
   if (typeof nano === "bigint") return Number(nano / 1_000_000_000n);
   else return nano / 1_000_000_000;
