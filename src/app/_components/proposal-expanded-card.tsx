@@ -4,27 +4,23 @@ export const runtime = "edge";
 
 import { format } from "date-fns";
 import Image from "next/image";
-import { Card } from "~/app/_components/card";
-// import { CopyToClipboard } from "~/app/_components/copy-to-clipboard";
-import { StatusLabel } from "~/app/_components/status-label";
-import { VoteLabel, type TVote } from "~/app/_components/vote-label";
-
 import { useState } from "react";
-import { VoteCard } from "~/app/_components/vote-card";
-import { Container } from "./container";
-import { type ProposalCardProps } from "./proposal-card";
+import { assert } from "tsafe";
 
-import { XMarkIcon } from "@heroicons/react/20/solid";
-import { assert } from "tsafe";
-import { type ProposalStakeInfo } from "~/proposals";
-import { bigint_division, format_token, small_address } from "~/utils";
-import { Label } from "./label";
-import { type ProposalStakeInfo } from "~/proposals";
-import { bigint_division, format_token } from "~/utils";
-import { assert } from "tsafe";
 import { XMarkIcon } from "@heroicons/react/20/solid";
 import MarkdownPreview from "@uiw/react-markdown-preview";
 
+import { Card } from "~/app/_components/card";
+// import { CopyToClipboard } from "~/app/_components/copy-to-clipboard";
+import { StatusLabel } from "~/app/_components/status-label";
+import { VoteCard } from "~/app/_components/vote-card";
+import { VoteLabel, type TVote } from "~/app/_components/vote-label";
+import { type ProposalStakeInfo } from "~/proposals";
+import { bigint_division, format_token, small_address } from "~/utils";
+
+import { Container } from "./container";
+import { Label } from "./label";
+import { type ProposalCardProps } from "./proposal-card";
 import { Skeleton } from "./skeleton";
 
 function handle_favorable_percent(favorable_percent: number) {
