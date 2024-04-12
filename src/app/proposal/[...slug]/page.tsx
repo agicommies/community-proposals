@@ -1,4 +1,4 @@
-export const runtime = 'edge'
+export const runtime = "edge";
 
 import { proposalMockList } from "~/utils/proposalMockList";
 import { Container } from "../../_components/container";
@@ -36,7 +36,7 @@ export default function ProposalDetails(props: TProposalDetails) {
       <div className="my-12 h-full w-full bg-[url(/dots-bg.svg)] bg-repeat py-12 dark:bg-[url(/dots-bg-dark.svg)]">
         <Container>
           <div className="flex gap-3">
-            <StatusLabel result='Pending' />  {/* TODO: add result */}
+            <StatusLabel result="Pending" /> {/* TODO: add result */}
             <VoteLabel vote={proposal.voted as TVote} />
           </div>
 

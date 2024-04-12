@@ -238,7 +238,7 @@ export const ProposalCard = (props: ProposalCardProps) => {
           )}
           {!isProposalLoading && (
             <Link
-              href={`/proposal/${proposal.id}`}
+              href={`/proposal/${proposal.id}?proposer=${proposal.proposer}?netuid=${netuid}?title=${title}?body=${body}?status=${proposal.status}?voted=${voted}?expirationBlock=${proposal.expirationBlock}`}
               className="text-blue-500 hover:text-blue-400 hover:underline"
             >
               Click to access proposal {"->"}

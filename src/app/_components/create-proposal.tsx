@@ -21,7 +21,7 @@ export function CreateProposal() {
   const [title, setTitle] = useState("");
   const [body, setBody] = useState("");
 
-  const [modalOpen, setModalOpen] = useState(true);
+  const [modalOpen, setModalOpen] = useState(false);
   const toggleModalMenu = () => setModalOpen(!modalOpen);
 
   const [accordionOpen, setAccordionOpen] = useState(false);
@@ -67,10 +67,12 @@ export function CreateProposal() {
     <>
       <button
         type="button"
-        onClick={toggleModalMenu}
-        className="min-w-auto w-full rounded-xl border-2 border-blue-500 px-4 py-2 text-blue-500 shadow-custom-blue lg:w-auto dark:bg-light-dark"
+        disabled={true}
+        // onClick={toggleModalMenu}
+        // className="min-w-auto w-full rounded-xl border-2 border-blue-500 px-4 py-2 text-blue-500 shadow-custom-blue lg:w-auto dark:bg-light-dark"
+        className="min-w-auto flex w-full flex-col items-center rounded-xl border-2 border-gray-500 px-4 py-2 text-gray-500 shadow-custom-gray lg:w-auto dark:bg-light-dark"
       >
-        New Proposal
+        New Proposal <span className="text-sm">commming soon</span>
       </button>
       <div
         role="dialog"
@@ -127,13 +129,13 @@ export function CreateProposal() {
                           setIsUriValid(true);
                         }
                       }}
-                      className="dark:active:shadow-custom-dark-clicked active:shadow-custom-clicked relative w-1/3 rounded-xl border-2 border-black bg-gray-100 p-3 font-semibold shadow-custom active:top-1 dark:border-white dark:bg-dark dark:text-white dark:shadow-custom-dark"
+                      className="relative w-1/3 rounded-xl border-2 border-black bg-gray-100 p-3 font-semibold shadow-custom active:top-1 active:shadow-custom-clicked dark:border-white dark:bg-dark dark:text-white dark:shadow-custom-dark dark:active:shadow-custom-dark-clicked"
                     >
                       Check
                     </button>
                   </div>
                   <button
-                    className={` relative rounded-xl border-2 px-4 py-2 font-semibold dark:bg-dark ${isConnected && isUriValid ? "active:shadow-custom-blue-clicked border-blue-500 text-blue-500 shadow-custom-blue active:top-1" : "shadow-custom-gray border-gray-500 text-gray-500"}`}
+                    className={` relative rounded-xl border-2 px-4 py-2 font-semibold dark:bg-dark ${isConnected && isUriValid ? "border-blue-500 text-blue-500 shadow-custom-blue active:top-1 active:shadow-custom-blue-clicked" : "border-gray-500 text-gray-500 shadow-custom-gray"}`}
                     disabled={!isConnected || !isUriValid}
                   >
                     {isUriValid

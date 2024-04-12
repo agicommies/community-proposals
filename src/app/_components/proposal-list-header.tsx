@@ -30,7 +30,7 @@ export const ProposalListHeader = (props: ProposalListHeaderProps) => {
           )}
         </div>
 
-        <div className="flex w-full flex-row-reverse justify-center gap-4 lg:w-auto lg:flex-row lg:gap-0 lg:pl-3">
+        {/* <div className="flex w-full flex-row-reverse justify-center gap-4 lg:w-auto lg:flex-row lg:gap-0 lg:pl-3">
           <input
             className="w-8/12 rounded-xl border-2 border-black bg-white px-4 py-2 shadow-custom placeholder:text-black lg:mr-3 lg:w-auto dark:border-white dark:bg-light-dark dark:text-white dark:shadow-custom-dark dark:placeholder:text-white"
             placeholder="Search"
@@ -38,7 +38,7 @@ export const ProposalListHeader = (props: ProposalListHeaderProps) => {
           <button className="w-4/12 rounded-xl border-2 border-black px-4 shadow-custom lg:w-auto dark:border-white dark:bg-light-dark dark:text-white dark:shadow-custom-dark">
             Filter
           </button>
-        </div>
+        </div> */}
 
         <div className="flex w-full min-w-max lg:w-auto lg:pl-3">
           <CreateProposal />
