@@ -9,3 +9,10 @@ export function format_token(nano: number | bigint): string {
   const amount = from_nano(nano);
   return amount.toFixed(2);
 }
+
+export function bigint_division(a: bigint, b: bigint, precision = 8n): number {
+  if (b == 0n) return NaN;
+  const base = 10n ** precision;
+  const base_num = Number(base);
+  return Number((a * base) / b) / base_num;
+}

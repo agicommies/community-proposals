@@ -1,7 +1,6 @@
 "use client";
 import { Label } from "./label";
 import { intlFormatDistance } from "date-fns";
-import Link from "next/link";
 import Image from "next/image";
 import { type TVote, VoteLabel } from "./vote-label";
 import { StatusLabel, type TProposalStatus } from "./status-label";
@@ -11,7 +10,7 @@ import { match } from "rustie";
 import { type ProposalState } from "~/types";
 import { type ProposalStakeInfo } from "~/proposals";
 import { assert } from "tsafe";
-import { format_token } from "~/utils";
+import { bigint_division, format_token } from "~/utils";
 import ProposalExpandedCard from "./proposal-expanded-card";
 
 export type ProposalCardProps = {
@@ -75,7 +74,7 @@ export const ProposalCard = (props: ProposalCardProps) => {
   });
 
   function handle_favorable_percent(favorable_percent: number) {
-    const againstPercentage = 100 - favorable_percent;
+    const against_percent = 100 - favorable_percent;
     // const winning = favorable_percent >= 50;
     if (Number.isNaN(favorable_percent)) {
       return (
@@ -95,7 +94,7 @@ export const ProposalCard = (props: ProposalCardProps) => {
           alt="favorable arrow up icon"
         />
         {" / "}
-        <span className="text-red-500"> {againstPercentage?.toFixed(0)}% </span>
+        <span className="text-red-500"> {against_percent?.toFixed(0)}% </span>
         <Image
           src={"/against-down.svg"}
           height={14}
@@ -104,13 +103,6 @@ export const ProposalCard = (props: ProposalCardProps) => {
         />
       </Label>
     );
-  }
-
-  function bigint_division(a: bigint, b: bigint, precision = 8n): number {
-    if (b == 0n) return NaN;
-    const base = 10n ** precision;
-    const base_num = Number(base);
-    return Number((a * base) / b) / base_num;
   }
 
   function render_favorable_percent(stake_info: ProposalStakeInfo) {
@@ -135,7 +127,7 @@ export const ProposalCard = (props: ProposalCardProps) => {
   }
 
   const isProposalLoading = false;
-  const voted = "FAVORABLE";
+  const voted: TVote = "UNVOTED";
 
   return (
     <Card.Root key={proposal.id}>
@@ -148,7 +140,7 @@ export const ProposalCard = (props: ProposalCardProps) => {
         {isProposalLoading && <Skeleton className="w-9/12 py-3 " />}
         {!isProposalLoading && (
           <div className="mb-2 flex min-w-fit flex-row-reverse gap-2 md:mb-0 md:ml-auto md:flex-row">
-            {!is_stake_loading && <VoteLabel vote={voted as TVote} />}
+            {!is_stake_loading && <VoteLabel vote={voted} />}
             {is_stake_loading && (
               <span className="flex w-[7rem] animate-pulse rounded-3xl bg-gray-700 py-3.5" />
             )}
@@ -165,7 +157,8 @@ export const ProposalCard = (props: ProposalCardProps) => {
       <Card.Body>
         {!isProposalLoading && (
           <div className="pb-2 md:pb-6">
-            <p className="line-clamp-7 md:line-clamp-5">
+            {/* Renders text body keeping line breaks */}
+            <p className="whitespace-pre-wrap">
               {proposal?.custom_data?.body}
             </p>
           </div>
@@ -238,7 +231,7 @@ export const ProposalCard = (props: ProposalCardProps) => {
             <span className="flex w-4/12 animate-pulse rounded-lg bg-gray-700 py-2.5" />
           )}
           {/* pass props here */}
-          {!isProposalLoading && <ProposalExpandedCard />}
+          {!isProposalLoading && <ProposalExpandedCard {...props} />}
         </div>
       </Card.Body>
     </Card.Root>

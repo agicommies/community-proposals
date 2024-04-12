@@ -7,7 +7,8 @@ export const VoteLabel = (props: TVoteLabelProps) => {
   const { vote } = props;
 
   const votingStatus = {
-    UNVOTED: <Label className="border border-white text-white">Unvoted</Label>,
+    // UNVOTED: <Label className="border border-white text-white">Unvoted</Label>,
+    UNVOTED: <></>,
     FAVORABLE: (
       <Label className="border border-green-500 text-green-500">
         Favorable
