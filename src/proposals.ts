@@ -13,7 +13,7 @@ export async function handle_custom_proposal_data(
 ): Promise<CustomProposalMetadata | null> {
   const cid = parse_ipfs_uri(data);
   if (cid == null) {
-    console.error(`Invalid IPFS URI ${data} for proposal ${proposal.id}`);
+    console.error(`Invalid IPFS URI '${data}' for proposal ${proposal.id}`);
     return null;
   }
   const url = build_ipfs_gateway_url(cid);
@@ -35,56 +35,57 @@ export async function handle_custom_proposal_data(
   return metadata;
 }
 
-export async function handle_proposals(
+export function handle_custom_proposals(
   proposals: Proposal[],
-  handler: (id: number, proposal_state: ProposalState) => void,
+  handler?: (id: number, proposal_state: ProposalState) => void,
 ) {
+  const promises = [];
   for (const proposal of proposals) {
-    // const variant = flatten_enum(proposal.data);
-    void match(proposal.data)({
+    const prom = match(proposal.data)({
       custom: async function (data: string) {
         const metadata = await handle_custom_proposal_data(proposal, data);
         if (metadata == null) {
           console.warn(
             `Invalid custom proposal data for proposal ${proposal.id}: ${data}`,
           );
-          return;
+          return null;
         }
         const proposal_state: ProposalState = {
           ...proposal,
           custom_data: metadata,
         };
-        handler(proposal.id, proposal_state);
+        if (handler != null) {
+          handler(proposal.id, proposal_state);
+        }
+        return {id: proposal.id, custom_data: metadata};
       },
-      subnetCustom: async function ({
-        // netuid,
-        data,
-      }: {
-        netuid: number;
-        data: string;
-      }) {
+      subnetCustom: async function ({ data }) {
         const metadata = await handle_custom_proposal_data(proposal, data);
         if (metadata == null) {
           console.warn(
             `Invalid custom proposal data for proposal ${proposal.id}: ${data}`,
           );
-          return;
+          return null;
         }
         const proposal_state: ProposalState = {
           ...proposal,
           custom_data: metadata,
         };
-        handler(proposal.id, proposal_state);
+        if (handler != null) {
+          handler(proposal.id, proposal_state);
+        }
+        return {id: proposal.id, custom_data: metadata};
       },
-      globalParams: async function (/*v: unknown*/) {
-        // ignore
+      globalParams: async function () {
+        return null;
       },
-      subnetParams:
-        async function (/*v: { netuid: number; params: unknown }*/) {
-          // ignore
-        },
+      subnetParams: async function () {
+        return null;
+      },
     });
+    promises.push(prom);
   }
+  return Promise.all(promises);
 }
 
 export function get_proposal_netuid(proposal: Proposal): number | null {
