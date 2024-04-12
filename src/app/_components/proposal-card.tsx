@@ -115,10 +115,9 @@ export const ProposalCard = (props: ProposalCardProps) => {
   }
 
   function bigint_division(a: bigint, b: bigint, precision = 8n): number {
-    if (b == 0n) return (1/0);
+    if (b == 0n) return NaN;
     const base = 10n ** precision;
     const base_num = Number(base);
-    a = a * base;
     return Number((a * base) / b) / base_num;
   }
 
