@@ -13,8 +13,13 @@ export function parse_ipfs_uri(uri: string): CID | null {
   const rest = uri.startsWith(ipfs_prefix)
     ? uri.slice(ipfs_prefix.length)
     : uri;
-  const cid = CID.parse(rest);
-  return cid;
+  try {
+    const cid = CID.parse(rest);
+    return cid;
+  } catch (e) {
+    console.error(`Invalid IPFS CID ${rest}`, e);
+    return null;
+  }
 }
 
 export function build_ipfs_gateway_url(cid: CID): string {

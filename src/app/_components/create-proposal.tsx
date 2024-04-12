@@ -117,7 +117,7 @@ export function CreateProposal() {
                   <div className="flex gap-3">
                     <input
                       type="text"
-                      placeholder="IPFS Uri"
+                      placeholder="IPFS URI"
                       value={ipfsUri}
                       onChange={(e) => setIpfsUri(e.target.value)}
                       className="w-full rounded-xl border-2 border-black bg-gray-100 p-3 shadow-custom dark:border-white dark:bg-dark dark:text-white dark:shadow-custom-dark"
