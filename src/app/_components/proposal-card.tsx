@@ -11,16 +11,7 @@ import { match } from "rustie";
 import { type ProposalState } from "~/types";
 import { type ProposalStakeInfo } from "~/proposals";
 import { assert } from "tsafe";
-
-function from_nano(nano: number | bigint): number {
-  if (typeof nano === "bigint") return Number(nano / 1_000_000_000n);
-  else return nano / 1_000_000_000;
-}
-
-function format_token(nano: number | bigint): string {
-  const amount = from_nano(nano);
-  return amount.toFixed(2);
-}
+import { format_token } from "~/utils";
 
 type ProposalCardProps = {
   proposal: ProposalState;

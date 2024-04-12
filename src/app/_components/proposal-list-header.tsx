@@ -1,7 +1,7 @@
 import { Skeleton } from "./skeleton";
 
-import Link from "next/link";
 import { CreateProposal } from "./create-proposal";
+import { format_token } from "~/utils";
 
 type ProposalListHeaderProps = {
   user_stake_weight: number | null;
@@ -24,8 +24,8 @@ export const ProposalListHeader = (props: ProposalListHeaderProps) => {
 
           {user_stake_weight && (
             <span className="ml-1 text-base font-semibold text-blue-500">
-              {user_stake_weight}
-              <span className="text-xs font-light">COMAI</span>
+              {format_token(user_stake_weight)}
+              <span className="text-xs font-light"> COMAI</span>
             </span>
           )}
         </div>
