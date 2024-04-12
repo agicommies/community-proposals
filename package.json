@@ -21,6 +21,7 @@
     "@trpc/next": "next",
     "@trpc/react-query": "next",
     "@trpc/server": "next",
+    "@uiw/react-markdown-preview": "^5.1.1",
     "date-fns": "^3.6.0",
     "drizzle-orm": "^0.29.4",
     "multiformats": "^13.1.0",
