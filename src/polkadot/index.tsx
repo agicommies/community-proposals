@@ -134,11 +134,7 @@ export const PolkadotProvider: React.FC<PolkadotProviderProps> = ({
             // }
           ).then((results) => {
             // Handle data from custom proposals
-            if (proposals == null) {
-              console.warn("proposals is null"); // Should not happen
-              return;
-            }
-            const new_proposal_list = [...proposals];
+            const new_proposal_list: ProposalState[] = [...proposals_result];
             // For each custom data result, find the proposal with the same id
             // and update its `custom_data` field
             results.filter(is_not_null).forEach((result) => {
