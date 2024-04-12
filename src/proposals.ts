@@ -17,6 +17,7 @@ export async function handle_custom_proposal_data(
     return null;
   }
   const url = build_ipfs_gateway_url(cid);
+  // TODO: render metadata loading failure
 
   const response = await fetch(url);
   const validated = CUSTOM_PROPOSAL_METADATA_SCHEMA.safeParse(

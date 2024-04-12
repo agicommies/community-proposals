@@ -3,8 +3,12 @@ import { z } from "zod";
 
 const URL_SCHEMA = z.string().trim().url();
 
-export function parse_ipfs_uri(uri: string): CID {
-  URL_SCHEMA.parse(uri);
+export function parse_ipfs_uri(uri: string): CID | null {
+  const validated = URL_SCHEMA.safeParse(uri);
+  if (!validated.success) {
+    console.warn(`Invalid IPFS URI ${uri}`, validated.error.issues);
+    return null;
+  }
   const ipfs_prefix = "ipfs://";
   const rest = uri.startsWith(ipfs_prefix)
     ? uri.slice(ipfs_prefix.length)
@@ -23,6 +27,10 @@ async function _test() {
   const cid = parse_ipfs_uri(
     "ipfs://bafkreideif2rljo42bmvuzqurbozhj55pvfkbwak42oadssk2w46y3a4pe",
   );
+  if (cid == null) {
+    console.error("Invalid IPFS URI");
+    return;
+  }
   const url = build_ipfs_gateway_url(cid);
   console.log(`Let's fetch: ${url}`);
   await fetch(url)
