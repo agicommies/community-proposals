@@ -14,9 +14,10 @@ import { Container } from "./container";
 import { type ProposalCardProps } from "./proposal-card";
 import { useState } from "react";
 import { Label } from "./label";
-import { ProposalStakeInfo } from "~/proposals";
+import { type ProposalStakeInfo } from "~/proposals";
 import { bigint_division, format_token } from "~/utils";
 import { assert } from "tsafe";
+import { XMarkIcon } from "@heroicons/react/20/solid";
 
 function handle_favorable_percent(favorable_percent: number) {
   const againstPercentage = 100 - favorable_percent;
@@ -145,12 +146,21 @@ export default function ProposalExpandedCard(props: ProposalCardProps) {
 
         {/* Modal */}
         <div className="fixed inset-0 z-10 w-screen animate-fade-in-down overflow-y-auto">
-          <main className="flex flex-col items-center justify-center dark:bg-light-dark">
-            <div className="my-12 h-full w-full bg-[url(/dots-bg.svg)] bg-repeat py-12 dark:bg-[url(/dots-bg-dark.svg)]">
+          <main className="flex flex-col items-center justify-center">
+            <div className="my-12 h-full w-full bg-repeat py-12 ">
               <Container>
-                <div className="flex gap-3">
-                  <StatusLabel result="Pending" /> {/* TODO: add result */}
-                  <VoteLabel vote={voted} />
+                <div className="flex items-center justify-between">
+                  <div className="flex gap-3">
+                    <StatusLabel result="Pending" /> {/* TODO: add result */}
+                    <VoteLabel vote={voted} />
+                  </div>
+                  <button
+                    type="button"
+                    onClick={toggleModalMenu}
+                    className="rounded-2xl border-2 border-black p-2 transition duration-200 dark:border-white dark:bg-light-dark hover:dark:bg-dark"
+                  >
+                    <XMarkIcon className="h-6 w-6 dark:fill-white" />
+                  </button>
                 </div>
 
                 <div className="mt-6 flex flex-col gap-4 lg:flex-row">
@@ -183,7 +193,7 @@ export default function ProposalExpandedCard(props: ProposalCardProps) {
                             alt="author icon"
                             className="mr-2"
                           />
-                          {proposal.proposer}
+                          {proposal.proposer.slice(0, 26)}...
                           <span className="ml-1 text-xs text-gray-600">
                             | Post Author
                           </span>
