@@ -15,7 +15,7 @@ import {
 import { handle_proposals } from "~/proposals";
 import { get_proposals } from "~/chain_queries";
 import { WalletModal } from "~/app/_components/wallet-modal";
-import type { Proposal, ProposalBody } from "~/types";
+import type { ProposalState } from "~/types";
 
 interface AddVoting {
   vote: boolean;
@@ -38,8 +38,7 @@ interface PolkadotContextType {
   accounts: InjectedAccountWithMeta[];
   selectedAccount: InjectedAccountWithMeta | undefined;
 
-  proposal: Proposal[];
-  isProposalLoading: boolean;
+  proposals: ProposalState[] | null;
 
   handleConnect: () => void;
   addVoting: (args: AddVoting) => void;
@@ -71,8 +70,11 @@ export const PolkadotProvider: React.FC<PolkadotProviderProps> = ({
   const [accounts, setAccounts] = useState<InjectedAccountWithMeta[]>([]);
   const [blockNumber, setBlockNumber] = useState(0);
 
-  const [proposal, setProposal] = useState<Proposal[]>([]);
-  const [isProposalLoading, setIsProposalLoading] = useState(true);
+  const [proposals, setProposals] = useState<ProposalState[] | null>(null);
+
+  const isProposalLoading = () => proposals == null;
+
+  // const [isProposalLoading, setIsProposalLoading] = useState(true);
 
   const [openModal, setOpenModal] = useState(false);
 
@@ -113,40 +115,16 @@ export const PolkadotProvider: React.FC<PolkadotProviderProps> = ({
 
       get_proposals(api)
         .then((proposals) => {
-          const bodies = proposals.map((proposal) => ({ Loading: proposal }));
+          console.log(proposals)
+          setProposals(proposals)
 
-          match(bodies[0] as ProposalBody)({
-            Loading: function () {
-              setIsProposalLoading(true);
-            },
-            Custom: function () {
-              console.log("Custom");
-            },
-            GlobalParams: function (v: null): unknown {
-              return console.log("Global params:", v);
-            },
-            SubnetParams: function (v: {
-              netuid: number;
-              params: null;
-            }): unknown {
-              return console.log("Subnet params:", v);
-            },
-          });
-
-          let updatedProposalsList: unknown = []
-
-          handle_proposals(proposals, (id, body) => {
-            const formattedProposal = {
-              ...proposals[id],
-              content: body
-            }
-            updatedProposalsList.push(formattedProposal)
+          handle_proposals(proposals, (id, new_proposal) => {
+            const new_proposal_list = [...proposals]
+            new_proposal_list[id] = new_proposal
+            setProposals(new_proposal_list)
           }).catch((e) => {
             console.error("Error fetching proposals:", e);
           });
-
-          setProposal(updatedProposalsList)
-          setIsProposalLoading(false)
         })
         .catch((e) => {
           console.error("Error fetching proposals:", e);
@@ -209,8 +187,7 @@ export const PolkadotProvider: React.FC<PolkadotProviderProps> = ({
         blockNumber,
         selectedAccount,
 
-        proposal,
-        isProposalLoading,
+        proposals,
 
         addVoting,
         handleConnect,

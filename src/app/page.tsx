@@ -8,7 +8,9 @@ import { usePolkadot } from "~/polkadot";
 export default function HomePage() {
   const stakedVotes = undefined;
 
-  const { proposal, isProposalLoading } = usePolkadot()
+  const { proposals } = usePolkadot()
+
+  const isProposalsLoading = proposals == null;
 
   return (
     <main className="flex flex-col items-center justify-center dark:bg-light-dark">
@@ -18,11 +20,13 @@ export default function HomePage() {
           <ProposalListHeader stakedVotes={stakedVotes} />
           <div className="py-8 space-y-8">
 
-            {!isProposalLoading &&
-              <ProposalCard proposalsList={proposal} isProposalLoading={isProposalLoading} />
+            {!isProposalsLoading &&
+              proposals?.map((proposal) => {
+                return <ProposalCard key={proposal.id} proposal={proposal} />
+              })
             }
 
-            {isProposalLoading &&
+            {isProposalsLoading &&
               <Card.Root>
                 <Card.Header className="flex-col-reverse">
                   <span className="w-9/12 py-3 bg-gray-700 rounded-lg animate-pulse" />

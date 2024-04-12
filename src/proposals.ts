@@ -3,7 +3,7 @@ import {
   type Proposal,
   type CustomProposalMetadata,
   CUSTOM_PROPOSAL_METADATA_SCHEMA,
-  type ProposalBody,
+  type ProposalState,
 } from "./types";
 import { parse_ipfs_uri, build_ipfs_gateway_url } from "./utils/ipfs";
 
@@ -36,7 +36,7 @@ export async function handle_custom_proposal_data(
 
 export async function handle_proposals(
   proposals: Proposal[],
-  handler: (id: number, proposal_body: ProposalBody) => void,
+  handler: (id: number, proposal_state: ProposalState) => void,
 ) {
   for (const proposal of proposals) {
     // const variant = flatten_enum(proposal.data);
@@ -49,10 +49,14 @@ export async function handle_proposals(
           );
           return;
         }
-        handler(proposal.id, { Custom: { metadata, netuid: null } });
+        const proposal_state: ProposalState = {
+          ...proposal,
+          custom_data: metadata,
+        };
+        handler(proposal.id, proposal_state);
       },
       subnetCustom: async function ({
-        netuid,
+        // netuid,
         data,
       }: {
         netuid: number;
@@ -65,12 +69,11 @@ export async function handle_proposals(
           );
           return;
         }
-        handler(proposal.id, {
-          Custom: {
-            metadata: metadata,
-            netuid: netuid,
-          },
-        });
+        const proposal_state: ProposalState = {
+          ...proposal,
+          custom_data: metadata,
+        };
+        handler(proposal.id, proposal_state);
       },
       globalParams: async function (/*v: unknown*/) {
         // ignore
@@ -81,4 +84,76 @@ export async function handle_proposals(
         },
     });
   }
+}
+
+export function get_proposal_netuid(proposal: Proposal): number | null {
+  return match(proposal.data)({
+    custom: function (/*v: string*/): null {
+      return null;
+    },
+    globalParams: function (/*v: unknown*/): null {
+      return null;
+    },
+    subnetParams: function ({ netuid }): number {
+      return netuid;
+    },
+    subnetCustom: function ({ netuid }): number {
+      return netuid;
+    },
+  });
+}
+
+export function is_proposal_custom(proposal: Proposal): boolean {
+  return match(proposal.data)({
+    custom: function (/*v: string*/): boolean {
+      return true;
+    },
+    globalParams: function (/*v: unknown*/): boolean {
+      return false;
+    },
+    subnetParams: function (/*{ netuid }*/): boolean {
+      return false;
+    },
+    subnetCustom: function (/*{ netuid }*/): boolean {
+      return true;
+    },
+  });
+}
+
+export interface ProposalStakeInfo {
+  stake_for: number;
+  stake_against: number;
+  stake_total: number;
+}
+
+export function compute_votes(
+  stake_map: Map<string, number>,
+  votes_for: string[],
+  votes_against: string[],
+): ProposalStakeInfo {
+  let stake_for = 0;
+  let stake_against = 0;
+  let stake_total = 0;
+
+  for (const vote_addr of votes_for) {
+    const stake = stake_map.get(vote_addr);
+    if (stake == null) {
+      console.error(`Key ${vote_addr} not found in stake map`);
+      continue;
+    }
+    stake_for += stake;
+    stake_total += stake;
+  }
+
+  for (const vote_addr of votes_against) {
+    const stake = stake_map.get(vote_addr);
+    if (stake == null) {
+      console.error(`Key ${vote_addr} not found in stake map`);
+      continue;
+    }
+    stake_against += stake;
+    stake_total += stake;
+  }
+
+  return { stake_for, stake_against, stake_total };
 }

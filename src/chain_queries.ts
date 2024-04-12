@@ -1,5 +1,6 @@
 import { ApiPromise, WsProvider } from "@polkadot/api";
 import { parse_proposal, type Proposal } from "./types";
+import { compute_votes } from "./proposals";
 
 export type DoubleMap<K1, K2, V> = Map<K1, Map<K2, V>>;
 
@@ -122,38 +123,6 @@ export async function get_proposals(api: ApiPromise): Promise<Proposal[]> {
   return proposals;
 }
 
-export function handle_votes(
-  stake_map: Map<string, number>,
-  votes_for: string[],
-  votes_against: string[],
-): { stake_for: number; stake_against: number; stake_total: number } {
-  let stake_for = 0;
-  let stake_against = 0;
-  let stake_total = 0;
-
-  for (const vote_addr of votes_for) {
-    const stake = stake_map.get(vote_addr);
-    if (stake == null) {
-      console.error(`Key ${vote_addr} not found in stake map`);
-      continue;
-    }
-    stake_for += stake;
-    stake_total += stake;
-  }
-
-  for (const vote_addr of votes_against) {
-    const stake = stake_map.get(vote_addr);
-    if (stake == null) {
-      console.error(`Key ${vote_addr} not found in stake map`);
-      continue;
-    }
-    stake_against += stake;
-    stake_total += stake;
-  }
-
-  return { stake_for, stake_against, stake_total };
-}
-
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 async function _test() {
   const ws_endpoint = "wss://testnet-commune-api-node-0.communeai.net";
@@ -172,7 +141,7 @@ async function _test() {
     // }
     console.log(`Proposal #${proposal.id}`, `proposer: ${proposal.proposer}`);
 
-    const { stake_for, stake_against, stake_total } = handle_votes(
+    const { stake_for, stake_against, stake_total } = compute_votes(
       stake_map_total,
       proposal.votesFor,
       proposal.votesAgainst,

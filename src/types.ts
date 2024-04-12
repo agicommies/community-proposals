@@ -1,22 +1,17 @@
 import type { Codec } from "@polkadot/types/types";
 import type { Enum, Tagged } from "rustie";
+import { assert, type Extends } from "tsafe";
 import { z } from "zod";
+import type { ProposalStakeInfo } from "~/proposals";
+
 export type SS58Address = Tagged<string, "SS58Address">;
 
 // == Proposal Body on Interface ==
 
-export type ProposalBody = Enum<{
-  Loading: Proposal;
-  Custom: {
-    metadata: CustomProposalMetadata;
-    netuid: number | null;
-  };
-  GlobalParams: null;
-  SubnetParams: {
-    netuid: number;
-    params: null;
-  };
-}> & { vote_data?: unknown };
+export interface ProposalState extends Proposal {
+  stake_data?: ProposalStakeInfo;
+  custom_data?: CustomProposalMetadata;
+}
 
 // == Custom Proposal Extra Data ==
 
@@ -140,8 +135,6 @@ export function parse_proposal(value_raw: Codec): Proposal | null {
     return validated.data;
   }
 }
-
-import { assert, type Extends } from "tsafe";
 
 // eslint-disable-next-line @typescript-eslint/no-unsafe-call
 assert<Extends<z.infer<typeof PROPOSAL_SHEMA>, Proposal>>();
