@@ -10,14 +10,14 @@ import { assert } from "tsafe";
 
 const DEBUG = process.env.NODE_ENV === "development";
 
-const sum = (arr: Iterable<number>) =>
-  Array.from(arr).reduce((a, b) => a + b, 0);
+const sum = (arr: Iterable<bigint>) =>
+  Array.from(arr).reduce((a, b) => a + b, 0n);
 
 export interface ProposalStakeInfo {
-  stake_for: number;
-  stake_against: number;
-  stake_voted: number;
-  stake_total: number;
+  stake_for: bigint;
+  stake_against: bigint;
+  stake_voted: bigint;
+  stake_total: bigint;
 }
 
 export async function handle_custom_proposal_data(
@@ -136,14 +136,14 @@ export function is_proposal_custom(proposal: Proposal): boolean {
 }
 
 export function compute_votes(
-  stake_map: Map<string, number>,
+  stake_map: Map<string, bigint>,
   votes_for: string[],
   votes_against: string[],
-  stake_total?: number,
+  stake_total?: bigint,
 ): ProposalStakeInfo {
-  let stake_for = 0;
-  let stake_against = 0;
-  let stake_voted = 0;
+  let stake_for = 0n;
+  let stake_against = 0n;
+  let stake_voted = 0n;
 
   if (stake_total == null) {
     stake_total = sum(stake_map.values());

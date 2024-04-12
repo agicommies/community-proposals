@@ -12,11 +12,12 @@ import { type ProposalState } from "~/types";
 import { type ProposalStakeInfo } from "~/proposals";
 import { assert } from "tsafe";
 
-function from_nano(nano: number): number {
-  return nano / 1_000_000_000;
+function from_nano(nano: number | bigint): number {
+  if (typeof nano === "bigint") return Number(nano / 1_000_000_000n);
+  else return nano / 1_000_000_000;
 }
 
-function format_token(nano: number): string {
+function format_token(nano: number | bigint): string {
   const amount = from_nano(nano);
   return amount.toFixed(2);
 }
@@ -113,20 +114,27 @@ export const ProposalCard = (props: ProposalCardProps) => {
     );
   }
 
+  function bigint_division(a: bigint, b: bigint, precision = 8n): number {
+    if (b == 0n) return (1/0);
+    const base = 10n ** precision;
+    const base_num = Number(base);
+    a = a * base;
+    return Number((a * base) / b) / base_num;
+  }
+
   function render_favorable_percent(stake_info: ProposalStakeInfo) {
-    console.log(stake_info);
     const { stake_for, stake_against, stake_voted } = stake_info;
     assert(
-      Math.abs(stake_for + stake_against - stake_voted) <= 1.0,
+      stake_for + stake_against == stake_voted,
       "stake_for + stake_against != stake_voted",
     );
-    const favorable_percent = (100 * stake_for) / stake_voted;
+    const favorable_percent = bigint_division(stake_for, stake_voted) * 100;
     return handle_favorable_percent(favorable_percent);
   }
 
   function render_quorum_percent(stake_info: ProposalStakeInfo) {
     const { stake_voted, stake_total } = stake_info;
-    const quorum_percent = (100 * stake_voted) / stake_total;
+    const quorum_percent = bigint_division(stake_voted, stake_total) * 100;
     return (
       <span className="text-yellow-600">
         {" ("}
