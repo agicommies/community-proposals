@@ -2,14 +2,12 @@ import type { Codec } from "@polkadot/types/types";
 import type { Enum, Tagged } from "rustie";
 import { assert, type Extends } from "tsafe";
 import { z } from "zod";
-import type { ProposalStakeInfo } from "~/proposals";
 
 export type SS58Address = Tagged<string, "SS58Address">;
 
 // == Proposal Body on Interface ==
 
 export interface ProposalState extends Proposal {
-  stake_data?: ProposalStakeInfo;
   custom_data?: CustomProposalMetadata;
 }
 

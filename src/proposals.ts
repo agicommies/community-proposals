@@ -6,6 +6,19 @@ import {
   type ProposalState,
 } from "./types";
 import { parse_ipfs_uri, build_ipfs_gateway_url } from "./utils/ipfs";
+import { assert } from "tsafe";
+
+const DEBUG = process.env.NODE_ENV === "development";
+
+const sum = (arr: Iterable<number>) =>
+  Array.from(arr).reduce((a, b) => a + b, 0);
+
+export interface ProposalStakeInfo {
+  stake_for: number;
+  stake_against: number;
+  stake_voted: number;
+  stake_total: number;
+}
 
 export async function handle_custom_proposal_data(
   proposal: Proposal,
@@ -57,7 +70,7 @@ export function handle_custom_proposals(
         if (handler != null) {
           handler(proposal.id, proposal_state);
         }
-        return {id: proposal.id, custom_data: metadata};
+        return { id: proposal.id, custom_data: metadata };
       },
       subnetCustom: async function ({ data }) {
         const metadata = await handle_custom_proposal_data(proposal, data);
@@ -74,7 +87,7 @@ export function handle_custom_proposals(
         if (handler != null) {
           handler(proposal.id, proposal_state);
         }
-        return {id: proposal.id, custom_data: metadata};
+        return { id: proposal.id, custom_data: metadata };
       },
       globalParams: async function () {
         return null;
@@ -122,20 +135,22 @@ export function is_proposal_custom(proposal: Proposal): boolean {
   });
 }
 
-export interface ProposalStakeInfo {
-  stake_for: number;
-  stake_against: number;
-  stake_total: number;
-}
-
 export function compute_votes(
   stake_map: Map<string, number>,
   votes_for: string[],
   votes_against: string[],
+  stake_total?: number,
 ): ProposalStakeInfo {
   let stake_for = 0;
   let stake_against = 0;
-  let stake_total = 0;
+  let stake_voted = 0;
+
+  if (stake_total == null) {
+    stake_total = sum(stake_map.values());
+  } else if (DEBUG) {
+    const stake_total_check = sum(stake_map.values());
+    assert(stake_total == stake_total_check && false, "stake_total mismatch");
+  }
 
   for (const vote_addr of votes_for) {
     const stake = stake_map.get(vote_addr);
@@ -144,7 +159,7 @@ export function compute_votes(
       continue;
     }
     stake_for += stake;
-    stake_total += stake;
+    stake_voted += stake;
   }
 
   for (const vote_addr of votes_against) {
@@ -154,8 +169,8 @@ export function compute_votes(
       continue;
     }
     stake_against += stake;
-    stake_total += stake;
+    stake_voted += stake;
   }
 
-  return { stake_for, stake_against, stake_total };
+  return { stake_for, stake_against, stake_voted, stake_total };
 }

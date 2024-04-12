@@ -11,7 +11,7 @@ import {
 } from "@polkadot/extension-inject/types";
 
 import { WalletModal } from "~/app/_components/wallet-modal";
-import { get_proposals } from "~/chain_queries";
+import { type StakeData, get_all_stake_out, get_proposals } from "~/chain_queries";
 import { handle_custom_proposals } from "~/proposals";
 import type { ProposalState } from "~/types";
 import { is_not_null } from "~/utils";
@@ -38,6 +38,7 @@ interface PolkadotContextType {
   selectedAccount: InjectedAccountWithMeta | undefined;
 
   proposals: ProposalState[] | null;
+  stake_data: StakeData | null;
 
   handleConnect: () => void;
   addVoting: (args: AddVoting) => void;
@@ -70,10 +71,7 @@ export const PolkadotProvider: React.FC<PolkadotProviderProps> = ({
   const [blockNumber, setBlockNumber] = useState(0);
 
   const [proposals, setProposals] = useState<ProposalState[] | null>(null);
-
-  const isProposalLoading = () => proposals == null;
-
-  // const [isProposalLoading, setIsProposalLoading] = useState(true);
+  const [stakeData, setStakeData] = useState<StakeData | null>(null);
 
   const [openModal, setOpenModal] = useState(false);
 
@@ -102,19 +100,25 @@ export const PolkadotProvider: React.FC<PolkadotProviderProps> = ({
   }, [wsEndpoint]);
 
   useEffect(() => {
-    console.log(wsEndpoint, "useEffect do wsEndpoint");
+    // console.log("useEffect for wsEndpoint", wsEndpoint); // DEBUG
   }, [wsEndpoint]);
 
   useEffect(() => {
-    console.log(api, "useEffect da api");
+    // console.log("useEffect for api", api); // DEBUG
     if (api) {
       void api.rpc.chain.subscribeNewHeads((header) => {
         setBlockNumber(header.number.toNumber());
       });
 
+      get_all_stake_out(api).then((stake_data_result) => {
+        setStakeData(stake_data_result);
+        console.log("got stake map");
+      }).catch((e) => {
+        console.error("Error fetching stake out map", e);
+      });
+
       get_proposals(api)
         .then((proposals_result) => {
-          console.log(proposals_result);
           setProposals(proposals_result);
 
           handle_custom_proposals(proposals_result,
@@ -128,10 +132,9 @@ export const PolkadotProvider: React.FC<PolkadotProviderProps> = ({
             //   setProposals(new_proposal_list);
             // }
           ).then((results) => {
-            console.log(results);
             // Handle data from custom proposals
             if (proposals == null) {
-              console.error("proposals is null"); // Should not happen
+              console.warn("proposals is null"); // Should not happen
               return;
             }
             const new_proposal_list = [...proposals];
@@ -140,7 +143,6 @@ export const PolkadotProvider: React.FC<PolkadotProviderProps> = ({
             results.filter(is_not_null).forEach((result) => {
               const { id, custom_data } = result;
               const proposal = new_proposal_list.find((p) => p.id === id);
-              console.log(`Updating proposal ${id} with custom data`, custom_data);
               if (proposal == null) {
                 console.error(`Proposal ${id} not found`);
                 return;
@@ -164,6 +166,7 @@ export const PolkadotProvider: React.FC<PolkadotProviderProps> = ({
     if (!polkadotApi.web3Enable || !polkadotApi.web3Accounts) return;
     const extensions = await polkadotApi.web3Enable("Community Validator");
     if (!extensions) {
+      // TODO: this seems agressive?
       throw Error("NO_EXTENSION_FOUND");
     }
     const allAccounts = await polkadotApi.web3Accounts();
@@ -216,6 +219,7 @@ export const PolkadotProvider: React.FC<PolkadotProviderProps> = ({
         selectedAccount,
 
         proposals,
+        stake_data: stakeData,
 
         addVoting,
         handleConnect,

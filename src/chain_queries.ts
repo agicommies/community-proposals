@@ -4,7 +4,33 @@ import { compute_votes } from "./proposals";
 
 export type DoubleMap<K1, K2, V> = Map<K1, Map<K2, V>>;
 
-export async function get_all_stake(
+export interface StakeData {
+  block_number: number;
+  block_hash_hex: string;
+  stake_out: {
+    total: number;
+    per_addr: Map<string, number>;
+    per_net: Map<number, number>;
+    per_addr_per_net: Map<number, Map<string, number>>;
+  };
+}
+
+export async function use_last_block(api: ApiPromise) {
+  const block_header = await api.rpc.chain.getHeader();
+  const block_number = block_header.number.toNumber();
+  const block_hash = block_header.hash;
+  const block_hash_hex = block_hash.toHex();
+  const api_at_block = await api.at(block_header.hash);
+  return {
+    block_header,
+    block_number,
+    block_hash,
+    block_hash_hex,
+    api_at_block,
+  };
+}
+
+export async function __get_all_stake(
   api: ApiPromise,
 ): Promise<Map<string, bigint>> {
   const stake_items = await api.query.subspaceModule?.stake?.entries();
@@ -48,18 +74,27 @@ export async function get_all_stake(
   return stake_map;
 }
 
-export async function get_all_stake_out(api: ApiPromise): Promise<{
-  stake_map_total: Map<string, number>;
-  stake_map_per_net: DoubleMap<number, string, number>;
-}> {
-  const stake_to_items = await api.query.subspaceModule?.stakeTo?.entries();
-  if (stake_to_items == null)
+export async function get_all_stake_out(api: ApiPromise) {
+  const { api_at_block, block_number, block_hash_hex } =
+    await use_last_block(api);
+  console.log(`Querying StakeTo at block ${block_number}`);
+  // TODO: cache query for specific block
+
+  const stake_to_query =
+    await api_at_block.query.subspaceModule?.stakeTo?.entries();
+  if (stake_to_query == null)
     throw new Error("Query to stakeTo returned nullish");
 
-  const stake_map_per_net = new Map<number, Map<string, number>>();
-  const stake_map_total = new Map<string, number>();
+  // Total stake
+  let total = 0;
+  // Total stake per address
+  const per_addr = new Map<string, number>();
+  // Total stake per netuid
+  const per_net = new Map<number, number>();
+  // Total stake per address per netuid
+  const per_addr_per_net = new Map<number, Map<string, number>>();
 
-  for (const stake_to_item of stake_to_items) {
+  for (const stake_to_item of stake_to_query) {
     if (!Array.isArray(stake_to_item) || stake_to_item.length != 2)
       throw new Error(`Invalid stakeTo item '${stake_to_item.toString()}'`);
     const [key_raw, value_raw] = stake_to_item;
@@ -90,19 +125,32 @@ export async function get_all_stake_out(api: ApiPromise): Promise<{
           "Invalid stakeTo storage value item, it's not a number",
         );
 
-      const old_total = stake_map_total.get(from_addr) ?? 0;
-      stake_map_total.set(from_addr, old_total + staked);
+      // Add stake to total
+      total += staked;
 
-      const stake_map_for_net =
-        stake_map_per_net.get(netuid) ?? new Map<string, number>();
-      const old_total_for_net = stake_map_for_net.get(from_addr) ?? 0;
-      stake_map_for_net.set(from_addr, old_total_for_net + staked);
+      // Add stake to (addr => stake) map
+      const old_total = per_addr.get(from_addr) ?? 0;
+      per_addr.set(from_addr, old_total + staked);
+
+      // Add stake to (netuid => stake) map
+      const old_total_for_net = per_net.get(netuid) ?? 0;
+      per_net.set(netuid, old_total_for_net + staked);
+
+      // Add stake to (netuid => addr => stake) map
+      const map_net =
+        per_addr_per_net.get(netuid) ?? new Map<string, number>();
+      const old_total_addr_net = map_net.get(from_addr) ?? 0;
+      map_net.set(from_addr, old_total_addr_net + staked);
     }
 
     // await do_repl({ api, netuid, from_addr, value_raw }); break
   }
 
-  return { stake_map_total, stake_map_per_net };
+  return {
+    block_number,
+    block_hash_hex,
+    stake_out: { total, per_addr, per_net, per_addr_per_net },
+  };
 }
 
 export async function get_proposals(api: ApiPromise): Promise<Proposal[]> {
@@ -133,7 +181,7 @@ async function _test() {
   const proposals = await get_proposals(api);
   console.log(proposals);
 
-  const { stake_map_total } = await get_all_stake_out(api);
+  const stake_data = await get_all_stake_out(api);
 
   for (const proposal of proposals) {
     // if (proposal.netuid != null) {
@@ -141,8 +189,8 @@ async function _test() {
     // }
     console.log(`Proposal #${proposal.id}`, `proposer: ${proposal.proposer}`);
 
-    const { stake_for, stake_against, stake_total } = compute_votes(
-      stake_map_total,
+    const { stake_for, stake_against, stake_voted: stake_total } = compute_votes(
+      stake_data.stake_out.per_addr,
       proposal.votesFor,
       proposal.votesAgainst,
     );

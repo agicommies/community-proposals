@@ -9,51 +9,56 @@ import { Card } from "./card";
 import { Skeleton } from "./skeleton";
 import { match } from "rustie";
 import { type ProposalState } from "~/types";
-import { type ProposalStakeInfo, is_proposal_custom } from "~/proposals";
+import { type ProposalStakeInfo } from "~/proposals";
+import { assert } from "tsafe";
 
-// type TProposalResponse = Array<Proposal> & Array<{
-//   data: { custom: string },
-//   expirationBlock: number //TODO: suposed to be converted in date someway (represents when is expected to be ended)
-//   finalizationBlock: number | null //TODO: suposed to be converted in date someway (represents when it have been finilized)
-//   id: number,
-//   proposalCost: number
-//   proposer: string, // author
-//   status: "Pending" //unknowed types of status
-//   votesAgainst: Array<string> //The strings inside the array represents the "wallet id" from everyone that have voted against this proposal
-//   votesFor: Array<string> //The strings inside the array represents the "wallet id" from everyone that have voted for this proposal
-// }>
+function from_nano(nano: number): number {
+  return nano / 1_000_000_000;
+}
+
+function format_token(nano: number): string {
+  const amount = from_nano(nano);
+  return amount.toFixed(2);
+}
 
 type ProposalCardProps = {
   proposal: ProposalState;
+  stake_info: ProposalStakeInfo | null;
 };
 
-const handleRelativeTime = (
+const handle_relative_time = (
   startDate: Date | string,
   endDate: Date | string | null,
 ) => {
-  if (endDate)
+  if (endDate) {
     return <span>Ended {intlFormatDistance(endDate, new Date())}</span>;
+  }
   return <span>Started {intlFormatDistance(startDate, new Date())}</span>;
 };
 
 export const ProposalCard = (props: ProposalCardProps) => {
-  const { proposal } = props;
+  const { proposal, stake_info } = props;
   const proposalId = proposal.id;
 
-  const isStakeLoading = proposal.stake_data == null;
-  const isCustomProposal = is_proposal_custom(proposal);
+  const is_stake_loading = stake_info == null;
+  // const is_custom_proposal = is_proposal_custom(proposal);
 
-  type ProposalCardFields = { title: string | null; body: string | null; netuid: number | 'GLOBAL' };
+  type ProposalCardFields = {
+    title: string | null;
+    body: string | null;
+    netuid: number | "GLOBAL";
+  };
 
+  // TODO: use these variables to render the proposal card
   const { title, body, netuid } = match(proposal.data)({
     custom: function (/*v: string*/): ProposalCardFields {
       return {
         title: proposal?.custom_data?.title ?? null,
         body: proposal?.custom_data?.title ?? null,
-        netuid: 'GLOBAL',
+        netuid: "GLOBAL",
       };
     },
-    subnetCustom: function ( { netuid, /*data*/ }): ProposalCardFields {
+    subnetCustom: function ({ netuid /*data*/ }): ProposalCardFields {
       return {
         title: `Custom proposal #${proposalId} for subnet ${netuid}`,
         body: `To be implemented :)`,
@@ -64,10 +69,10 @@ export const ProposalCard = (props: ProposalCardProps) => {
       return {
         title: `Parameters proposal #${proposalId} for global network`,
         body: `To be implemented :)`,
-        netuid: 'GLOBAL',
+        netuid: "GLOBAL",
       };
     },
-    subnetParams: function ({ netuid, /*params*/ }): ProposalCardFields {
+    subnetParams: function ({ netuid /*params*/ }): ProposalCardFields {
       return {
         title: `Parameters proposal #${proposalId} for subnet ${netuid}`,
         body: `To be implemented :)`,
@@ -76,63 +81,61 @@ export const ProposalCard = (props: ProposalCardProps) => {
     },
   });
 
-  const handlePercentage = (favorablePercentage: number) => {
-    const againstPercentage = 100 - favorablePercentage;
-
-    if (againstPercentage > favorablePercentage) {
+  function handle_favorable_percent(favorable_percent: number) {
+    const againstPercentage = 100 - favorable_percent;
+    // const winning = favorable_percent >= 50;
+    if (Number.isNaN(favorable_percent)) {
       return (
-        <Label className="flex w-1/2 items-center justify-center gap-1.5 bg-gray-100 py-1.5 text-center text-red-500 md:w-auto lg:text-left dark:bg-light-dark">
-          {againstPercentage?.toFixed(0)}%
-          <Image
-            src={"/against-down.svg"}
-            height={14}
-            width={10}
-            alt="against arrow down icon"
-          />
-        </Label>
-      );
-    }
-
-    if (againstPercentage < favorablePercentage) {
-      return (
-        <Label className=" flex w-1/2 items-center justify-center gap-1.5 bg-gray-100 py-1.5 text-center text-green-500 md:w-auto lg:text-left dark:bg-light-dark">
-          {favorablePercentage?.toFixed(0)}%
-          <Image
-            src={"/favorable-up.svg"}
-            height={14}
-            width={10}
-            alt="favorable arrow up icon"
-          />
+        <Label className="w-1/2 bg-gray-100 py-1.5 text-center text-yellow-500 md:w-auto lg:text-left dark:bg-light-dark">
+          – %
         </Label>
       );
     }
     return (
-      <Label className="w-1/2 bg-gray-100 py-1.5 text-center text-yellow-500 md:w-auto lg:text-left dark:bg-light-dark">
-        {favorablePercentage?.toFixed(0)}% -
+      // TODO: render red-ish label if losing and green-ish label if winning
+      <Label className="flex w-1/2 items-center justify-center gap-1.5 bg-gray-100 py-1.5 text-center md:w-auto lg:text-left dark:bg-light-dark">
+        <span className="text-green-500">{favorable_percent?.toFixed(0)}%</span>
+        <Image
+          src={"/favorable-up.svg"}
+          height={14}
+          width={10}
+          alt="favorable arrow up icon"
+        />
+        {" / "}
+        <span className="text-red-500"> {againstPercentage?.toFixed(0)}% </span>
+        <Image
+          src={"/against-down.svg"}
+          height={14}
+          width={10}
+          alt="against arrow down icon"
+        />
       </Label>
     );
-  };
-
-  function from_nano(nano: number): number {
-    return nano / 1_000_000_000;
   }
 
-  function format_token(nano: number): string {
-    const amount = from_nano(nano);
-    return amount.toFixed(2);
+  function render_favorable_percent(stake_info: ProposalStakeInfo) {
+    console.log(stake_info);
+    const { stake_for, stake_against, stake_voted } = stake_info;
+    assert(
+      Math.abs(stake_for + stake_against - stake_voted) <= 1.0,
+      "stake_for + stake_against != stake_voted",
+    );
+    const favorable_percent = (100 * stake_for) / stake_voted;
+    return handle_favorable_percent(favorable_percent);
   }
 
-  function handle_stake_info(stake_info: ProposalStakeInfo) {
-    const { stake_for, stake_against, stake_total } = stake_info;
-    const is_favorable = stake_for >= stake_against;
-    const favorable_percentage = 100 * stake_for / stake_total;
-    handlePercentage(favorable_percentage);
+  function render_quorum_percent(stake_info: ProposalStakeInfo) {
+    const { stake_voted, stake_total } = stake_info;
+    const quorum_percent = (100 * stake_voted) / stake_total;
+    return (
+      <span className="text-yellow-600">
+        {" ("}
+        {quorum_percent.toFixed(2)} %{")"}
+      </span>
+    );
   }
 
   const isProposalLoading = false;
-  const totalStake = 10000;
-  const isFavorable = true;
-  const favorablePercentage = 100;
   const voted = "FAVORABLE";
 
   return (
@@ -146,8 +149,8 @@ export const ProposalCard = (props: ProposalCardProps) => {
         {isProposalLoading && <Skeleton className="w-9/12 py-3 " />}
         {!isProposalLoading && (
           <div className="mb-2 flex min-w-fit flex-row-reverse gap-2 md:mb-0 md:ml-auto md:flex-row">
-            {!isStakeLoading && <VoteLabel vote={voted as TVote} />}
-            {isStakeLoading && (
+            {!is_stake_loading && <VoteLabel vote={voted as TVote} />}
+            {is_stake_loading && (
               <span className="flex w-[7rem] animate-pulse rounded-3xl bg-gray-700 py-3.5" />
             )}
             <StatusLabel result={proposal.status as TProposalStatus} />
@@ -195,36 +198,38 @@ export const ProposalCard = (props: ProposalCardProps) => {
           )}
 
           <div className="center mx-auto ml-auto mt-4 flex w-full flex-col-reverse gap-2 md:mt-0 md:flex-row md:justify-end">
-            {isStakeLoading && (
+            {!stake_info && (
               <div className="flex w-full items-center space-x-2 md:justify-end">
                 <span className="flex w-full animate-pulse rounded-3xl bg-gray-700 py-3.5 md:w-2/5 lg:w-3/12" />
               </div>
             )}
-            {!isStakeLoading && (
+            {stake_info && (
               <div className="flex w-full items-center space-x-2 md:w-auto">
                 {/* <ResultLabel
                         result={proposal?.proposalResult as TProposalResult}
                       /> */}
-                {handlePercentage(favorablePercentage)}
+                {render_favorable_percent(stake_info)}
               </div>
             )}
 
-            {isStakeLoading && (
+            {!stake_info && (
               <div className="w-full text-center md:w-4/5">
                 <span className="flex w-full animate-pulse rounded-3xl bg-gray-700 py-3.5" />
               </div>
             )}
 
-            {!isStakeLoading && (
+            {stake_info && (
               <Label className="w-full rounded-3xl bg-gray-100 py-1.5 text-center font-medium md:w-auto dark:bg-light-dark">
                 Total staked:
                 <span className="font-bold text-blue-500">
                   {" "}
-                  {totalStake}
+                  {format_token(stake_info.stake_voted)}
                 </span>
                 <span className="text-xs font-extralight text-blue-500">
+                  {" "}
                   COMAI
                 </span>
+                {render_quorum_percent(stake_info)}
               </Label>
             )}
           </div>

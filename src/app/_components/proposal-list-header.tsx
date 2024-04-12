@@ -1,41 +1,48 @@
 import { Skeleton } from "./skeleton";
 
 type ProposalListHeaderProps = {
-  stakedVotes?: string | number
-}
+  user_stake_weight: number | null;
+};
 
 export const ProposalListHeader = (props: ProposalListHeaderProps) => {
-  const { stakedVotes } = props;
+  const { user_stake_weight } = props;
   return (
-    <div className="flex flex-col items-center justify-between w-full gap-6 lg:flex-row">
+    <div className="flex w-full flex-col items-center justify-between gap-6 lg:flex-row">
       <h2 className="text-4xl font-semibold dark:text-white">Proposals</h2>
-      <div className="flex flex-col items-center w-full space-y-4 lg:space-y-0 lg:space-x-3 lg:divide-x lg:flex-row">
-        <div className="flex justify-center w-full lg:items-end lg:flex-col">
-          <span className="text-base font-medium text-black dark:text-white">Your total staked votes:</span>
+      <div className="flex w-full flex-col items-center space-y-4 lg:flex-row lg:space-x-3 lg:space-y-0 lg:divide-x">
+        <div className="flex w-full justify-center lg:flex-col lg:items-end">
+          <span className="text-base font-medium text-black dark:text-white">
+            Your total staked balance:
+          </span>
 
-          {!stakedVotes &&
-            <Skeleton className="w-1/5 py-2 ml-2 lg:w-2/5 md:mt-1" />
-          }
+          {!user_stake_weight && (
+            <Skeleton className="ml-2 w-1/5 py-2 md:mt-1 lg:w-2/5" />
+          )}
 
-          {stakedVotes &&
+          {user_stake_weight && (
             <span className="ml-1 text-base font-semibold text-blue-500">
-              {stakedVotes}
+              {user_stake_weight}
               <span className="text-xs font-light">COMAI</span>
             </span>
-          }
-
+          )}
         </div>
 
-        <div className="flex flex-row-reverse justify-center w-full gap-4 lg:gap-0 lg:flex-row lg:pl-3 lg:w-auto">
-          <input className="w-8/12 px-4 py-2 bg-white border-2 border-black lg:mr-3 lg:w-auto dark:border-white dark:bg-light-dark dark:text-white rounded-xl dark:shadow-custom-dark shadow-custom dark:placeholder:text-white placeholder:text-black" placeholder="Search"></input>
-          <button className="w-4/12 px-4 border-2 border-black lg:w-auto dark:border-white dark:bg-light-dark rounded-xl dark:text-white dark:shadow-custom-dark shadow-custom">Filter</button>
+        <div className="flex w-full flex-row-reverse justify-center gap-4 lg:w-auto lg:flex-row lg:gap-0 lg:pl-3">
+          <input
+            className="w-8/12 rounded-xl border-2 border-black bg-white px-4 py-2 shadow-custom placeholder:text-black lg:mr-3 lg:w-auto dark:border-white dark:bg-light-dark dark:text-white dark:shadow-custom-dark dark:placeholder:text-white"
+            placeholder="Search"
+          ></input>
+          <button className="w-4/12 rounded-xl border-2 border-black px-4 shadow-custom lg:w-auto dark:border-white dark:bg-light-dark dark:text-white dark:shadow-custom-dark">
+            Filter
+          </button>
         </div>
 
-        <div className="flex w-full lg:pl-3 lg:w-auto min-w-max">
-          <button className="w-full px-4 py-2 text-blue-500 border-2 border-blue-500 lg:w-auto min-w-auto rounded-xl dark:bg-light-dark shadow-custom-blue">New proposal</button>
+        <div className="flex w-full min-w-max lg:w-auto lg:pl-3">
+          <button className="min-w-auto w-full rounded-xl border-2 border-blue-500 px-4 py-2 text-blue-500 shadow-custom-blue lg:w-auto dark:bg-light-dark">
+            New proposal
+          </button>
         </div>
       </div>
     </div>
-  )
-}
-
+  );
+};
