@@ -124,31 +124,29 @@ export default function ProposalExpandedCard(props: ProposalCardProps) {
 
                 <div className="mt-6 flex flex-col gap-4 lg:flex-row">
                   <Card.Root className="w-full lg:w-8/12">
-                    {proposal.custom_data && (
-                      <>
-                        <Card.Header>
-                          {title && (
-                            <h3 className="text-base font-semibold">{title}</h3>
-                          )}
-                          {!title && <Skeleton className="w-8/12 py-3" />}
-                        </Card.Header>
-                        <Card.Body>
-                          {body && (
-                            <div
-                              className="rounded-xl p-3 dark:bg-black/20"
-                              data-color-mode={
-                                theme === "dark" ? "dark" : "light"
-                              }
-                            >
-                              <MarkdownPreview source={body} />
-                            </div>
-                          )}
-                          {!body && (
-                            <Skeleton className="w-full rounded-xl py-3" />
-                          )}
-                        </Card.Body>
-                      </>
-                    )}
+                    <>
+                      <Card.Header>
+                        {title && (
+                          <h3 className="text-base font-semibold">{title}</h3>
+                        )}
+                        {!title && <Skeleton className="w-8/12 py-3" />}
+                      </Card.Header>
+                      <Card.Body>
+                        {body != null && (
+                          <div
+                            className="rounded-xl p-3 dark:bg-black/20"
+                            data-color-mode={
+                              theme === "dark" ? "dark" : "light"
+                            }
+                          >
+                            <MarkdownPreview source={body} />
+                          </div>
+                        )}
+                        {body == null && ( 
+                          <Skeleton className="w-full rounded-xl py-3" />
+                        )}
+                      </Card.Body>
+                    </>
                   </Card.Root>
 
                   <div className="w-full space-y-6 lg:w-4/12">

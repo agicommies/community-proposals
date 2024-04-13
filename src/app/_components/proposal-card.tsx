@@ -86,11 +86,9 @@ export const ProposalCard = (props: ProposalCardProps) => {
               <Label className="w-full rounded-3xl bg-gray-100 py-1.5 text-center font-medium md:w-auto dark:bg-light-dark">
                 Total staked:
                 <span className="font-bold text-blue-500">
-                  {" "}
                   {format_token(stake_info.stake_voted)}
                 </span>
                 <span className="text-xs font-extralight text-blue-500">
-                  {" "}
                   COMAI
                 </span>
                 {render_quorum_percent(stake_info)}
