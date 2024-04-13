@@ -119,6 +119,7 @@ export function CreateProposal() {
                       type="text"
                       placeholder="IPFS URI"
                       value={ipfsUri}
+                      disabled={true}
                       onChange={(e) => setIpfsUri(e.target.value)}
                       className="w-full rounded-xl border-2 border-gray-500 bg-gray-100 p-3 shadow-custom-gray dark:bg-dark dark:text-white"
                     />
@@ -150,6 +151,22 @@ export function CreateProposal() {
                     Comming Soon
                   </button>
                   <div className="my-2 rounded-xl bg-gray-500 p-0.5 dark:bg-dark"></div>
+
+                  <div className="flex flex-wrap items-center gap-1 text-white">
+                    <div className="flex items-center gap-1">
+                      <InformationCircleIcon className="h-6 w-6 fill-blue-500" />
+                      <span>in construction...</span>
+                    </div>
+                    <span>
+                      <Link
+                        href="https://mirror.xyz/0xD80E194aBe2d8084fAecCFfd72877e63F5822Fc5/FUvj1g9rPyVm8Ii_qLNu-IbRQPiCHkfZDLAmlP00M1Q"
+                        className="text-blue-500 hover:underline"
+                        target="_blank"
+                      >
+                        check how to create a proposal with the CLI tool
+                      </Link>
+                    </span>
+                  </div>
                   {/* Accordion */}
                   <div className="rounded-xl border-2 p-1 ">
                     <button
@@ -164,16 +181,6 @@ export function CreateProposal() {
                     {accordionOpen && (
                       <div className="flex animate-fade-in-down flex-col gap-3">
                         <div className="flex flex-col gap-3 rounded-xl p-3 ">
-                          <div className="flex items-center gap-1">
-                            <InformationCircleIcon className="h-6 w-6 fill-blue-500" />
-                            <Link
-                              href="https://mirror.xyz/0xD80E194aBe2d8084fAecCFfd72877e63F5822Fc5/FUvj1g9rPyVm8Ii_qLNu-IbRQPiCHkfZDLAmlP00M1Q"
-                              className="text-blue-500 hover:underline"
-                              target="_blank"
-                            >
-                              Check how to create a proposal
-                            </Link>
-                          </div>
                           <div className="flex flex-col">
                             <div className="flex items-center justify-start gap-1">
                               <button
