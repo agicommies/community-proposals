@@ -38,20 +38,26 @@ export const ProposalCard = (props: ProposalCardProps) => {
     netuid: number | "GLOBAL";
   };
 
-  const params_to_bullets = (params: Record<string, unknown>) => {
-    const bullets = [];
-    for (const [key, value] of Object.entries(params)) {
-      if (typeof value === "string" || typeof value === "number") {
-        bullets.push(`- ${param_name_to_display_name(key)}: ${value}`);
-      } else {
-        console.error(`Unknown value type for param '${key}'}`);
-        bullets.push(`- ${param_name_to_display_name(key)}: ???`);
-      }
-    }
-    return bullets.join("\n") + "\n";
+  const param_name_to_display_name = (paramName: string): string => {
+    return paramName
+      .replace(/_/g, " ")
+      .replace(/\b\w/g, (l) => l.toUpperCase());
   };
 
-  // TODO: use these variables to render the proposal card
+  const params_to_markdown = (params: Record<string, unknown>): string => {
+    const items = [];
+    for (const [key, value] of Object.entries(params)) {
+      const label = `**${param_name_to_display_name(key).toUpperCase()}**`;
+      const formattedValue =
+        typeof value === "string" || typeof value === "number"
+          ? `\`${value}\``
+          : "`???`";
+
+      items.push(`${label}: ${formattedValue}`);
+    }
+    return items.join(" | ") + "\n";
+  };
+
   const proposal_info = match(proposal.data)({
     custom: function (/*v: string*/): ProposalCardFields {
       return {
@@ -70,14 +76,14 @@ export const ProposalCard = (props: ProposalCardProps) => {
     globalParams: function (params): ProposalCardFields {
       return {
         title: `Parameters proposal #${proposalId} for global network`,
-        body: params_to_bullets(params),
+        body: params_to_markdown(params),
         netuid: "GLOBAL",
       };
     },
     subnetParams: function ({ netuid, params }): ProposalCardFields {
       return {
         title: `Parameters proposal #${proposalId} for subnet ${netuid}`,
-        body: params_to_bullets(params),
+        body: params_to_markdown(params),
         netuid: netuid,
       };
     },
