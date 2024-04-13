@@ -1,3 +1,7 @@
+import { type Enum } from "rustie";
+
+export type Result<T, E> = Enum<{ Ok: T; Err: E }>;
+
 export const is_not_null = <T>(item: T | null): item is T => item !== null;
 
 export const small_address = (address: string) =>

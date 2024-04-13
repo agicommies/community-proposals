@@ -8,7 +8,7 @@ import Image from "next/image";
 
 export const VoteCard = (props: { proposalId: number }) => {
   const { proposalId } = props;
-  const { isConnected, addVoting, handleConnect } = usePolkadot();
+  const { isConnected, send_vote, handleConnect } = usePolkadot();
 
   const [vote, setVote] = useState("UNVOTED");
 
@@ -18,8 +18,8 @@ export const VoteCard = (props: { proposalId: number }) => {
   };
 
   const handleVote = () => {
-    addVoting({
-      proposalId,
+    send_vote({
+      proposal_id: proposalId,
       vote: vote === "FAVORABLE" ? true : false,
     });
   };

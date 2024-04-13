@@ -3,14 +3,16 @@
 
 import React, { createContext, useContext, useEffect, useState } from "react";
 
-import { ApiPromise, type SubmittableResult, WsProvider } from "@polkadot/api";
-import { type DispatchError } from '@polkadot/types/interfaces';
+import { ApiPromise, WsProvider, type SubmittableResult } from "@polkadot/api";
+import { type DispatchError } from "@polkadot/types/interfaces";
 
 import {
   type InjectedAccountWithMeta,
   type InjectedExtension,
 } from "@polkadot/extension-inject/types";
 
+import { type Enum } from "rustie";
+import { assert } from "tsafe";
 import { WalletModal } from "~/app/_components/wallet-modal";
 import {
   get_all_stake_out,
@@ -19,12 +21,11 @@ import {
 } from "~/hooks/polkadot/functions/chain_queries";
 import { handle_custom_proposals } from "~/hooks/polkadot/functions/proposals";
 import type { ProposalState } from "~/hooks/polkadot/functions/types";
-import { is_not_null } from "~/utils";
+import { is_not_null, type Result } from "~/utils";
 
-interface AddVoting {
+interface Vote {
+  proposal_id: number;
   vote: boolean;
-  proposalId: number;
-  callback?: () => void;
 }
 
 interface PolkadotApiState {
@@ -46,7 +47,7 @@ interface PolkadotContextType {
   stake_data: StakeData | null;
 
   handleConnect: () => void;
-  addVoting: (args: AddVoting) => void;
+  send_vote: (args: Vote, callback?: () => void) => void;
   createNewProposal: (args: string) => void;
 }
 
@@ -110,20 +111,22 @@ export const PolkadotProvider: React.FC<PolkadotProviderProps> = ({
   }, [wsEndpoint]);
 
   useEffect(() => {
-    const favoriteWalletAddress = localStorage.getItem('favoriteWalletAddress')
+    const favoriteWalletAddress = localStorage.getItem("favoriteWalletAddress");
     if (favoriteWalletAddress) {
       const fetchWallets = async () => {
-        const walletList = await getWallets()
-        const accountExist = walletList?.find((wallet) => wallet.address === favoriteWalletAddress)
+        const walletList = await getWallets();
+        const accountExist = walletList?.find(
+          (wallet) => wallet.address === favoriteWalletAddress,
+        );
         if (accountExist) {
-          setSelectedAccount(accountExist)
+          setSelectedAccount(accountExist);
           setIsConnected(true);
         }
-      }
-      fetchWallets().catch(console.error)
+      };
+      fetchWallets().catch(console.error);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isInitialized])
+  }, [isInitialized]);
 
   useEffect(() => {
     // console.log("useEffect for api", api); // DEBUG
@@ -193,22 +196,22 @@ export const PolkadotProvider: React.FC<PolkadotProviderProps> = ({
       throw Error("NO_EXTENSION_FOUND");
     }
     try {
-      const response = await polkadotApi.web3Accounts()
-      return response
+      const response = await polkadotApi.web3Accounts();
+      return response;
     } catch (error) {
-      console.warn(error)
+      console.warn(error);
     }
   }
 
   async function handleConnect() {
     try {
-      const allAccounts = await getWallets()
+      const allAccounts = await getWallets();
       if (allAccounts) {
         setAccounts(allAccounts);
         setOpenModal(true);
       }
     } catch (error) {
-      console.warn(error)
+      console.warn(error);
     }
   }
 
@@ -216,13 +219,26 @@ export const PolkadotProvider: React.FC<PolkadotProviderProps> = ({
     useState<InjectedAccountWithMeta>();
 
   async function handleWalletSelections(wallet: InjectedAccountWithMeta) {
-    localStorage.setItem('favoriteWalletAddress', wallet.address)
+    localStorage.setItem("favoriteWalletAddress", wallet.address);
     setSelectedAccount(wallet);
     setIsConnected(true);
     setOpenModal(false);
   }
 
-  async function addVoting({ vote, proposalId, callback }: AddVoting) {
+  type VoteState = Enum<{
+    Unsent: null;
+    Sent: null;
+    Included: { finalized: boolean; status: Result<null, TransactionError> | null };
+  }>;
+
+  interface TransactionError {
+    message: string;
+  }
+
+  async function send_vote(
+    { vote, proposal_id: proposalId }: Vote,
+    callback?: (vote_state: VoteState) => void,
+  ) {
     if (
       !api ||
       !selectedAccount ||
@@ -241,42 +257,52 @@ export const PolkadotProvider: React.FC<PolkadotProviderProps> = ({
         (result: SubmittableResult) => {
           console.log(`Transaction hash: ${result.txHash.toHex()}`);
 
-          if (result.status.isInBlock) {
-            console.log(`Transaction included in block`);
-          }
-
           if (result.status.isFinalized) {
+            assert(result.status.isInBlock);
+
             result.events.forEach(({ event }) => {
               if (api.events.system?.ExtrinsicSuccess?.is(event)) {
                 alert(`Voting successful`);
-                callback?.();
+                callback?.({
+                  Included: { finalized: true, status: { Ok: null } },
+                });
               } else if (api.events.system?.ExtrinsicFailed?.is(event)) {
-                const [dispatchError] = event.data as unknown as [DispatchError];
+                const [dispatchError] = event.data as unknown as [
+                  DispatchError,
+                ];
 
+                let msg;
                 if (dispatchError.isModule) {
                   const mod = dispatchError.asModule;
                   const error = api.registry.findMetaError(mod);
 
                   if (error.section && error.name && error.docs) {
                     const errorMessage = `${error.name}`;
-                    alert(`Voting failed: ${errorMessage}`);
+                    msg = `Voting failed: ${errorMessage}`;
                   } else {
-                    alert(`Voting failed: Unknown error`);
+                    msg = `Voting failed: Unknown error`;
                   }
                 } else {
-                  alert(`Voting failed: ${dispatchError.type}`);
+                  msg = `Voting failed: ${dispatchError.type}`;
                 }
+                alert(msg);
+                callback?.({
+                  Included: { finalized: true, status: { Err: { message: msg } } },
+                });
               }
             });
+          } else if (result.status.isInBlock) {
+            callback?.({
+              Included: { finalized: false, status: null },
+            });
           }
-        }
+        },
       )
       .catch((err) => {
         // TODO toast error
         console.error(err);
       });
   }
-
 
   async function createNewProposal(data: string) {
     if (
@@ -314,7 +340,7 @@ export const PolkadotProvider: React.FC<PolkadotProviderProps> = ({
         proposals,
         stake_data: stakeData,
 
-        addVoting,
+        send_vote,
         handleConnect,
         createNewProposal,
       }}
