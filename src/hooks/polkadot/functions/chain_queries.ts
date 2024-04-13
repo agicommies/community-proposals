@@ -168,6 +168,8 @@ export async function get_proposals(api: ApiPromise): Promise<Proposal[]> {
     if (proposal == null) throw new Error("Invalid proposal");
     proposals.push(proposal);
   }
+
+  proposals.reverse()
   return proposals;
 }
 
