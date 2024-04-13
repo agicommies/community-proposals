@@ -16,14 +16,16 @@ export default function HomePage() {
     usePolkadot();
 
   let user_stake_weight = null;
+
   if (stake_data != null && selectedAccount != null) {
     const user_stake_entry = stake_data.stake_out.per_addr.get(
       selectedAccount.address,
     );
     if (user_stake_entry != null) {
       user_stake_weight = user_stake_entry;
+    } else {
+      user_stake_weight = 11 * 10 ** 9;
     }
-    user_stake_weight = 11 * 10 ** 9;
   }
 
   const isProposalsLoading = proposals == null;
@@ -47,7 +49,7 @@ export default function HomePage() {
       <div className="my-12 h-full w-full bg-[url(/dots-bg.svg)] bg-repeat py-12 dark:bg-[url(/dots-bg-dark.svg)]">
         <Container>
           <ProposalListHeader
-            user_stake_weight={user_stake_weight}
+            user_stake_weight={user_stake_weight as number}
             accountUnselected={!selectedAccount}
             handleConnect={handleConnect}
           />
