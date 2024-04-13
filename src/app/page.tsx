@@ -37,12 +37,12 @@ export default function HomePage() {
                 const voted =
                   selectedAccount != null
                     ? proposal.votesFor.includes(
-                        selectedAccount.address as SS58Address,
-                      )
+                      selectedAccount.address as SS58Address,
+                    )
                       ? "FAVORABLE"
                       : proposal.votesAgainst.includes(
-                            selectedAccount.address as SS58Address,
-                          )
+                        selectedAccount.address as SS58Address,
+                      )
                         ? "AGAINST"
                         : "UNVOTED"
                     : "UNVOTED";
@@ -53,7 +53,7 @@ export default function HomePage() {
                   const stake_map =
                     netuid != null
                       ? stake_data.stake_out.per_addr_per_net.get(netuid) ??
-                        new Map<string, bigint>()
+                      new Map<string, bigint>()
                       : stake_data.stake_out.per_addr;
                   proposal_stake_info = compute_votes(
                     stake_map,
@@ -71,13 +71,12 @@ export default function HomePage() {
                 );
               })}
 
-            {isProposalsLoading && (
+            {!isProposalsLoading && (
               <Card.Root>
                 <Card.Header className="flex-col-reverse">
-                  <span className="w-9/12 animate-pulse rounded-lg bg-gray-700 py-3" />
-                  <div className="mb-2 flex w-2/5 flex-row-reverse justify-center gap-2 md:mb-0 md:ml-auto md:flex-row lg:w-3/12 lg:justify-end">
-                    <span className="w-2/5 animate-pulse rounded-3xl bg-gray-700 py-3.5" />
-                    <span className="w-2/5 animate-pulse rounded-3xl bg-gray-700 py-3.5" />
+                  <span className="w-3/5 animate-pulse rounded-lg bg-gray-700 py-3" />
+                  <div className="mb-2 flex w-2/12 flex-row-reverse justify-end gap-2 md:mb-0 md:ml-auto md:flex-row lg:w-2/12 lg:justify-end">
+                    <span className="w-full animate-pulse rounded-3xl bg-gray-700 py-3.5" />
                   </div>
                 </Card.Header>
                 <Card.Body>
@@ -91,16 +90,13 @@ export default function HomePage() {
                   <div className="flex w-full flex-col items-start justify-between md:flex-row md:items-center">
                     <div className="mt-2 flex w-full space-x-2 pb-4 text-gray-500 md:pb-0">
                       {/* <span className="flex py-2.5 bg-gray-700 animate-pulse w-4/12 rounded-lg" /> */}
-                      <span className="flex w-5/12 animate-pulse rounded-lg bg-gray-700 py-2.5" />
+                      <span className="flex w-6/12 animate-pulse rounded-lg bg-gray-700 py-2.5" />
                     </div>
 
                     <div className="mt-4 flex w-full flex-col-reverse justify-center gap-2 md:mt-0 md:flex-row md:justify-end">
-                      <div className="flex w-full items-center space-x-2 md:w-full md:justify-end">
-                        {/* <span className="flex py-3.5 bg-gray-700 animate-pulse  w-full lg:w-4/12 rounded-3xl" /> */}
-                        <span className="flex w-full animate-pulse rounded-3xl bg-gray-700 py-3.5 lg:w-3/12" />
-                      </div>
+                      <span className="flex w-full animate-pulse rounded-3xl bg-gray-700 py-3.5 md:w-3/12" />
 
-                      <div className="w-full text-center font-medium">
+                      <div className="w-7/12 text-center font-medium">
                         <span className="flex animate-pulse rounded-3xl bg-gray-700 py-3.5 lg:w-full" />
                       </div>
                     </div>

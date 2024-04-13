@@ -3,8 +3,8 @@
 
 import React, { createContext, useContext, useEffect, useState } from "react";
 
-import { ApiPromise, SubmittableResult, WsProvider } from "@polkadot/api";
-import { DispatchError } from '@polkadot/types/interfaces';
+import { ApiPromise, type SubmittableResult, WsProvider } from "@polkadot/api";
+import { type DispatchError } from '@polkadot/types/interfaces';
 
 import {
   type InjectedAccountWithMeta,
@@ -110,6 +110,22 @@ export const PolkadotProvider: React.FC<PolkadotProviderProps> = ({
   }, [wsEndpoint]);
 
   useEffect(() => {
+    const favoriteWalletAddress = localStorage.getItem('favoriteWalletAddress')
+    if (favoriteWalletAddress) {
+      const fetchWallets = async () => {
+        const walletList = await getWallets()
+        const accountExist = walletList?.find((wallet) => wallet.address === favoriteWalletAddress)
+        if (accountExist) {
+          setSelectedAccount(accountExist)
+          setIsConnected(true);
+        }
+      }
+      fetchWallets().catch(console.error)
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isInitialized])
+
+  useEffect(() => {
     // console.log("useEffect for api", api); // DEBUG
     if (api) {
       void api.rpc.chain.subscribeNewHeads((header) => {
@@ -169,22 +185,38 @@ export const PolkadotProvider: React.FC<PolkadotProviderProps> = ({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [api]);
 
-  async function handleConnect() {
+  async function getWallets() {
     if (!polkadotApi.web3Enable || !polkadotApi.web3Accounts) return;
     const extensions = await polkadotApi.web3Enable("Community Validator");
     if (!extensions) {
       // TODO: this seems agressive?
       throw Error("NO_EXTENSION_FOUND");
     }
-    const allAccounts = await polkadotApi.web3Accounts();
-    setAccounts(allAccounts);
-    setOpenModal(true);
+    try {
+      const response = await polkadotApi.web3Accounts()
+      return response
+    } catch (error) {
+      console.warn(error)
+    }
+  }
+
+  async function handleConnect() {
+    try {
+      const allAccounts = await getWallets()
+      if (allAccounts) {
+        setAccounts(allAccounts);
+        setOpenModal(true);
+      }
+    } catch (error) {
+      console.warn(error)
+    }
   }
 
   const [selectedAccount, setSelectedAccount] =
     useState<InjectedAccountWithMeta>();
 
   async function handleWalletSelections(wallet: InjectedAccountWithMeta) {
+    localStorage.setItem('favoriteWalletAddress', wallet.address)
     setSelectedAccount(wallet);
     setIsConnected(true);
     setOpenModal(false);
@@ -198,9 +230,9 @@ export const PolkadotProvider: React.FC<PolkadotProviderProps> = ({
       !api.tx.subspaceModule?.voteProposal
     )
       return;
-  
+
     const injector = await polkadotApi.web3FromAddress(selectedAccount.address);
-  
+
     api.tx.subspaceModule
       .voteProposal(proposalId, vote)
       .signAndSend(
@@ -208,11 +240,11 @@ export const PolkadotProvider: React.FC<PolkadotProviderProps> = ({
         { signer: injector.signer },
         (result: SubmittableResult) => {
           console.log(`Transaction hash: ${result.txHash.toHex()}`);
-  
+
           if (result.status.isInBlock) {
             console.log(`Transaction included in block`);
           }
-  
+
           if (result.status.isFinalized) {
             result.events.forEach(({ event }) => {
               if (api.events.system?.ExtrinsicSuccess?.is(event)) {
@@ -220,11 +252,11 @@ export const PolkadotProvider: React.FC<PolkadotProviderProps> = ({
                 callback?.();
               } else if (api.events.system?.ExtrinsicFailed?.is(event)) {
                 const [dispatchError] = event.data as unknown as [DispatchError];
-  
+
                 if (dispatchError.isModule) {
                   const mod = dispatchError.asModule;
                   const error = api.registry.findMetaError(mod);
-  
+
                   if (error.section && error.name && error.docs) {
                     const errorMessage = `${error.name}`;
                     alert(`Voting failed: ${errorMessage}`);
@@ -244,7 +276,7 @@ export const PolkadotProvider: React.FC<PolkadotProviderProps> = ({
         console.error(err);
       });
   }
-  
+
 
   async function createNewProposal(data: string) {
     if (

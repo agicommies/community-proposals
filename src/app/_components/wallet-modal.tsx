@@ -23,7 +23,7 @@ export function WalletModal({
   return (
     <div
       role="dialog"
-      className={`fixed inset-0 z-50 ${open ? "block" : "hidden"} animate-fade-in-down`}
+      className={`fixed inset-0 z-[100] ${open ? "block" : "hidden"} animate-fade-in-down`}
     >
       {/* Backdrop */}
       <div className="absolute inset-0 bg-dark opacity-80" />
@@ -68,11 +68,10 @@ export function WalletModal({
                   className={`text-md flex cursor-pointer items-center gap-x-3 overflow-auto rounded-xl border-2 p-5 shadow-white dark:text-white ${selectedAccount === item ? "border-green-500" : "border-black dark:border-white "}`}
                 >
                   <CheckCircleIcon
-                    className={`h-6 w-6 ${
-                      selectedAccount === item
-                        ? "fill-green-500"
-                        : "fill-black dark:fill-white"
-                    }`}
+                    className={`h-6 w-6 ${selectedAccount === item
+                      ? "fill-green-500"
+                      : "fill-black dark:fill-white"
+                      }`}
                   />
                   <div className="flex flex-col items-start gap-1">
                     <span className="font-semibold">{item.meta.name}</span>

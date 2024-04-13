@@ -140,12 +140,13 @@ export default function ProposalExpandedCard(props: ProposalCardProps) {
       >
         Click to view proposal {"->"}
       </button>
+
       <div
         role="dialog"
         className={`relative z-50 ${modalOpen ? "visible" : "hidden"}`}
       >
         {/* Backdrop */}
-        <div className="fixed inset-0 bg-dark bg-opacity-60 backdrop-blur-sm transition-opacity" />
+        <div className="fixed inset-0 bg-dark/95 backdrop-blur-sm transition-opacity" />
 
         {/* Modal */}
         <div className="fixed inset-0 z-10 w-screen animate-fade-in-down overflow-y-auto">
@@ -261,7 +262,7 @@ export default function ProposalExpandedCard(props: ProposalCardProps) {
                       </Card.Body>
                     </Card.Root>
 
-                    <VoteCard />
+                    <VoteCard proposalId={proposal.id} />
 
                     <Card.Root>
                       <Card.Header>

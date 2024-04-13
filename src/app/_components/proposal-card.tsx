@@ -24,23 +24,10 @@ export type ProposalCardProps = {
   voted: TVote;
 };
 
-// const handle_relative_time = (
-//   startDate: Date | string,
-//   endDate: Date | string | null,
-// ) => {
-//   if (endDate) {
-//     return <span>Ended {intlFormatDistance(endDate, new Date())}</span>;
-//   }
-//   return <span>Started {intlFormatDistance(startDate, new Date())}</span>;
-// };
-
 export const ProposalCard = (props: ProposalCardProps) => {
   const { proposal, stake_info, voted } = props;
   const proposalId = proposal.id;
   const theme = getStoredTheme();
-
-  // const is_stake_loading = stake_info == null;
-  // const is_custom_proposal = is_proposal_custom(proposal);
 
   type ProposalCardFields = {
     title: string | null;
@@ -85,14 +72,14 @@ export const ProposalCard = (props: ProposalCardProps) => {
     // const winning = favorable_percent >= 50;
     if (Number.isNaN(favorable_percent)) {
       return (
-        <Label className="w-1/2 bg-gray-100 py-1.5 text-center text-yellow-500 md:w-auto lg:text-left dark:bg-light-dark">
+        <Label className="w-full bg-gray-100 py-1.5 text-center text-yellow-500 md:w-auto lg:text-left dark:bg-light-dark">
           – %
         </Label>
       );
     }
     return (
       // TODO: render red-ish label if losing and green-ish label if winning
-      <Label className="flex w-1/2 items-center justify-center gap-1.5 bg-gray-100 py-1.5 text-center md:w-auto lg:text-left dark:bg-light-dark">
+      <Label className="flex w-full items-center justify-center gap-1.5 bg-gray-100 py-1.5 text-center md:w-auto lg:text-left dark:bg-light-dark">
         <span className="text-green-500">{favorable_percent?.toFixed(0)}%</span>
         <Image
           src={"/favorable-up.svg"}
@@ -139,71 +126,42 @@ export const ProposalCard = (props: ProposalCardProps) => {
         {proposal_info.title && (
           <h3 className="text-base font-semibold">{proposal_info.title}</h3>
         )}
-        {!proposal_info.title && <Skeleton className="w-9/12 py-3 " />}
-        {true && (
-          <div className="mb-2 flex min-w-fit flex-row-reverse gap-2 md:mb-0 md:ml-auto md:flex-row">
-            {voted !== "UNVOTED" && <VoteLabel vote={voted} />}
-            {/* {is_stake_loading && (
-              <span className="flex w-[7rem] animate-pulse rounded-3xl bg-gray-700 py-3.5" />
-            )} */}
-            <StatusLabel result={proposal.status as TProposalStatus} />
-          </div>
-        )}
-        {/* {isProposalLoading && (
-          <div className="mb-2 flex w-2/5 flex-row-reverse justify-center gap-2 md:mb-0 md:ml-auto md:flex-row lg:w-3/12 lg:justify-end">
-            <Skeleton className="w-2/5 rounded-3xl py-3.5" />
-            <Skeleton className="w-2/5 rounded-3xl py-3.5" />
-          </div>
-        )} */}
+
+        {!proposal_info.title && <Skeleton className="w-8/12 py-3" />}
+
+        <div className="mb-2 flex w-full justify-center md:w-auto md:justify-end flex-row-reverse gap-2 md:mb-0 md:ml-auto md:pl-4 md:flex-row">
+          {voted !== "UNVOTED" && <VoteLabel vote={voted} />}
+          <StatusLabel result={proposal.status as TProposalStatus} />
+        </div>
+
       </Card.Header>
       <Card.Body>
-        {true && (
-          <div className="pb-2 md:pb-6">
-            {/* Renders text body keeping line breaks */}
-            <div
-              className="rounded-xl p-3 dark:bg-black/20"
-              data-color-mode={theme === "dark" ? "dark" : "light"}
-            >
-              <MarkdownPreview source={String(proposal?.custom_data?.body)} />
-            </div>
+        <div className="pb-2 md:pb-6">
+          {/* Renders text body keeping line breaks */}
+          <div
+            className="rounded-xl p-3 dark:bg-black/20"
+            data-color-mode={theme === "dark" ? "dark" : "light"}
+          >
+            <MarkdownPreview source={String(proposal?.custom_data?.body)} />
           </div>
-        )}
-
-        {/* {isProposalLoading && (
-          <div className="space-y-1 pb-2 md:pb-6">
-            <Skeleton className="w-full rounded-md py-2.5" />
-            <Skeleton className="w-full rounded-md py-2.5" />
-            <Skeleton className="w-full rounded-md py-2.5" />
-            <Skeleton className="w-2/4 rounded-md py-2.5" />
-          </div>
-        )} */}
+        </div>
 
         <div className="flex flex-col items-start justify-between md:flex-row md:items-center">
-          {/* {isProposalLoading && (
-            <div className="flex w-full space-x-2">
-              <Skeleton className="w-full rounded-3xl py-2.5 lg:w-5/12" />
-            </div>
-          )} */}
-          {true && (
-            <div className="w-[240px] space-x-2 pb-4 text-gray-500 md:pb-0">
-              {/* <span className="">By {proposal.expirationBlock}</span> */}
-              <span className="line-clamp-1 block w-full truncate">
-                posted by {small_address(proposal.proposer)}
-              </span>
-            </div>
-          )}
+          <div className="w-[240px] space-x-2 pb-4 text-gray-500 md:pb-0">
+            <span className="line-clamp-1 block w-full truncate">
+              posted by {small_address(proposal.proposer)}
+            </span>
+          </div>
 
           <div className="center mx-auto ml-auto mt-4 flex w-full flex-col-reverse gap-2 md:mt-0 md:flex-row md:justify-end">
+
             {!stake_info && (
               <div className="flex w-full items-center space-x-2 md:justify-end">
                 <span className="flex w-full animate-pulse rounded-3xl bg-gray-700 py-3.5 md:w-2/5 lg:w-3/12" />
               </div>
             )}
             {stake_info && (
-              <div className="flex w-full items-center space-x-2 md:w-auto">
-                {/* <ResultLabel
-                        result={proposal?.proposalResult as TProposalResult}
-                      /> */}
+              <div className="flex w-full md:w-auto">
                 {render_favorable_percent(stake_info)}
               </div>
             )}
@@ -230,12 +188,8 @@ export const ProposalCard = (props: ProposalCardProps) => {
             )}
           </div>
         </div>
-        <div className="flex justify-center pt-4 md:justify-start md:pt-2">
-          {/* {isProposalLoading && (
-            <span className="flex w-4/12 animate-pulse rounded-lg bg-gray-700 py-2.5" />
-          )} */}
-          {/* pass props here */}
-          {true && <ProposalExpandedCard {...props} />}
+        <div className="flex justify-center pt-4 md:justify-start">
+          <ProposalExpandedCard {...props} />
         </div>
       </Card.Body>
     </Card.Root>
