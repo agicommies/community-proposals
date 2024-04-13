@@ -16,63 +16,12 @@ import { VoteLabel } from "~/app/_components/vote-label";
 import { type ProposalStakeInfo } from "~/hooks/polkadot/functions/proposals";
 import { bigint_division, format_token, small_address } from "~/utils";
 
+import { getStoredTheme } from "~/styles/theming";
 import { Container } from "./container";
+import { Label } from "./label";
 import { type ProposalCardProps } from "./proposal-card";
 import { Skeleton } from "./skeleton";
-import { getStoredTheme } from "~/styles/theming";
-
-// function handle_favorable_percent(favorable_percent: number) {
-//   const againstPercentage = 100 - favorable_percent;
-//   // const winning = favorable_percent >= 50;
-//   if (Number.isNaN(favorable_percent)) {
-//     return (
-//       <Label className="w-1/2 bg-gray-100 py-1.5 text-center text-yellow-500 md:w-auto lg:text-left dark:bg-light-dark">
-//         – %
-//       </Label>
-//     );
-//   }
-//   return (
-//     // TODO: render red-ish label if losing and green-ish label if winning
-//     <Label className="flex w-1/2 items-center justify-center gap-1.5 bg-gray-100 py-1.5 text-center md:w-auto lg:text-left dark:bg-light-dark">
-//       <span className="text-green-500">{favorable_percent?.toFixed(0)}%</span>
-//       <Image
-//         src={"/favorable-up.svg"}
-//         height={14}
-//         width={10}
-//         alt="favorable arrow up icon"
-//       />
-//       {" / "}
-//       <span className="text-red-500"> {againstPercentage?.toFixed(0)}% </span>
-//       <Image
-//         src={"/against-down.svg"}
-//         height={14}
-//         width={10}
-//         alt="against arrow down icon"
-//       />
-//     </Label>
-//   );
-// }
-
-// function render_favorable_percent(stake_info: ProposalStakeInfo) {
-//   const { stake_for, stake_against, stake_voted } = stake_info;
-//   assert(
-//     stake_for + stake_against == stake_voted,
-//     "stake_for + stake_against != stake_voted",
-//   );
-//   const favorable_percent = bigint_division(stake_for, stake_voted) * 100;
-//   return handle_favorable_percent(favorable_percent);
-// }
-
-// function render_quorum_percent(stake_info: ProposalStakeInfo) {
-//   const { stake_voted, stake_total } = stake_info;
-//   const quorum_percent = bigint_division(stake_voted, stake_total) * 100;
-//   return (
-//     <span className="text-yellow-600">
-//       {" ("}
-//       {quorum_percent.toFixed(2)} %{")"}
-//     </span>
-//   );
-// }
+import { handle_proposal } from "./util.ts/proposal_fields";
 
 function render_vote_data(stake_info: ProposalStakeInfo) {
   const { stake_for, stake_against, stake_voted } = stake_info;
@@ -125,7 +74,8 @@ export default function ProposalExpandedCard(props: ProposalCardProps) {
   const toggleModalMenu = () => setModalOpen(!modalOpen);
   const theme = getStoredTheme();
 
-  const { proposal, stake_info, voted = "UNVOTED" } = props;
+  const { proposal, stake_info, voted } = props;
+  const { title, body, netuid, invalid } = handle_proposal(proposal);
 
   // const share_pathname = `/proposal/${proposal.id}`; // TODO
 
@@ -147,14 +97,21 @@ export default function ProposalExpandedCard(props: ProposalCardProps) {
         <div className="fixed inset-0 bg-dark/95 backdrop-blur-sm transition-opacity" />
 
         {/* Modal */}
-        <div className="fixed inset-0 z-10 w-screen animate-fade-in-down overflow-y-auto">
+        className={``}
+        {/* Red corner if invalid */}
+        <div className={`fixed inset-0 z-10 w-screen animate-fade-in-down overflow-y-auto ${invalid ? "corner-red" : ""}`}>
           <main className="flex flex-col items-center justify-center">
             <div className="my-12 h-full w-full bg-repeat py-12 ">
               <Container>
                 <div className="flex items-center justify-between">
                   <div className="flex gap-3">
-                    <StatusLabel result={proposal.status} />
                     <VoteLabel vote={voted} />
+                    <Label>
+                      {(netuid !== "GLOBAL" && (
+                        <span> Subnet {netuid} </span>
+                      )) || <span> Global </span>}
+                    </Label>
+                    <StatusLabel result={proposal.status} />{" "}
                   </div>
                   <button
                     type="button"
@@ -170,21 +127,25 @@ export default function ProposalExpandedCard(props: ProposalCardProps) {
                     {proposal.custom_data && (
                       <>
                         <Card.Header>
-                          <h3 className="text-base font-semibold">
-                            {proposal.custom_data.title}
-                          </h3>
+                          {title && (
+                            <h3 className="text-base font-semibold">{title}</h3>
+                          )}
+                          {!title && <Skeleton className="w-8/12 py-3" />}
                         </Card.Header>
                         <Card.Body>
-                          <div
-                            className="rounded-xl p-3 dark:bg-black/20"
-                            data-color-mode={
-                              theme === "dark" ? "dark" : "light"
-                            }
-                          >
-                            <MarkdownPreview
-                              source={String(proposal.custom_data.body)}
-                            />
-                          </div>
+                          {body && (
+                            <div
+                              className="rounded-xl p-3 dark:bg-black/20"
+                              data-color-mode={
+                                theme === "dark" ? "dark" : "light"
+                              }
+                            >
+                              <MarkdownPreview source={body} />
+                            </div>
+                          )}
+                          {!body && (
+                            <Skeleton className="w-full rounded-xl py-3" />
+                          )}
                         </Card.Body>
                       </>
                     )}

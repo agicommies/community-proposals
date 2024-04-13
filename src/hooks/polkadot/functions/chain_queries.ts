@@ -51,10 +51,10 @@ export async function __get_all_stake(
     if (n_raw == null || address_raw == null)
       throw new Error("stake storage key is nullish");
 
-    const n = n_raw.toPrimitive(); // TODO: I don't even know what `n` is. netuid?
+    const netuid = n_raw.toPrimitive();
     const address = address_raw.toHuman();
 
-    if (typeof n !== "number") throw new Error("Invalid stake storage key (n)");
+    if (typeof netuid !== "number") throw new Error("Invalid stake storage key (n)");
     if (typeof address !== "string")
       throw new Error("Invalid stake storage key (address)");
 
@@ -103,7 +103,7 @@ export async function get_all_stake_out(api: ApiPromise) {
     if (netuid_raw == null || from_addr_raw == null)
       throw new Error("stakeTo storage key is nullish");
 
-    const netuid = netuid_raw.toPrimitive(); // TODO: I don't even know what `n` is. netuid?
+    const netuid = netuid_raw.toPrimitive();
     const from_addr = from_addr_raw.toHuman();
     const stake_to_map_for_key = value_raw.toPrimitive();
 

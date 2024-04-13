@@ -2,18 +2,25 @@ import type { Codec } from "@polkadot/types/types";
 import type { Enum, Tagged } from "rustie";
 import { assert, type Extends } from "tsafe";
 import { z } from "zod";
+import type { Result } from "~/utils";
 
 export type SS58Address = Tagged<string, "SS58Address">;
 
-// == Proposal Body on Interface ==
+// == Proposal State on Interface ==
 
 export interface ProposalState extends Proposal {
-  custom_data?: CustomProposalMetadata;
+  custom_data?: CustomProposalDataState;
 }
+
+export type CustomProposalDataState = Result<
+  CustomProposalData,
+  CustomProposalDataError
+>;
+export type CustomProposalDataError = { message: string };
 
 // == Custom Proposal Extra Data ==
 
-export interface CustomProposalMetadata {
+export interface CustomProposalData {
   title?: string;
   body?: string; // Markdown description
 }
@@ -24,10 +31,7 @@ export const CUSTOM_PROPOSAL_METADATA_SCHEMA = z.object({
 });
 
 assert<
-  Extends<
-    z.infer<typeof CUSTOM_PROPOSAL_METADATA_SCHEMA>,
-    CustomProposalMetadata
-  >
+  Extends<z.infer<typeof CUSTOM_PROPOSAL_METADATA_SCHEMA>, CustomProposalData>
 >();
 
 // == Proposal ==
@@ -103,8 +107,9 @@ const PARAM_FIELD_DISPLAY_NAMES: Record<string, string> = {
   voteMode: "Vote Mode",
 };
 
-export const param_name_to_display_name = (paramName: string): string => {
-  return paramName.replace(/_/g, " ").replace(/\b\w/g, (l) => l.toUpperCase());
+export const param_name_to_display_name = (param_name: string): string => {
+  return PARAM_FIELD_DISPLAY_NAMES[param_name] ?? param_name;
+  // return paramName.replace(/_/g, " ").replace(/\b\w/g, (l) => l.toUpperCase()); // Do not try to do AI with regex
 };
 
 export const ADDRESS_SCHEMA = z
@@ -143,10 +148,9 @@ assert<Extends<z.infer<typeof PROPOSAL_DATA_SCHEMA>, ProposalData>>();
 export const PROPOSAL_SHEMA = z
   .object({
     id: z.number(),
-    proposer: ADDRESS_SCHEMA,
+    proposer: ADDRESS_SCHEMA, // TODO: validate SS58 address
     expirationBlock: z.number(),
     data: PROPOSAL_DATA_SCHEMA,
-    // TODO: cast to SS58 address
     status: z
       .string()
       .refine(
