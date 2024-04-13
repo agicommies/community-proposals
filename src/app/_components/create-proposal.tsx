@@ -15,6 +15,7 @@ import { useRouter } from "next/navigation";
 // import { parse_ipfs_uri } from "~/utils/ipfs";
 import { usePolkadot } from "~/hooks/polkadot";
 import { getStoredTheme } from "~/styles/theming";
+import { toast } from "react-toastify";
 
 export function CreateProposal() {
   const { isConnected, createNewProposal } = usePolkadot();
@@ -45,10 +46,14 @@ export function CreateProposal() {
   const copyJSONToClipboard = () => {
     navigator.clipboard.writeText(generateJSON()).then(
       () => {
-        alert("JSON copied to clipboard!");
+        toast.success("Copied to clipboard", {
+          theme: theme === "dark" ? "dark" : "light",
+        });
       },
       () => {
-        alert("Failed to copy JSON to clipboard.");
+        toast.error("Failed to copy to clipboard", {
+          theme: theme === "dark" ? "dark" : "light",
+        });
       },
     );
   };

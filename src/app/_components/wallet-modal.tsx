@@ -5,6 +5,8 @@ import React, { useState } from "react";
 
 import { CheckCircleIcon, XMarkIcon } from "@heroicons/react/20/solid";
 import { type InjectedAccountWithMeta } from "@polkadot/extension-inject/types";
+import { toast } from "react-toastify";
+import { getStoredTheme } from "~/styles/theming";
 
 export function WalletModal({
   open,
@@ -17,6 +19,8 @@ export function WalletModal({
   wallets: InjectedAccountWithMeta[];
   handleWalletSelections: (arg: InjectedAccountWithMeta) => void;
 }) {
+  const theme = getStoredTheme();
+
   const [selectedAccount, setSelectedAccount] =
     useState<InjectedAccountWithMeta>();
 
@@ -68,10 +72,11 @@ export function WalletModal({
                   className={`text-md flex cursor-pointer items-center gap-x-3 overflow-auto rounded-xl border-2 p-5 shadow-white dark:text-white ${selectedAccount === item ? "border-green-500" : "border-black dark:border-white "}`}
                 >
                   <CheckCircleIcon
-                    className={`h-6 w-6 ${selectedAccount === item
-                      ? "fill-green-500"
-                      : "fill-black dark:fill-white"
-                      }`}
+                    className={`h-6 w-6 ${
+                      selectedAccount === item
+                        ? "fill-green-500"
+                        : "fill-black dark:fill-white"
+                    }`}
                   />
                   <div className="flex flex-col items-start gap-1">
                     <span className="font-semibold">{item.meta.name}</span>
@@ -100,8 +105,9 @@ export function WalletModal({
                 className="w-full rounded-xl border-2 border-orange-500 p-4 text-xl font-semibold text-orange-500"
                 onClick={() => {
                   if (!selectedAccount) {
-                    // TODO toast error
-                    console.log("No account selected");
+                    toast.error("No account selected", {
+                      theme: theme === "dark" ? "dark" : "light",
+                    });
                     return;
                   }
                   handleWalletSelections(selectedAccount);

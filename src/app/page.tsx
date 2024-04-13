@@ -37,12 +37,12 @@ export default function HomePage() {
                 const voted =
                   selectedAccount != null
                     ? proposal.votesFor.includes(
-                      selectedAccount.address as SS58Address,
-                    )
-                      ? "FAVORABLE"
-                      : proposal.votesAgainst.includes(
                         selectedAccount.address as SS58Address,
                       )
+                      ? "FAVORABLE"
+                      : proposal.votesAgainst.includes(
+                            selectedAccount.address as SS58Address,
+                          )
                         ? "AGAINST"
                         : "UNVOTED"
                     : "UNVOTED";
@@ -53,7 +53,7 @@ export default function HomePage() {
                   const stake_map =
                     netuid != null
                       ? stake_data.stake_out.per_addr_per_net.get(netuid) ??
-                      new Map<string, bigint>()
+                        new Map<string, bigint>()
                       : stake_data.stake_out.per_addr;
                   proposal_stake_info = compute_votes(
                     stake_map,
