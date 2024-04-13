@@ -22,6 +22,7 @@ import { Container } from "./container";
 import { Label } from "./label";
 import { type ProposalCardProps } from "./proposal-card";
 import { Skeleton } from "./skeleton";
+import { getStoredTheme } from "~/styles/theming";
 
 function handle_favorable_percent(favorable_percent: number) {
   const againstPercentage = 100 - favorable_percent;
@@ -125,6 +126,7 @@ function render_vote_data(stake_info: ProposalStakeInfo) {
 export default function ProposalExpandedCard(props: ProposalCardProps) {
   const [modalOpen, setModalOpen] = useState(false);
   const toggleModalMenu = () => setModalOpen(!modalOpen);
+  const theme = getStoredTheme();
 
   const { proposal, stake_info } = props;
 
@@ -160,7 +162,7 @@ export default function ProposalExpandedCard(props: ProposalCardProps) {
                   <button
                     type="button"
                     onClick={toggleModalMenu}
-                    className="rounded-2xl border-2 border-black p-2 transition duration-200 dark:border-white dark:bg-light-dark hover:dark:bg-dark"
+                    className="rounded-2xl border-2 border-black bg-white p-2 transition duration-200 dark:border-white dark:bg-light-dark hover:dark:bg-dark"
                   >
                     <XMarkIcon className="h-6 w-6 dark:fill-white" />
                   </button>
@@ -176,7 +178,12 @@ export default function ProposalExpandedCard(props: ProposalCardProps) {
                           </h3>
                         </Card.Header>
                         <Card.Body>
-                          <div className="rounded-xl bg-black p-3">
+                          <div
+                            className="rounded-xl p-3 dark:bg-black/20"
+                            data-color-mode={
+                              theme === "dark" ? "dark" : "light"
+                            }
+                          >
                             <MarkdownPreview
                               source={String(proposal.custom_data.body)}
                             />

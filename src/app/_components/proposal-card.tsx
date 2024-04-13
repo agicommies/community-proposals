@@ -13,6 +13,7 @@ import { Skeleton } from "./skeleton";
 import { StatusLabel, type TProposalStatus } from "./status-label";
 import { VoteLabel, type TVote } from "./vote-label";
 import MarkdownPreview from "@uiw/react-markdown-preview";
+import { getStoredTheme } from "~/styles/theming";
 
 export type ProposalCardProps = {
   proposal: ProposalState;
@@ -32,6 +33,7 @@ const handle_relative_time = (
 export const ProposalCard = (props: ProposalCardProps) => {
   const { proposal, stake_info } = props;
   const proposalId = proposal.id;
+  const theme = getStoredTheme();
 
   const is_stake_loading = stake_info == null;
   // const is_custom_proposal = is_proposal_custom(proposal);
@@ -159,7 +161,10 @@ export const ProposalCard = (props: ProposalCardProps) => {
         {!isProposalLoading && (
           <div className="pb-2 md:pb-6">
             {/* Renders text body keeping line breaks */}
-            <div className="rounded-xl bg-black p-3">
+            <div
+              className="rounded-xl p-3 dark:bg-black/20"
+              data-color-mode={theme === "dark" ? "dark" : "light"}
+            >
               <MarkdownPreview source={String(proposal?.custom_data?.body)} />
             </div>
           </div>
