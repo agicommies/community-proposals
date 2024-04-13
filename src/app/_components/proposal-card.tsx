@@ -7,7 +7,7 @@ import { assert } from "tsafe";
 
 import { type ProposalStakeInfo } from "~/hooks/polkadot/functions/proposals";
 import { type ProposalState } from "~/hooks/polkadot/functions/types";
-import { getStoredTheme } from "~/styles/theming";
+import { getCurrentTheme } from "~/styles/theming";
 import { bigint_division, format_token, small_address } from "~/utils";
 
 import { Card } from "./card";
@@ -26,12 +26,15 @@ export type ProposalCardProps = {
 
 export const ProposalCard = (props: ProposalCardProps) => {
   const { proposal, stake_info, voted } = props;
-  const theme = getStoredTheme();
+  const theme = getCurrentTheme();
 
   const { title, body, netuid, invalid } = handle_proposal(proposal);
 
   return (
-    <Card.Root key={proposal.id} className={`${invalid ? "opacity-50" : ""} ${invalid ? "hidden" : ""}`}>
+    <Card.Root
+      key={proposal.id}
+      className={`${invalid ? "opacity-50" : ""} ${invalid ? "hidden" : ""}`}
+    >
       <Card.Header className="z-10 flex-col-reverse">
         {title && <h3 className="text-base font-semibold">{title}</h3>}
         {!title && <Skeleton className="w-8/12 py-3" />}

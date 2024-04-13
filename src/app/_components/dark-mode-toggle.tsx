@@ -10,7 +10,7 @@ import {
   DARK_THEME_CLASSNAME,
   LIGHT_THEME_CLASSNAME,
   SYSTEM_THEME_CLASSNAME,
-  getStoredTheme,
+  getCurrentTheme,
   isDarkSystemTheme,
   setTheme,
   type TThemes,
@@ -34,8 +34,8 @@ const ThemeOption = ({
   return (
     <div
       className={`${
-        currentTheme === theme && "dark:bg-light-dark bg-gray-100"
-      } dark:hover:bg-light-dark flex w-full items-center gap-2 px-4 py-2 text-left text-sm text-black hover:bg-gray-200 dark:text-white`}
+        currentTheme === theme && "bg-gray-100 dark:bg-light-dark"
+      } flex w-full items-center gap-2 px-4 py-2 text-left text-sm text-black hover:bg-gray-200 dark:text-white dark:hover:bg-light-dark`}
       onClick={() => handleThemeChange(theme)}
     >
       <span>{icon}</span>
@@ -46,7 +46,7 @@ const ThemeOption = ({
 
 export const DarkModeToggle = () => {
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
-  const defaultTheme = useMemo(getStoredTheme, []) as TThemes;
+  const defaultTheme = useMemo(getCurrentTheme, []) as TThemes;
   const [currentTheme, setCurrentTheme] = useState<TThemes>(defaultTheme);
 
   const isDarkTheme = currentTheme === DARK_THEME_CLASSNAME;
@@ -99,7 +99,7 @@ export const DarkModeToggle = () => {
         {Icon}
       </button>
       {isDropdownOpen && (
-        <div className="dark:bg-dark absolute right-0 top-10 w-fit origin-top-right rounded-xl bg-white md:right-0 md:top-12 md:mt-4">
+        <div className="absolute right-0 top-10 w-fit origin-top-right rounded-xl bg-white md:right-0 md:top-12 md:mt-4 dark:bg-dark">
           <div
             role="menu"
             className="py-1"

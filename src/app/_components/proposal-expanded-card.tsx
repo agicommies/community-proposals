@@ -16,7 +16,7 @@ import { VoteLabel } from "~/app/_components/vote-label";
 import { type ProposalStakeInfo } from "~/hooks/polkadot/functions/proposals";
 import { bigint_division, format_token, small_address } from "~/utils";
 
-import { getStoredTheme } from "~/styles/theming";
+import { getCurrentTheme } from "~/styles/theming";
 import { Container } from "./container";
 import { Label } from "./label";
 import { type ProposalCardProps } from "./proposal-card";
@@ -72,7 +72,7 @@ function render_vote_data(stake_info: ProposalStakeInfo) {
 export default function ProposalExpandedCard(props: ProposalCardProps) {
   const [modalOpen, setModalOpen] = useState(false);
   const toggleModalMenu = () => setModalOpen(!modalOpen);
-  const theme = getStoredTheme();
+  const theme = getCurrentTheme();
 
   const { proposal, stake_info, voted } = props;
   const { title, body, netuid, invalid } = handle_proposal(proposal);
@@ -95,11 +95,12 @@ export default function ProposalExpandedCard(props: ProposalCardProps) {
       >
         {/* Backdrop */}
         <div className="fixed inset-0 bg-dark/95 backdrop-blur-sm transition-opacity" />
-
         {/* Modal */}
         className={``}
         {/* Red corner if invalid */}
-        <div className={`fixed inset-0 z-10 w-screen animate-fade-in-down overflow-y-auto ${invalid ? "corner-red" : ""}`}>
+        <div
+          className={`fixed inset-0 z-10 w-screen animate-fade-in-down overflow-y-auto ${invalid ? "corner-red" : ""}`}
+        >
           <main className="flex flex-col items-center justify-center">
             <div className="my-12 h-full w-full bg-repeat py-12 ">
               <Container>
@@ -142,7 +143,7 @@ export default function ProposalExpandedCard(props: ProposalCardProps) {
                             <MarkdownPreview source={body} />
                           </div>
                         )}
-                        {body == null && ( 
+                        {body == null && (
                           <Skeleton className="w-full rounded-xl py-3" />
                         )}
                       </Card.Body>

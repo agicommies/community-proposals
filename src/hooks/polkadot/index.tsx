@@ -21,7 +21,7 @@ import { handle_custom_proposals } from "~/hooks/polkadot/functions/proposals";
 import type { ProposalState } from "~/hooks/polkadot/functions/types";
 import { is_not_null } from "~/utils";
 import { toast } from "react-toastify";
-import { getStoredTheme } from "~/styles/theming";
+import { getCurrentTheme } from "~/styles/theming";
 
 interface Vote {
   proposal_id: number;
@@ -52,10 +52,10 @@ interface PolkadotContextType {
 }
 
 export type VoteStatus = {
-  finalized: boolean
-  status: "SUCCESS" | "ERROR" | "PENDING" | null,
-  message: string | null
-}
+  finalized: boolean;
+  status: "SUCCESS" | "ERROR" | "PENDING" | null;
+  message: string | null;
+};
 
 const PolkadotContext = createContext<PolkadotContextType | undefined>(
   undefined,
@@ -71,7 +71,7 @@ export const PolkadotProvider: React.FC<PolkadotProviderProps> = ({
   wsEndpoint,
 }) => {
   const [api, setApi] = useState<ApiPromise | null>(null);
-  const theme = getStoredTheme();
+  const theme = getCurrentTheme();
 
   const [polkadotApi, setPolkadotApi] = useState<PolkadotApiState>({
     web3Enable: null,
@@ -172,7 +172,7 @@ export const PolkadotProvider: React.FC<PolkadotProviderProps> = ({
       .catch((e) => {
         console.error("Error fetching proposals:", e);
       });
-  }
+  };
 
   useEffect(() => {
     // console.log("useEffect for api", api); // DEBUG
@@ -191,7 +191,7 @@ export const PolkadotProvider: React.FC<PolkadotProviderProps> = ({
           });
         });
 
-      handleGetProposals(api)
+      handleGetProposals(api);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [api]);
@@ -247,7 +247,6 @@ export const PolkadotProvider: React.FC<PolkadotProviderProps> = ({
     )
       return;
 
-
     const injector = await polkadotApi.web3FromAddress(selectedAccount.address);
 
     api.tx.subspaceModule
@@ -264,7 +263,7 @@ export const PolkadotProvider: React.FC<PolkadotProviderProps> = ({
             callback?.({
               finalized: false,
               status: "PENDING",
-              message: "Casting your vote..."
+              message: "Casting your vote...",
             });
           }
 
@@ -279,7 +278,7 @@ export const PolkadotProvider: React.FC<PolkadotProviderProps> = ({
                   status: "SUCCESS",
                   message: "Vote sucessful",
                 });
-                handleGetProposals(api)
+                handleGetProposals(api);
               } else if (api.events.system?.ExtrinsicFailed?.is(event)) {
                 const [dispatchError] = event.data as unknown as [
                   DispatchError,
@@ -305,7 +304,7 @@ export const PolkadotProvider: React.FC<PolkadotProviderProps> = ({
                 callback?.({
                   finalized: true,
                   status: "ERROR",
-                  message: msg
+                  message: msg,
                 });
               }
             });
