@@ -12,17 +12,19 @@ export type ProposalCardFields = {
   invalid?: boolean;
 };
 
-const params_to_bullets = (params: Record<string, unknown>) => {
-  const bullets = [];
+
+const params_to_markdown = (params: Record<string, unknown>): string => {
+  const items = [];
   for (const [key, value] of Object.entries(params)) {
-    if (typeof value === "string" || typeof value === "number") {
-      bullets.push(`- ${param_name_to_display_name(key)}: ${value}`);
-    } else {
-      console.error(`Unknown value type for param '${key}'}`);
-      bullets.push(`- ${param_name_to_display_name(key)}: ???`);
-    }
+    const label = `**${param_name_to_display_name(key)}**`;
+    const formattedValue =
+      typeof value === "string" || typeof value === "number"
+        ? `\`${value}\``
+        : "`???`";
+
+    items.push(`${label}: ${formattedValue}`);
   }
-  return bullets.join("\n") + "\n";
+  return items.join(" |  ") + "\n";
 };
 
 function handle_custom_proposal_data(
@@ -63,10 +65,10 @@ function handle_proposal_params(
 ): ProposalCardFields {
   const title =
     `Parameters proposal #${proposal_id} for ` +
-    (params.netuid == null ? "global network" : `subnet ${netuid}`);
+    (netuid == null ? "global network" : `subnet ${netuid}`);
   return {
     title,
-    body: params_to_bullets(params),
+    body: params_to_markdown(params),
     netuid,
   };
 }
