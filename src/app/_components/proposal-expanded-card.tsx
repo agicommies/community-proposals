@@ -235,9 +235,9 @@ export default function ProposalExpandedCard(props: ProposalCardProps) {
                             alt="author icon"
                             className="mr-2"
                           />
-                          {format(new Date(), "MMM dd, yyyy, hh:mma")}
+                          {proposal.expirationBlock}
                           <span className="ml-1 text-xs text-gray-600">
-                            | End Date
+                            | Expiration block
                           </span>
                         </span>
 
