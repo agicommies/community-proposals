@@ -1,37 +1,41 @@
 "use client";
-import { intlFormatDistance } from "date-fns";
+
+import MarkdownPreview from "@uiw/react-markdown-preview";
+// import { intlFormatDistance } from "date-fns";
 import Image from "next/image";
 import { match } from "rustie";
 import { assert } from "tsafe";
+
 import { type ProposalStakeInfo } from "~/proposals";
 import { type ProposalState } from "~/types";
 import { bigint_division, format_token, small_address } from "~/utils";
+
 import { Card } from "./card";
 import { Label } from "./label";
 import ProposalExpandedCard from "./proposal-expanded-card";
 import { Skeleton } from "./skeleton";
 import { StatusLabel, type TProposalStatus } from "./status-label";
 import { VoteLabel, type TVote } from "./vote-label";
-import MarkdownPreview from "@uiw/react-markdown-preview";
 import { getStoredTheme } from "~/styles/theming";
 
 export type ProposalCardProps = {
   proposal: ProposalState;
   stake_info: ProposalStakeInfo | null;
+  voted: TVote;
 };
 
-const handle_relative_time = (
-  startDate: Date | string,
-  endDate: Date | string | null,
-) => {
-  if (endDate) {
-    return <span>Ended {intlFormatDistance(endDate, new Date())}</span>;
-  }
-  return <span>Started {intlFormatDistance(startDate, new Date())}</span>;
-};
+// const handle_relative_time = (
+//   startDate: Date | string,
+//   endDate: Date | string | null,
+// ) => {
+//   if (endDate) {
+//     return <span>Ended {intlFormatDistance(endDate, new Date())}</span>;
+//   }
+//   return <span>Started {intlFormatDistance(startDate, new Date())}</span>;
+// };
 
 export const ProposalCard = (props: ProposalCardProps) => {
-  const { proposal, stake_info } = props;
+  const { proposal, stake_info, voted } = props;
   const proposalId = proposal.id;
   const theme = getStoredTheme();
 
@@ -45,7 +49,7 @@ export const ProposalCard = (props: ProposalCardProps) => {
   };
 
   // TODO: use these variables to render the proposal card
-  const { title, body, netuid } = match(proposal.data)({
+  const proposal_info = match(proposal.data)({
     custom: function (/*v: string*/): ProposalCardFields {
       return {
         title: proposal?.custom_data?.title ?? null,
@@ -129,36 +133,31 @@ export const ProposalCard = (props: ProposalCardProps) => {
     );
   }
 
-  const isProposalLoading = false;
-  const voted: TVote = "UNVOTED";
-
   return (
     <Card.Root key={proposal.id}>
       <Card.Header className="flex-col-reverse">
-        {proposal.custom_data && (
-          <h3 className="text-base font-semibold">
-            {proposal.custom_data.title}
-          </h3>
+        {proposal_info.title && (
+          <h3 className="text-base font-semibold">{proposal_info.title}</h3>
         )}
-        {isProposalLoading && <Skeleton className="w-9/12 py-3 " />}
-        {!isProposalLoading && (
+        {!proposal_info.title && <Skeleton className="w-9/12 py-3 " />}
+        {true && (
           <div className="mb-2 flex min-w-fit flex-row-reverse gap-2 md:mb-0 md:ml-auto md:flex-row">
-            {!is_stake_loading && <VoteLabel vote={voted} />}
-            {is_stake_loading && (
+            {voted !== "UNVOTED" && <VoteLabel vote={voted} />}
+            {/* {is_stake_loading && (
               <span className="flex w-[7rem] animate-pulse rounded-3xl bg-gray-700 py-3.5" />
-            )}
+            )} */}
             <StatusLabel result={proposal.status as TProposalStatus} />
           </div>
         )}
-        {isProposalLoading && (
+        {/* {isProposalLoading && (
           <div className="mb-2 flex w-2/5 flex-row-reverse justify-center gap-2 md:mb-0 md:ml-auto md:flex-row lg:w-3/12 lg:justify-end">
             <Skeleton className="w-2/5 rounded-3xl py-3.5" />
             <Skeleton className="w-2/5 rounded-3xl py-3.5" />
           </div>
-        )}
+        )} */}
       </Card.Header>
       <Card.Body>
-        {!isProposalLoading && (
+        {true && (
           <div className="pb-2 md:pb-6">
             {/* Renders text body keeping line breaks */}
             <div
@@ -170,23 +169,22 @@ export const ProposalCard = (props: ProposalCardProps) => {
           </div>
         )}
 
-        {isProposalLoading && (
+        {/* {isProposalLoading && (
           <div className="space-y-1 pb-2 md:pb-6">
             <Skeleton className="w-full rounded-md py-2.5" />
             <Skeleton className="w-full rounded-md py-2.5" />
             <Skeleton className="w-full rounded-md py-2.5" />
             <Skeleton className="w-2/4 rounded-md py-2.5" />
           </div>
-        )}
+        )} */}
 
         <div className="flex flex-col items-start justify-between md:flex-row md:items-center">
-          {isProposalLoading && (
+          {/* {isProposalLoading && (
             <div className="flex w-full space-x-2">
-              {/* <Skeleton className="py-2.5 w-full lg:w-4/12 rounded-3xl" /> */}
               <Skeleton className="w-full rounded-3xl py-2.5 lg:w-5/12" />
             </div>
-          )}
-          {!isProposalLoading && (
+          )} */}
+          {true && (
             <div className="w-[240px] space-x-2 pb-4 text-gray-500 md:pb-0">
               {/* <span className="">By {proposal.expirationBlock}</span> */}
               <span className="line-clamp-1 block w-full truncate">
@@ -233,11 +231,11 @@ export const ProposalCard = (props: ProposalCardProps) => {
           </div>
         </div>
         <div className="flex justify-center pt-4 md:justify-start md:pt-2">
-          {isProposalLoading && (
+          {/* {isProposalLoading && (
             <span className="flex w-4/12 animate-pulse rounded-lg bg-gray-700 py-2.5" />
-          )}
+          )} */}
           {/* pass props here */}
-          {!isProposalLoading && <ProposalExpandedCard {...props} />}
+          {true && <ProposalExpandedCard {...props} />}
         </div>
       </Card.Body>
     </Card.Root>
