@@ -85,7 +85,7 @@ export const ProposalCard = (props: ProposalCardProps) => {
 
   function handle_favorable_percent(favorable_percent: number) {
     const against_percent = 100 - favorable_percent;
-    // const winning = favorable_percent >= 50;
+    const isFavorableBigger = favorable_percent >= 50;
     if (Number.isNaN(favorable_percent)) {
       return (
         <Label className="w-full bg-gray-100 py-1.5 text-center text-yellow-500 md:w-auto lg:text-left dark:bg-light-dark">
@@ -95,7 +95,7 @@ export const ProposalCard = (props: ProposalCardProps) => {
     }
     return (
       // TODO: render red-ish label if losing and green-ish label if winning
-      <Label className="flex w-full items-center justify-center gap-1.5 bg-gray-100 py-1.5 text-center md:w-auto lg:text-left dark:bg-light-dark">
+      <Label className={`flex w-full items-center justify-center gap-1.5 bg-gray-100 py-1.5 text-center md:w-auto lg:text-left dark:bg-light-dark ${isFavorableBigger ? 'border-green-500 border-2' : 'border-red-500 border-2'}`}>
         <span className="text-green-500">{favorable_percent?.toFixed(0)}%</span>
         <Image
           src={"/favorable-up.svg"}
