@@ -6,6 +6,7 @@ import { inter } from "~/styles/fonts";
 import { Header } from "./_components/header";
 import { PolkadotProvider } from "~/hooks/polkadot";
 import { TRPCReactProvider } from "~/hooks/trpc/react";
+import ToastProvider from "~/hooks/toast";
 
 export const metadata = {
   title: "Community Proposal",
@@ -23,8 +24,10 @@ export default function RootLayout({
       <body className={`dark:bg-light-dark`}>
         <TRPCReactProvider>
           <PolkadotProvider wsEndpoint={env.NEXT_PUBLIC_WS_PROVIDER_URL}>
-            <Header />
-            {children}
+            <ToastProvider>
+              <Header />
+              {children}
+            </ToastProvider>
           </PolkadotProvider>
         </TRPCReactProvider>
       </body>

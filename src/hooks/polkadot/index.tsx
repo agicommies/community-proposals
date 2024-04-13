@@ -20,6 +20,8 @@ import {
 import { handle_custom_proposals } from "~/hooks/polkadot/functions/proposals";
 import type { ProposalState } from "~/hooks/polkadot/functions/types";
 import { is_not_null } from "~/utils";
+import { toast } from "react-toastify";
+import { getStoredTheme } from "~/styles/theming";
 
 interface Vote {
   proposal_id: number;
@@ -69,6 +71,7 @@ export const PolkadotProvider: React.FC<PolkadotProviderProps> = ({
   wsEndpoint,
 }) => {
   const [api, setApi] = useState<ApiPromise | null>(null);
+  const theme = getStoredTheme();
 
   const [polkadotApi, setPolkadotApi] = useState<PolkadotApiState>({
     web3Enable: null,
@@ -181,10 +184,11 @@ export const PolkadotProvider: React.FC<PolkadotProviderProps> = ({
       get_all_stake_out(api)
         .then((stake_data_result) => {
           setStakeData(stake_data_result);
-          console.log("got stake map");
         })
         .catch((e) => {
-          console.error("Error fetching stake out map", e);
+          toast.success(`Error fetching stake out map", ${e}`, {
+            theme: theme === "dark" ? "dark" : "light",
+          });
         });
 
       handleGetProposals(api)
@@ -196,7 +200,9 @@ export const PolkadotProvider: React.FC<PolkadotProviderProps> = ({
     if (!polkadotApi.web3Enable || !polkadotApi.web3Accounts) return;
     const extensions = await polkadotApi.web3Enable("Community Validator");
     if (!extensions) {
-      // TODO: this seems agressive?
+      toast.error("No account selected", {
+        theme: theme === "dark" ? "dark" : "light",
+      });
       throw Error("NO_EXTENSION_FOUND");
     }
     try {
@@ -250,7 +256,9 @@ export const PolkadotProvider: React.FC<PolkadotProviderProps> = ({
         selectedAccount.address,
         { signer: injector.signer },
         (result: SubmittableResult) => {
-          console.log(`Transaction hash: ${result.txHash.toHex()}`);
+          // toast.success(`Transaction hash: ${result.txHash.toHex()}`, {
+          //   theme: theme === "dark" ? "dark" : "light",
+          // });
 
           if (result.status.isInBlock) {
             callback?.({
@@ -263,6 +271,9 @@ export const PolkadotProvider: React.FC<PolkadotProviderProps> = ({
           if (result.status.isFinalized) {
             result.events.forEach(({ event }) => {
               if (api.events.system?.ExtrinsicSuccess?.is(event)) {
+                toast.success("Voting successful", {
+                  theme: theme === "dark" ? "dark" : "light",
+                });
                 callback?.({
                   finalized: true,
                   status: "SUCCESS",
@@ -288,6 +299,9 @@ export const PolkadotProvider: React.FC<PolkadotProviderProps> = ({
                 } else {
                   msg = `Voting failed: ${dispatchError.type}`;
                 }
+                toast(msg, {
+                  theme: theme === "dark" ? "dark" : "light",
+                });
                 callback?.({
                   finalized: true,
                   status: "ERROR",
@@ -299,7 +313,9 @@ export const PolkadotProvider: React.FC<PolkadotProviderProps> = ({
         },
       )
       .catch((err) => {
-        // TODO toast error
+        toast.error(`${err}`, {
+          theme: theme === "dark" ? "dark" : "light",
+        });
         console.error(err);
       });
   }
@@ -321,8 +337,9 @@ export const PolkadotProvider: React.FC<PolkadotProviderProps> = ({
         window.location.reload();
       })
       .catch((err) => {
-        // TODO toast error
-        console.log(err);
+        toast.error(`${err}`, {
+          theme: theme === "dark" ? "dark" : "light",
+        });
       });
   }
 

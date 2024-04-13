@@ -50,8 +50,8 @@ pub enum ProposalData<T: Config> {
 */
 export type ProposalData = Enum<{
   custom: string;
-  globalParams: unknown;
-  subnetParams: { netuid: number; params: unknown };
+  globalParams: Record<string, unknown>;
+  subnetParams: { netuid: number; params: Record<string, unknown> };
   subnetCustom: { netuid: number; data: string };
 }>;
 
@@ -66,6 +66,47 @@ export interface Proposal {
   data: ProposalData;
 }
 
+const PARAM_FIELD_DISPLAY_NAMES: Record<string, string> = {
+  // # Global
+  maxNameLength: "Max Name Length",
+  maxAllowedSubnets: "Max Allowed Subnets",
+  maxAllowedModules: "Max Allowed Modules",
+  unitEmission: "Unit Emission",
+  floorDelegationFee: "Floor Delegation Fee",
+  maxRegistrationsPerBlock: "Max Registrations Per Block",
+  targetRegistrationsPerInterval: "Target Registrations Per Interval",
+  targetRegistrationsInterval: "Target Registrations Interval",
+  burnRate: "Burn Rate",
+  minBurn: "Min Burn",
+  maxBurn: "Max Burn",
+  adjustmentAlpha: "Adjustment Alpha",
+  minStake: "Min Stake",
+  maxAllowedWeights: "Max Allowed Weights",
+  minWeightStake: "Min Weight Stake",
+  proposalCost: "Proposal Cost",
+  proposalExpiration: "Proposal Expiration",
+  proposalParticipationThreshold: "Proposal Participation Threshold",
+  // # Subnet
+  founder: "Founder",
+  founderShare: "Founder Share",
+  immunityPeriod: "Immunity Period",
+  incentiveRatio: "Incentive Ratio",
+  maxAllowedUids: "Max Allowed UIDs",
+  // maxAllowedWeights: "Max Allowed Weights",
+  maxStake: "Max Stake",
+  maxWeightAge: "Max Weight Age",
+  minAllowedWeights: "Min Allowed Weights",
+  // minStake: "Min Stake",
+  name: "Name",
+  tempo: "Tempo",
+  trustRatio: "Trust Ratio",
+  voteMode: "Vote Mode",
+};
+
+export const param_name_to_display_name = (paramName: string): string => {
+  return paramName.replace(/_/g, " ").replace(/\b\w/g, (l) => l.toUpperCase());
+};
+
 export const ADDRESS_SCHEMA = z
   .string()
   .transform((value) => value as SS58Address); // TODO: validate SS58 address
@@ -75,12 +116,18 @@ export const PROPOSAL_DATA_SCHEMA = z.union([
     custom: z.string(),
   }),
   z.object({
-    globalParams: z.object({}), // TODO: globalParams validation
+    globalParams: z
+      .object({})
+      .passthrough()
+      .transform((value) => value as Record<string, unknown>), // TODO: globalParams validation
   }),
   z.object({
     subnetParams: z.object({
       netuid: z.number(),
-      params: z.object({}), // TODO: subnetParams validation
+      params: z
+        .object({})
+        .passthrough()
+        .transform((value) => value as Record<string, unknown>), // TODO: subnetParams validation
     }),
   }),
   z.object({
