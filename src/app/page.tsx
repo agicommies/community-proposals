@@ -71,7 +71,7 @@ export default function HomePage() {
                 );
               })}
 
-            {!isProposalsLoading && (
+            {isProposalsLoading && (
               <Card.Root>
                 <Card.Header className="flex-col-reverse">
                   <span className="w-3/5 animate-pulse rounded-lg bg-gray-700 py-3" />
