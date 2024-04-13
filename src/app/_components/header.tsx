@@ -20,21 +20,25 @@ export function Header() {
       >
         <nav className="fixed z-50 h-full w-full shadow-xl">
           <div className="min-w-1/4 sticky right-3 top-3 ml-auto h-auto w-[94%] rounded-lg bg-white p-5 sm:w-[40%] dark:bg-light-dark dark:text-white">
-            <div
-              className={`absolute right-14 top-0 z-50 m-5 flex h-12 w-12 items-center justify-center rounded-lg bg-gray-100 p-1.5 dark:bg-dark`}
-            >
-              <DarkModeToggle />
-            </div>
-            <button
-              type="button"
-              onClick={toggleMobileMenu}
-              className="absolute right-0 top-0 z-50 m-5 flex h-12 w-12 items-center justify-center rounded-lg bg-gray-100 p-1.5 dark:bg-dark"
-            >
-              <span className="sr-only">Close menu</span>
-              <XMarkIcon className="h-6 w-6 dark:fill-white" />
-            </button>
-            <div className="flow-root">
-              <div className="ml-2 space-y-2 p-3">WIP</div>
+            <div className="flex items-baseline justify-between">
+              <div className="flow-root">
+                <PolkadotButton />
+              </div>
+              <div className="flex gap-3">
+                <div
+                  className={`z-50 flex h-12 w-12 items-center justify-center rounded-lg bg-gray-100 p-1.5 dark:bg-dark`}
+                >
+                  <DarkModeToggle />
+                </div>
+                <button
+                  type="button"
+                  onClick={toggleMobileMenu}
+                  className="z-50 flex h-12 w-12 items-center justify-center rounded-lg bg-gray-100 p-1.5 dark:bg-dark"
+                >
+                  <span className="sr-only">Close menu</span>
+                  <XMarkIcon className="h-6 w-6 dark:fill-white" />
+                </button>
+              </div>
             </div>
           </div>
         </nav>
