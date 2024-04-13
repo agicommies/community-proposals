@@ -17,7 +17,7 @@ export function parse_ipfs_uri(uri: string): CID | null {
     const cid = CID.parse(rest);
     return cid;
   } catch (e) {
-    console.error(`Invalid IPFS CID ${rest}`, e);
+    console.warn(`Invalid IPFS CID ${rest}`, e);
     return null;
   }
 }
