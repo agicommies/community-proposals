@@ -203,8 +203,7 @@ export const PolkadotProvider: React.FC<PolkadotProviderProps> = ({
       .voteProposal(proposalId, vote)
       .signAndSend(selectedAccount.address, { signer: injector.signer })
       .then((response) => {
-        console.log("Vote Submitted");
-        console.log(response);
+        alert(`Voting Successful, hash: ${response.toHex()}`);
         callback?.();
       })
       .catch((err) => {

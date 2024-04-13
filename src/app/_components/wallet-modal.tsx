@@ -74,7 +74,10 @@ export function WalletModal({
                         : "fill-black dark:fill-white"
                     }`}
                   />
-                  {item.address}
+                  <div className="flex flex-col items-start gap-1">
+                    <span className="font-semibold">{item.meta.name}</span>
+                    <span>{item.address}</span>
+                  </div>
                 </button>
               ))}
               {!wallets.length && (
