@@ -39,7 +39,7 @@ export const ProposalCard = (props: ProposalCardProps) => {
   const proposalId = proposal.id;
   const theme = getStoredTheme();
 
-  const is_stake_loading = stake_info == null;
+  // const is_stake_loading = stake_info == null;
   // const is_custom_proposal = is_proposal_custom(proposal);
 
   type ProposalCardFields = {

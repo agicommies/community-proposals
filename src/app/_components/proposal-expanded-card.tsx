@@ -5,7 +5,6 @@ export const runtime = "edge";
 import { format } from "date-fns";
 import Image from "next/image";
 import { useState } from "react";
-import { assert } from "tsafe";
 
 import { XMarkIcon } from "@heroicons/react/20/solid";
 import MarkdownPreview from "@uiw/react-markdown-preview";
@@ -19,66 +18,65 @@ import { type ProposalStakeInfo } from "~/hooks/polkadot/functions/proposals";
 import { bigint_division, format_token, small_address } from "~/utils";
 
 import { Container } from "./container";
-import { Label } from "./label";
 import { type ProposalCardProps } from "./proposal-card";
 import { Skeleton } from "./skeleton";
 import { getStoredTheme } from "~/styles/theming";
 
-function handle_favorable_percent(favorable_percent: number) {
-  const againstPercentage = 100 - favorable_percent;
-  // const winning = favorable_percent >= 50;
-  if (Number.isNaN(favorable_percent)) {
-    return (
-      <Label className="w-1/2 bg-gray-100 py-1.5 text-center text-yellow-500 md:w-auto lg:text-left dark:bg-light-dark">
-        – %
-      </Label>
-    );
-  }
-  return (
-    // TODO: render red-ish label if losing and green-ish label if winning
-    <Label className="flex w-1/2 items-center justify-center gap-1.5 bg-gray-100 py-1.5 text-center md:w-auto lg:text-left dark:bg-light-dark">
-      <span className="text-green-500">{favorable_percent?.toFixed(0)}%</span>
-      <Image
-        src={"/favorable-up.svg"}
-        height={14}
-        width={10}
-        alt="favorable arrow up icon"
-      />
-      {" / "}
-      <span className="text-red-500"> {againstPercentage?.toFixed(0)}% </span>
-      <Image
-        src={"/against-down.svg"}
-        height={14}
-        width={10}
-        alt="against arrow down icon"
-      />
-    </Label>
-  );
-}
+// function handle_favorable_percent(favorable_percent: number) {
+//   const againstPercentage = 100 - favorable_percent;
+//   // const winning = favorable_percent >= 50;
+//   if (Number.isNaN(favorable_percent)) {
+//     return (
+//       <Label className="w-1/2 bg-gray-100 py-1.5 text-center text-yellow-500 md:w-auto lg:text-left dark:bg-light-dark">
+//         – %
+//       </Label>
+//     );
+//   }
+//   return (
+//     // TODO: render red-ish label if losing and green-ish label if winning
+//     <Label className="flex w-1/2 items-center justify-center gap-1.5 bg-gray-100 py-1.5 text-center md:w-auto lg:text-left dark:bg-light-dark">
+//       <span className="text-green-500">{favorable_percent?.toFixed(0)}%</span>
+//       <Image
+//         src={"/favorable-up.svg"}
+//         height={14}
+//         width={10}
+//         alt="favorable arrow up icon"
+//       />
+//       {" / "}
+//       <span className="text-red-500"> {againstPercentage?.toFixed(0)}% </span>
+//       <Image
+//         src={"/against-down.svg"}
+//         height={14}
+//         width={10}
+//         alt="against arrow down icon"
+//       />
+//     </Label>
+//   );
+// }
 
-function render_favorable_percent(stake_info: ProposalStakeInfo) {
-  const { stake_for, stake_against, stake_voted } = stake_info;
-  assert(
-    stake_for + stake_against == stake_voted,
-    "stake_for + stake_against != stake_voted",
-  );
-  const favorable_percent = bigint_division(stake_for, stake_voted) * 100;
-  return handle_favorable_percent(favorable_percent);
-}
+// function render_favorable_percent(stake_info: ProposalStakeInfo) {
+//   const { stake_for, stake_against, stake_voted } = stake_info;
+//   assert(
+//     stake_for + stake_against == stake_voted,
+//     "stake_for + stake_against != stake_voted",
+//   );
+//   const favorable_percent = bigint_division(stake_for, stake_voted) * 100;
+//   return handle_favorable_percent(favorable_percent);
+// }
 
-function render_quorum_percent(stake_info: ProposalStakeInfo) {
-  const { stake_voted, stake_total } = stake_info;
-  const quorum_percent = bigint_division(stake_voted, stake_total) * 100;
-  return (
-    <span className="text-yellow-600">
-      {" ("}
-      {quorum_percent.toFixed(2)} %{")"}
-    </span>
-  );
-}
+// function render_quorum_percent(stake_info: ProposalStakeInfo) {
+//   const { stake_voted, stake_total } = stake_info;
+//   const quorum_percent = bigint_division(stake_voted, stake_total) * 100;
+//   return (
+//     <span className="text-yellow-600">
+//       {" ("}
+//       {quorum_percent.toFixed(2)} %{")"}
+//     </span>
+//   );
+// }
 
 function render_vote_data(stake_info: ProposalStakeInfo) {
-  const { stake_for, stake_against, stake_voted, stake_total } = stake_info;
+  const { stake_for, stake_against, stake_voted } = stake_info;
 
   const favorable_percent = bigint_division(stake_for, stake_voted) * 100;
   const against_percent = bigint_division(stake_against, stake_voted) * 100;
