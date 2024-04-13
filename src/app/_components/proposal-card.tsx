@@ -7,7 +7,11 @@ import { match } from "rustie";
 import { assert } from "tsafe";
 
 import { type ProposalStakeInfo } from "~/hooks/polkadot/functions/proposals";
-import { type ProposalState } from "~/hooks/polkadot/functions/types";
+import {
+  param_name_to_display_name,
+  type ProposalState,
+} from "~/hooks/polkadot/functions/types";
+import { getStoredTheme } from "~/styles/theming";
 import { bigint_division, format_token, small_address } from "~/utils";
 
 import { Card } from "./card";
@@ -16,7 +20,6 @@ import ProposalExpandedCard from "./proposal-expanded-card";
 import { Skeleton } from "./skeleton";
 import { StatusLabel, type TProposalStatus } from "./status-label";
 import { VoteLabel, type TVote } from "./vote-label";
-import { getStoredTheme } from "~/styles/theming";
 
 export type ProposalCardProps = {
   proposal: ProposalState;
@@ -35,6 +38,19 @@ export const ProposalCard = (props: ProposalCardProps) => {
     netuid: number | "GLOBAL";
   };
 
+  const params_to_bullets = (params: Record<string, unknown>) => {
+    const bullets = [];
+    for (const [key, value] of Object.entries(params)) {
+      if (typeof value === "string" || typeof value === "number") {
+        bullets.push(`- ${param_name_to_display_name(key)}: ${value}`);
+      } else {
+        console.error(`Unknown value type for param '${key}'}`);
+        bullets.push(`- ${param_name_to_display_name(key)}: ???`);
+      }
+    }
+    return bullets.join("\n") + "\n";
+  };
+
   // TODO: use these variables to render the proposal card
   const proposal_info = match(proposal.data)({
     custom: function (/*v: string*/): ProposalCardFields {
@@ -46,22 +62,22 @@ export const ProposalCard = (props: ProposalCardProps) => {
     },
     subnetCustom: function ({ netuid /*data*/ }): ProposalCardFields {
       return {
-        title: `Custom proposal #${proposalId} for subnet ${netuid}`,
-        body: `To be implemented :)`,
+        title: proposal?.custom_data?.title ?? null,
+        body: proposal?.custom_data?.title ?? null,
         netuid: netuid,
       };
     },
-    globalParams: function (/*v: unknown*/): ProposalCardFields {
+    globalParams: function (params): ProposalCardFields {
       return {
         title: `Parameters proposal #${proposalId} for global network`,
-        body: `To be implemented :)`,
+        body: params_to_bullets(params),
         netuid: "GLOBAL",
       };
     },
-    subnetParams: function ({ netuid /*params*/ }): ProposalCardFields {
+    subnetParams: function ({ netuid, params }): ProposalCardFields {
       return {
         title: `Parameters proposal #${proposalId} for subnet ${netuid}`,
-        body: `To be implemented :)`,
+        body: params_to_bullets(params),
         netuid: netuid,
       };
     },
@@ -126,23 +142,28 @@ export const ProposalCard = (props: ProposalCardProps) => {
         {proposal_info.title && (
           <h3 className="text-base font-semibold">{proposal_info.title}</h3>
         )}
-
         {!proposal_info.title && <Skeleton className="w-8/12 py-3" />}
 
-        <div className="mb-2 flex w-full justify-center md:w-auto md:justify-end flex-row-reverse gap-2 md:mb-0 md:ml-auto md:pl-4 md:flex-row">
-          {voted !== "UNVOTED" && <VoteLabel vote={voted} />}
+        <div className="mb-2 flex w-full flex-row-reverse justify-center gap-2 md:mb-0 md:ml-auto md:w-auto md:flex-row md:justify-end md:pl-4">
+          <VoteLabel vote={voted} />
+          <Label>
+            {(proposal_info.netuid !== "GLOBAL" && (
+              <span> Subnet {proposal_info.netuid} </span>
+            )) || <span> Global </span>}
+          </Label>
           <StatusLabel result={proposal.status as TProposalStatus} />
         </div>
-
       </Card.Header>
       <Card.Body>
         <div className="pb-2 md:pb-6">
-          {/* Renders text body keeping line breaks */}
           <div
             className="rounded-xl p-3 dark:bg-black/20"
             data-color-mode={theme === "dark" ? "dark" : "light"}
           >
-            <MarkdownPreview source={String(proposal?.custom_data?.body)} />
+            {proposal_info.body && (
+              <MarkdownPreview source={proposal_info.body} />
+            )}
+            {/* TODO: skeleton */}
           </div>
         </div>
 
@@ -154,7 +175,6 @@ export const ProposalCard = (props: ProposalCardProps) => {
           </div>
 
           <div className="center mx-auto ml-auto mt-4 flex w-full flex-col-reverse gap-2 md:mt-0 md:flex-row md:justify-end">
-
             {!stake_info && (
               <div className="flex w-full items-center space-x-2 md:justify-end">
                 <span className="flex w-full animate-pulse rounded-3xl bg-gray-700 py-3.5 md:w-2/5 lg:w-3/12" />
