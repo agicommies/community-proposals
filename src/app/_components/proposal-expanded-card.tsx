@@ -2,7 +2,6 @@
 
 export const runtime = "edge";
 
-import { format } from "date-fns";
 import Image from "next/image";
 import { useState } from "react";
 
@@ -13,7 +12,7 @@ import { Card } from "~/app/_components/card";
 // import { CopyToClipboard } from "~/app/_components/copy-to-clipboard";
 import { StatusLabel } from "~/app/_components/status-label";
 import { VoteCard } from "~/app/_components/vote-card";
-import { VoteLabel, type TVote } from "~/app/_components/vote-label";
+import { VoteLabel } from "~/app/_components/vote-label";
 import { type ProposalStakeInfo } from "~/hooks/polkadot/functions/proposals";
 import { bigint_division, format_token, small_address } from "~/utils";
 
@@ -126,9 +125,8 @@ export default function ProposalExpandedCard(props: ProposalCardProps) {
   const toggleModalMenu = () => setModalOpen(!modalOpen);
   const theme = getStoredTheme();
 
-  const { proposal, stake_info } = props;
+  const { proposal, stake_info, voted = "UNVOTED" } = props;
 
-  const voted: TVote = "UNVOTED";
   // const share_pathname = `/proposal/${proposal.id}`; // TODO
 
   return (
@@ -155,7 +153,7 @@ export default function ProposalExpandedCard(props: ProposalCardProps) {
               <Container>
                 <div className="flex items-center justify-between">
                   <div className="flex gap-3">
-                    <StatusLabel result="Pending" /> {/* TODO: add result */}
+                    <StatusLabel result={proposal.status} />
                     <VoteLabel vote={voted} />
                   </div>
                   <button
@@ -262,7 +260,7 @@ export default function ProposalExpandedCard(props: ProposalCardProps) {
                       </Card.Body>
                     </Card.Root>
 
-                    <VoteCard proposalId={proposal.id} />
+                    <VoteCard proposalId={proposal.id} voted={voted} />
 
                     <Card.Root>
                       <Card.Header>

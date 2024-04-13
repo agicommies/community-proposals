@@ -22,10 +22,10 @@ export function PolkadotButton() {
     >
       {selectedAccount ? (
         <span className="flex gap-3 font-medium text-orange-500 items-center">
-          <WalletIcon className="h-8 w-8 flex flex-row" />
+          <WalletIcon className="h-6 w-6 flex flex-row" />
           <div className="flex flex-col items-start">
             <p className="text-sm dark:text-orange-400 text-orange-700 font-semibold">{selectedAccount.meta.name}</p>
-            <p className="text-sm dark:text-orange-500 font-extralight">{selectedAccount.address.slice(0, 8)}...</p>
+            <p className="text-xs dark:text-orange-500 font-extralight">{selectedAccount.address.slice(0, 8)}...</p>
           </div>
         </span>
       ) : (

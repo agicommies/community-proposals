@@ -11,8 +11,6 @@ import {
   type InjectedExtension,
 } from "@polkadot/extension-inject/types";
 
-import { type Enum } from "rustie";
-import { assert } from "tsafe";
 import { WalletModal } from "~/app/_components/wallet-modal";
 import {
   get_all_stake_out,
@@ -21,7 +19,7 @@ import {
 } from "~/hooks/polkadot/functions/chain_queries";
 import { handle_custom_proposals } from "~/hooks/polkadot/functions/proposals";
 import type { ProposalState } from "~/hooks/polkadot/functions/types";
-import { is_not_null, type Result } from "~/utils";
+import { is_not_null } from "~/utils";
 
 interface Vote {
   proposal_id: number;
@@ -47,8 +45,14 @@ interface PolkadotContextType {
   stake_data: StakeData | null;
 
   handleConnect: () => void;
-  send_vote: (args: Vote, callback?: () => void) => void;
+  send_vote: (args: Vote, callback?: (arg: VoteStatus) => void) => void;
   createNewProposal: (args: string) => void;
+}
+
+export type VoteStatus = {
+  finalized: boolean
+  status: "SUCCESS" | "ERROR" | "PENDING" | null,
+  message: string | null
 }
 
 const PolkadotContext = createContext<PolkadotContextType | undefined>(
@@ -107,10 +111,6 @@ export const PolkadotProvider: React.FC<PolkadotProviderProps> = ({
   }, [wsEndpoint]);
 
   useEffect(() => {
-    // console.log("useEffect for wsEndpoint", wsEndpoint); // DEBUG
-  }, [wsEndpoint]);
-
-  useEffect(() => {
     const favoriteWalletAddress = localStorage.getItem("favoriteWalletAddress");
     if (favoriteWalletAddress) {
       const fetchWallets = async () => {
@@ -128,6 +128,49 @@ export const PolkadotProvider: React.FC<PolkadotProviderProps> = ({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isInitialized]);
 
+  const handleGetProposals = (api: ApiPromise) => {
+    get_proposals(api)
+      .then((proposals_result) => {
+        setProposals(proposals_result);
+
+        handle_custom_proposals(
+          proposals_result,
+          // (id, new_proposal) => {
+          //   if (proposals == null) {
+          //     console.error(`New proposal ${id} is null`); // Should not happen
+          //     return;
+          //   }
+          //   const new_proposal_list = [...proposals];
+          //   new_proposal_list[id] = new_proposal;
+          //   setProposals(new_proposal_list);
+          // }
+        )
+          .then((results) => {
+            // Handle data from custom proposals
+            const new_proposal_list: ProposalState[] = [...proposals_result];
+            // For each custom data result, find the proposal with the same id
+            // and update its `custom_data` field
+            results.filter(is_not_null).forEach((result) => {
+              const { id, custom_data } = result;
+              const proposal = new_proposal_list.find((p) => p.id === id);
+              if (proposal == null) {
+                console.error(`Proposal ${id} not found`);
+                return;
+              }
+              proposal.custom_data = custom_data;
+            });
+            // Update the state with the new proposal list
+            setProposals(new_proposal_list);
+          })
+          .catch((e) => {
+            console.error("Error fetching custom proposals data:", e);
+          });
+      })
+      .catch((e) => {
+        console.error("Error fetching proposals:", e);
+      });
+  }
+
   useEffect(() => {
     // console.log("useEffect for api", api); // DEBUG
     if (api) {
@@ -144,46 +187,7 @@ export const PolkadotProvider: React.FC<PolkadotProviderProps> = ({
           console.error("Error fetching stake out map", e);
         });
 
-      get_proposals(api)
-        .then((proposals_result) => {
-          setProposals(proposals_result);
-
-          handle_custom_proposals(
-            proposals_result,
-            // (id, new_proposal) => {
-            //   if (proposals == null) {
-            //     console.error(`New proposal ${id} is null`); // Should not happen
-            //     return;
-            //   }
-            //   const new_proposal_list = [...proposals];
-            //   new_proposal_list[id] = new_proposal;
-            //   setProposals(new_proposal_list);
-            // }
-          )
-            .then((results) => {
-              // Handle data from custom proposals
-              const new_proposal_list: ProposalState[] = [...proposals_result];
-              // For each custom data result, find the proposal with the same id
-              // and update its `custom_data` field
-              results.filter(is_not_null).forEach((result) => {
-                const { id, custom_data } = result;
-                const proposal = new_proposal_list.find((p) => p.id === id);
-                if (proposal == null) {
-                  console.error(`Proposal ${id} not found`);
-                  return;
-                }
-                proposal.custom_data = custom_data;
-              });
-              // Update the state with the new proposal list
-              setProposals(new_proposal_list);
-            })
-            .catch((e) => {
-              console.error("Error fetching custom proposals data:", e);
-            });
-        })
-        .catch((e) => {
-          console.error("Error fetching proposals:", e);
-        });
+      handleGetProposals(api)
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [api]);
@@ -225,19 +229,9 @@ export const PolkadotProvider: React.FC<PolkadotProviderProps> = ({
     setOpenModal(false);
   }
 
-  type VoteState = Enum<{
-    Unsent: null;
-    Sent: null;
-    Included: { finalized: boolean; status: Result<null, TransactionError> | null };
-  }>;
-
-  interface TransactionError {
-    message: string;
-  }
-
   async function send_vote(
     { vote, proposal_id: proposalId }: Vote,
-    callback?: (vote_state: VoteState) => void,
+    callback?: (vote_status: VoteStatus) => void,
   ) {
     if (
       !api ||
@@ -246,6 +240,7 @@ export const PolkadotProvider: React.FC<PolkadotProviderProps> = ({
       !api.tx.subspaceModule?.voteProposal
     )
       return;
+
 
     const injector = await polkadotApi.web3FromAddress(selectedAccount.address);
 
@@ -257,15 +252,23 @@ export const PolkadotProvider: React.FC<PolkadotProviderProps> = ({
         (result: SubmittableResult) => {
           console.log(`Transaction hash: ${result.txHash.toHex()}`);
 
-          if (result.status.isFinalized) {
-            assert(result.status.isInBlock);
+          if (result.status.isInBlock) {
+            callback?.({
+              finalized: false,
+              status: "PENDING",
+              message: "Casting your vote..."
+            });
+          }
 
+          if (result.status.isFinalized) {
             result.events.forEach(({ event }) => {
               if (api.events.system?.ExtrinsicSuccess?.is(event)) {
-                alert(`Voting successful`);
                 callback?.({
-                  Included: { finalized: true, status: { Ok: null } },
+                  finalized: true,
+                  status: "SUCCESS",
+                  message: "Vote sucessful",
                 });
+                handleGetProposals(api)
               } else if (api.events.system?.ExtrinsicFailed?.is(event)) {
                 const [dispatchError] = event.data as unknown as [
                   DispatchError,
@@ -285,15 +288,12 @@ export const PolkadotProvider: React.FC<PolkadotProviderProps> = ({
                 } else {
                   msg = `Voting failed: ${dispatchError.type}`;
                 }
-                alert(msg);
                 callback?.({
-                  Included: { finalized: true, status: { Err: { message: msg } } },
+                  finalized: true,
+                  status: "ERROR",
+                  message: msg
                 });
               }
-            });
-          } else if (result.status.isInBlock) {
-            callback?.({
-              Included: { finalized: false, status: null },
             });
           }
         },

@@ -10,12 +10,12 @@ export const VoteLabel = (props: TVoteLabelProps) => {
     // UNVOTED: <Label className="border border-white text-white">Unvoted</Label>,
     UNVOTED: <></>,
     FAVORABLE: (
-      <Label className="border border-green-500 text-green-500">
+      <Label className="border border-green-500 text-green-500 bg-light-dark">
         Favorable
       </Label>
     ),
     AGAINST: (
-      <Label className="border border-red-500 text-red-500">Against</Label>
+      <Label className="border border-red-500 text-red-500 bg-light-dark">Against</Label>
     ),
   };
   return votingStatus[vote || "UNVOTED"];

@@ -5,10 +5,13 @@ import { format_token } from "~/utils";
 
 type ProposalListHeaderProps = {
   user_stake_weight: number | null;
+  accountUnselected: boolean
+  handleConnect: () => void
 };
 
 export const ProposalListHeader = (props: ProposalListHeaderProps) => {
-  const { user_stake_weight } = props;
+  const { user_stake_weight, accountUnselected, handleConnect } = props;
+
   return (
     <div className="flex w-full flex-col items-center justify-between gap-6 lg:flex-row">
       <h2 className="text-4xl font-semibold dark:text-white">Proposals</h2>
@@ -18,8 +21,17 @@ export const ProposalListHeader = (props: ProposalListHeaderProps) => {
             Your total staked balance:
           </span>
 
-          {!user_stake_weight && (
+          {!user_stake_weight && !accountUnselected && (
             <Skeleton className="ml-2 w-1/5 py-2 md:mt-1 lg:w-2/5" />
+          )}
+
+          {!user_stake_weight && accountUnselected && (
+            <button
+              className="text-blue-500"
+              onClick={() => handleConnect()}
+            >
+              Connect your wallet
+            </button>
           )}
 
           {user_stake_weight && (

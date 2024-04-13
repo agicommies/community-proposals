@@ -122,7 +122,7 @@ export const ProposalCard = (props: ProposalCardProps) => {
 
   return (
     <Card.Root key={proposal.id}>
-      <Card.Header className="flex-col-reverse">
+      <Card.Header className="flex-col-reverse z-10">
         {proposal_info.title && (
           <h3 className="text-base font-semibold">{proposal_info.title}</h3>
         )}
@@ -130,7 +130,7 @@ export const ProposalCard = (props: ProposalCardProps) => {
         {!proposal_info.title && <Skeleton className="w-8/12 py-3" />}
 
         <div className="mb-2 flex w-full justify-center md:w-auto md:justify-end flex-row-reverse gap-2 md:mb-0 md:ml-auto md:pl-4 md:flex-row">
-          {voted !== "UNVOTED" && <VoteLabel vote={voted} />}
+          <VoteLabel vote={voted} />
           <StatusLabel result={proposal.status as TProposalStatus} />
         </div>
 

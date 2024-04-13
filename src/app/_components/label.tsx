@@ -4,7 +4,7 @@ type LabelProps = {
   className?: string
 }
 
-export const Label = ({ children, className }: LabelProps) => {
+export const Label = ({ children, className = '' }: LabelProps) => {
 
   return (
     <span className={`px-4 py-1 text-sm font-semibold rounded-3xl ${className}`}>

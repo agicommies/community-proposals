@@ -20,7 +20,7 @@ const CardHeader = (props: TCardProps) => {
     <div
       className={`relative flex w-full items-center justify-center rounded-t-xl border-b border-black px-6 py-3 md:flex-row lg:justify-start dark:border-white ${className}`}
     >
-      <div className="absolute left-0 top-0 h-full w-full rounded-t-xl bg-cover opacity-20 dark:bg-dark dark:bg-[url('/grid-bg.svg')]" />
+      <div className="absolute z-0 left-0 top-0 h-full w-full rounded-t-xl bg-cover opacity-20 dark:bg-dark dark:bg-[url('/grid-bg.svg')]" />
       {children}
     </div>
   );

@@ -9,9 +9,10 @@ import {
   get_proposal_netuid,
 } from "~/hooks/polkadot/functions/proposals";
 import type { SS58Address } from "~/hooks/polkadot/functions/types";
+import { type TVote } from "./_components/vote-label";
 
 export default function HomePage() {
-  const { proposals, stake_data, selectedAccount } = usePolkadot();
+  const { proposals, stake_data, selectedAccount, handleConnect } = usePolkadot();
 
   let user_stake_weight = null;
   if (stake_data != null && selectedAccount != null) {
@@ -26,26 +27,26 @@ export default function HomePage() {
 
   const isProposalsLoading = proposals == null;
 
+  const handleUserVotes = ({ votesAgainst, votesFor, selectedAccountAddress }: { votesAgainst: Array<string>, votesFor: Array<string>, selectedAccountAddress: SS58Address }): TVote => {
+    if (votesAgainst.includes(selectedAccountAddress)) return "AGAINST"
+    if (votesFor.includes(selectedAccountAddress)) return "FAVORABLE"
+    return "UNVOTED"
+  }
+
   return (
     <main className="flex flex-col items-center justify-center dark:bg-light-dark">
       <div className="my-12 h-full w-full bg-[url(/dots-bg.svg)] bg-repeat py-12 dark:bg-[url(/dots-bg-dark.svg)]">
         <Container>
-          <ProposalListHeader user_stake_weight={user_stake_weight} />
+          <ProposalListHeader user_stake_weight={user_stake_weight} accountUnselected={!selectedAccount} handleConnect={handleConnect} />
           <div className="space-y-8 py-8">
             {!isProposalsLoading &&
               proposals?.map((proposal) => {
-                const voted =
-                  selectedAccount != null
-                    ? proposal.votesFor.includes(
-                      selectedAccount.address as SS58Address,
-                    )
-                      ? "FAVORABLE"
-                      : proposal.votesAgainst.includes(
-                        selectedAccount.address as SS58Address,
-                      )
-                        ? "AGAINST"
-                        : "UNVOTED"
-                    : "UNVOTED";
+
+                const voted = handleUserVotes({
+                  votesAgainst: proposal.votesAgainst,
+                  votesFor: proposal.votesFor,
+                  selectedAccountAddress: selectedAccount?.address as SS58Address
+                })
 
                 const netuid = get_proposal_netuid(proposal);
                 let proposal_stake_info = null;
