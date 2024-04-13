@@ -1,12 +1,12 @@
 import { match } from "rustie";
+import { assert } from "tsafe";
+import { build_ipfs_gateway_url, parse_ipfs_uri } from "../../../utils/ipfs";
 import {
-  type Proposal,
-  type CustomProposalMetadata,
   CUSTOM_PROPOSAL_METADATA_SCHEMA,
+  type CustomProposalDataState,
+  type Proposal,
   type ProposalState,
 } from "./types";
-import { parse_ipfs_uri, build_ipfs_gateway_url } from "../../../utils/ipfs";
-import { assert } from "tsafe";
 
 const DEBUG = process.env.NODE_ENV === "development";
 
@@ -23,29 +23,26 @@ export interface ProposalStakeInfo {
 export async function handle_custom_proposal_data(
   proposal: Proposal,
   data: string,
-): Promise<CustomProposalMetadata | null> {
+): Promise<CustomProposalDataState> {
   const cid = parse_ipfs_uri(data);
   if (cid == null) {
-    console.error(`Invalid IPFS URI '${data}' for proposal ${proposal.id}`);
-    return null;
+    const message = `Invalid IPFS URI '${data}' for proposal ${proposal.id}`;
+    console.error(message);
+    return { Err: { message } };
   }
-  const url = build_ipfs_gateway_url(cid);
-  // TODO: render metadata loading failure
 
+  const url = build_ipfs_gateway_url(cid);
   const response = await fetch(url);
-  const validated = CUSTOM_PROPOSAL_METADATA_SCHEMA.safeParse(
-    await response.json(),
-  );
+  const obj: unknown = await response.json();
+
+  const validated = CUSTOM_PROPOSAL_METADATA_SCHEMA.safeParse(obj);
   if (!validated.success) {
-    console.error(
-      `Invalid proposal data for proposal ${proposal.id} at ${url}`,
-      validated.error.issues,
-    );
-    console.error();
-    return null;
+    const message = `Invalid proposal data for proposal ${proposal.id} at ${url}`;
+    console.error(message, validated.error.issues);
+    return { Err: { message } };
   }
-  const metadata = validated.data;
-  return metadata;
+
+  return { Ok: validated.data };
 }
 
 export function handle_custom_proposals(

@@ -2,18 +2,25 @@ import type { Codec } from "@polkadot/types/types";
 import type { Enum, Tagged } from "rustie";
 import { assert, type Extends } from "tsafe";
 import { z } from "zod";
+import type { Result } from "~/utils";
 
 export type SS58Address = Tagged<string, "SS58Address">;
 
-// == Proposal Body on Interface ==
+// == Proposal State on Interface ==
 
 export interface ProposalState extends Proposal {
-  custom_data?: CustomProposalMetadata;
+  custom_data?: CustomProposalDataState;
 }
+
+export type CustomProposalDataState = Result<
+  CustomProposalData,
+  CustomProposalDataError
+>;
+export type CustomProposalDataError = { message: string };
 
 // == Custom Proposal Extra Data ==
 
-export interface CustomProposalMetadata {
+export interface CustomProposalData {
   title?: string;
   body?: string; // Markdown description
 }
@@ -24,10 +31,7 @@ export const CUSTOM_PROPOSAL_METADATA_SCHEMA = z.object({
 });
 
 assert<
-  Extends<
-    z.infer<typeof CUSTOM_PROPOSAL_METADATA_SCHEMA>,
-    CustomProposalMetadata
-  >
+  Extends<z.infer<typeof CUSTOM_PROPOSAL_METADATA_SCHEMA>, CustomProposalData>
 >();
 
 // == Proposal ==
