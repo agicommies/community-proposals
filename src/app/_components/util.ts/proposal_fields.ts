@@ -65,7 +65,7 @@ function handle_proposal_params(
 ): ProposalCardFields {
   const title =
     `Parameters proposal #${proposal_id} for ` +
-    (netuid == null ? "global network" : `subnet ${netuid}`);
+    (netuid == "GLOBAL" ? "global network" : `subnet ${netuid}`);
   return {
     title,
     body: params_to_markdown(params),
