@@ -38,12 +38,6 @@ export const ProposalCard = (props: ProposalCardProps) => {
     netuid: number | "GLOBAL";
   };
 
-  const param_name_to_display_name = (paramName: string): string => {
-    return paramName
-      .replace(/_/g, " ")
-      .replace(/\b\w/g, (l) => l.toUpperCase());
-  };
-
   const params_to_markdown = (params: Record<string, unknown>): string => {
     const items = [];
     for (const [key, value] of Object.entries(params)) {

@@ -103,8 +103,9 @@ const PARAM_FIELD_DISPLAY_NAMES: Record<string, string> = {
   voteMode: "Vote Mode",
 };
 
-export const param_name_to_display_name = (name: string): string =>
-  PARAM_FIELD_DISPLAY_NAMES[name] ?? name;
+export const param_name_to_display_name = (paramName: string): string => {
+  return paramName.replace(/_/g, " ").replace(/\b\w/g, (l) => l.toUpperCase());
+};
 
 export const ADDRESS_SCHEMA = z
   .string()
@@ -115,12 +116,18 @@ export const PROPOSAL_DATA_SCHEMA = z.union([
     custom: z.string(),
   }),
   z.object({
-    globalParams: z.object({}).passthrough().transform((value) => value as Record<string, unknown>), // TODO: globalParams validation
+    globalParams: z
+      .object({})
+      .passthrough()
+      .transform((value) => value as Record<string, unknown>), // TODO: globalParams validation
   }),
   z.object({
     subnetParams: z.object({
       netuid: z.number(),
-      params: z.object({}).passthrough().transform((value) => value as Record<string, unknown>), // TODO: subnetParams validation
+      params: z
+        .object({})
+        .passthrough()
+        .transform((value) => value as Record<string, unknown>), // TODO: subnetParams validation
     }),
   }),
   z.object({
