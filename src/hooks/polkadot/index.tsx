@@ -3,7 +3,8 @@
 
 import React, { createContext, useContext, useEffect, useState } from "react";
 
-import { ApiPromise, WsProvider } from "@polkadot/api";
+import { ApiPromise, SubmittableResult, WsProvider } from "@polkadot/api";
+import { DispatchError } from '@polkadot/types/interfaces';
 
 import {
   type InjectedAccountWithMeta,
@@ -197,20 +198,53 @@ export const PolkadotProvider: React.FC<PolkadotProviderProps> = ({
       !api.tx.subspaceModule?.voteProposal
     )
       return;
-
+  
     const injector = await polkadotApi.web3FromAddress(selectedAccount.address);
+  
     api.tx.subspaceModule
       .voteProposal(proposalId, vote)
-      .signAndSend(selectedAccount.address, { signer: injector.signer })
-      .then((response) => {
-        alert(`Voting Successful, hash: ${response.toHex()}`);
-        callback?.();
-      })
+      .signAndSend(
+        selectedAccount.address,
+        { signer: injector.signer },
+        (result: SubmittableResult) => {
+          console.log(`Transaction hash: ${result.txHash.toHex()}`);
+  
+          if (result.status.isInBlock) {
+            console.log(`Transaction included in block`);
+          }
+  
+          if (result.status.isFinalized) {
+            result.events.forEach(({ event }) => {
+              if (api.events.system?.ExtrinsicSuccess?.is(event)) {
+                alert(`Voting successful`);
+                callback?.();
+              } else if (api.events.system?.ExtrinsicFailed?.is(event)) {
+                const [dispatchError] = event.data as unknown as [DispatchError];
+  
+                if (dispatchError.isModule) {
+                  const mod = dispatchError.asModule;
+                  const error = api.registry.findMetaError(mod);
+  
+                  if (error.section && error.name && error.docs) {
+                    const errorMessage = `${error.name}`;
+                    alert(`Voting failed: ${errorMessage}`);
+                  } else {
+                    alert(`Voting failed: Unknown error`);
+                  }
+                } else {
+                  alert(`Voting failed: ${dispatchError.type}`);
+                }
+              }
+            });
+          }
+        }
+      )
       .catch((err) => {
         // TODO toast error
-        console.log(err);
+        console.error(err);
       });
   }
+  
 
   async function createNewProposal(data: string) {
     if (
