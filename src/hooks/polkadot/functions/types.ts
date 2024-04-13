@@ -107,8 +107,9 @@ const PARAM_FIELD_DISPLAY_NAMES: Record<string, string> = {
   voteMode: "Vote Mode",
 };
 
-export const param_name_to_display_name = (paramName: string): string => {
-  return paramName.replace(/_/g, " ").replace(/\b\w/g, (l) => l.toUpperCase());
+export const param_name_to_display_name = (param_name: string): string => {
+  return PARAM_FIELD_DISPLAY_NAMES[param_name] ?? param_name;
+  // return paramName.replace(/_/g, " ").replace(/\b\w/g, (l) => l.toUpperCase()); // Do not try to do AI with regex
 };
 
 export const ADDRESS_SCHEMA = z
@@ -147,10 +148,9 @@ assert<Extends<z.infer<typeof PROPOSAL_DATA_SCHEMA>, ProposalData>>();
 export const PROPOSAL_SHEMA = z
   .object({
     id: z.number(),
-    proposer: ADDRESS_SCHEMA,
+    proposer: ADDRESS_SCHEMA, // TODO: validate SS58 address
     expirationBlock: z.number(),
     data: PROPOSAL_DATA_SCHEMA,
-    // TODO: cast to SS58 address
     status: z
       .string()
       .refine(

@@ -112,7 +112,6 @@ export default function ProposalExpandedCard(props: ProposalCardProps) {
                       )) || <span> Global </span>}
                     </Label>
                     <StatusLabel result={proposal.status} />{" "}
-                    {/* TODO: add result */}
                   </div>
                   <button
                     type="button"

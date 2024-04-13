@@ -32,7 +32,7 @@ export const ProposalCard = (props: ProposalCardProps) => {
 
   return (
     <Card.Root key={proposal.id} className={`${invalid ? "opacity-50" : ""}`}>
-       <Card.Header classNme="flex-col-reverse z-10">
+      <Card.Header className="z-10 flex-col-reverse">
         {title && <h3 className="text-base font-semibold">{title}</h3>}
         {!title && <Skeleton className="w-8/12 py-3" />}
 
@@ -53,7 +53,7 @@ export const ProposalCard = (props: ProposalCardProps) => {
             data-color-mode={theme === "dark" ? "dark" : "light"}
           >
             {body && <MarkdownPreview source={body} />}
-            {/* TODO: skeleton */}
+            {/* TODO: skeleton for markdown body */}
           </div>
         </div>
 
