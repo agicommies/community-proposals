@@ -4,8 +4,8 @@ import { env } from "~/env";
 
 import { inter } from "~/styles/fonts";
 import { Header } from "./_components/header";
-import { PolkadotProvider } from "~/polkadot";
-import { TRPCReactProvider } from "~/trpc/react";
+import { PolkadotProvider } from "~/hooks/polkadot";
+import { TRPCReactProvider } from "~/hooks/trpc/react";
 
 export const metadata = {
   title: "Community Proposal",

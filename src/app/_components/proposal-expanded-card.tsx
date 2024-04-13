@@ -15,7 +15,7 @@ import { Card } from "~/app/_components/card";
 import { StatusLabel } from "~/app/_components/status-label";
 import { VoteCard } from "~/app/_components/vote-card";
 import { VoteLabel, type TVote } from "~/app/_components/vote-label";
-import { type ProposalStakeInfo } from "~/proposals";
+import { type ProposalStakeInfo } from "~/hooks/polkadot/functions/proposals";
 import { bigint_division, format_token, small_address } from "~/utils";
 
 import { Container } from "./container";

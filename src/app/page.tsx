@@ -3,16 +3,21 @@ import { Container } from "./_components/container";
 import { ProposalListHeader } from "./_components/proposal-list-header";
 import { ProposalCard } from "./_components/proposal-card";
 import { Card } from "./_components/card";
-import { usePolkadot } from "~/polkadot";
-import { compute_votes, get_proposal_netuid } from "~/proposals";
-import type { SS58Address } from "~/types";
+import { usePolkadot } from "~/hooks/polkadot";
+import {
+  compute_votes,
+  get_proposal_netuid,
+} from "~/hooks/polkadot/functions/proposals";
+import type { SS58Address } from "~/hooks/polkadot/functions/types";
 
 export default function HomePage() {
   const { proposals, stake_data, selectedAccount } = usePolkadot();
 
   let user_stake_weight = null;
   if (stake_data != null && selectedAccount != null) {
-    const user_stake_entry = stake_data.stake_out.per_addr.get(selectedAccount.address);
+    const user_stake_entry = stake_data.stake_out.per_addr.get(
+      selectedAccount.address,
+    );
     if (user_stake_entry != null) {
       user_stake_weight = user_stake_entry;
     }
@@ -29,13 +34,18 @@ export default function HomePage() {
           <div className="space-y-8 py-8">
             {!isProposalsLoading &&
               proposals?.map((proposal) => {
-                const voted = selectedAccount != null
-                  ? proposal.votesFor.includes(selectedAccount.address as SS58Address)
-                    ? "FAVORABLE"
-                    : proposal.votesAgainst.includes(selectedAccount.address as SS58Address)
-                      ? "AGAINST"
-                      : "UNVOTED"
-                  : "UNVOTED";
+                const voted =
+                  selectedAccount != null
+                    ? proposal.votesFor.includes(
+                        selectedAccount.address as SS58Address,
+                      )
+                      ? "FAVORABLE"
+                      : proposal.votesAgainst.includes(
+                            selectedAccount.address as SS58Address,
+                          )
+                        ? "AGAINST"
+                        : "UNVOTED"
+                    : "UNVOTED";
 
                 const netuid = get_proposal_netuid(proposal);
                 let proposal_stake_info = null;

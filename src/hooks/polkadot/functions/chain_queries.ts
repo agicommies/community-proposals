@@ -138,8 +138,7 @@ export async function get_all_stake_out(api: ApiPromise) {
       per_net.set(netuid, old_total_for_net + staked);
 
       // Add stake to (netuid => addr => stake) map
-      const map_net =
-        per_addr_per_net.get(netuid) ?? new Map<string, bigint>();
+      const map_net = per_addr_per_net.get(netuid) ?? new Map<string, bigint>();
       const old_total_addr_net = map_net.get(from_addr) ?? 0n;
       map_net.set(from_addr, old_total_addr_net + staked);
     }
@@ -189,7 +188,11 @@ async function _test() {
     // }
     console.log(`Proposal #${proposal.id}`, `proposer: ${proposal.proposer}`); // TEST
 
-    const { stake_for, stake_against, stake_voted: stake_total } = compute_votes(
+    const {
+      stake_for,
+      stake_against,
+      stake_voted: stake_total,
+    } = compute_votes(
       stake_data.stake_out.per_addr,
       proposal.votesFor,
       proposal.votesAgainst,

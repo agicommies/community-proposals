@@ -6,8 +6,8 @@ import Image from "next/image";
 import { match } from "rustie";
 import { assert } from "tsafe";
 
-import { type ProposalStakeInfo } from "~/proposals";
-import { type ProposalState } from "~/types";
+import { type ProposalStakeInfo } from "~/hooks/polkadot/functions/proposals";
+import { type ProposalState } from "~/hooks/polkadot/functions/types";
 import { bigint_division, format_token, small_address } from "~/utils";
 
 import { Card } from "./card";

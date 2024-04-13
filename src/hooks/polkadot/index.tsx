@@ -11,9 +11,13 @@ import {
 } from "@polkadot/extension-inject/types";
 
 import { WalletModal } from "~/app/_components/wallet-modal";
-import { get_all_stake_out, get_proposals, type StakeData } from "~/chain_queries";
-import { handle_custom_proposals } from "~/proposals";
-import type { ProposalState } from "~/types";
+import {
+  get_all_stake_out,
+  get_proposals,
+  type StakeData,
+} from "~/hooks/polkadot/functions/chain_queries";
+import { handle_custom_proposals } from "~/hooks/polkadot/functions/proposals";
+import type { ProposalState } from "~/hooks/polkadot/functions/types";
 import { is_not_null } from "~/utils";
 
 interface AddVoting {
@@ -111,18 +115,21 @@ export const PolkadotProvider: React.FC<PolkadotProviderProps> = ({
         setBlockNumber(header.number.toNumber());
       });
 
-      get_all_stake_out(api).then((stake_data_result) => {
-        setStakeData(stake_data_result);
-        console.log("got stake map");
-      }).catch((e) => {
-        console.error("Error fetching stake out map", e);
-      });
+      get_all_stake_out(api)
+        .then((stake_data_result) => {
+          setStakeData(stake_data_result);
+          console.log("got stake map");
+        })
+        .catch((e) => {
+          console.error("Error fetching stake out map", e);
+        });
 
       get_proposals(api)
         .then((proposals_result) => {
           setProposals(proposals_result);
 
-          handle_custom_proposals(proposals_result,
+          handle_custom_proposals(
+            proposals_result,
             // (id, new_proposal) => {
             //   if (proposals == null) {
             //     console.error(`New proposal ${id} is null`); // Should not happen
@@ -132,31 +139,33 @@ export const PolkadotProvider: React.FC<PolkadotProviderProps> = ({
             //   new_proposal_list[id] = new_proposal;
             //   setProposals(new_proposal_list);
             // }
-          ).then((results) => {
-            // Handle data from custom proposals
-            const new_proposal_list: ProposalState[] = [...proposals_result];
-            // For each custom data result, find the proposal with the same id
-            // and update its `custom_data` field
-            results.filter(is_not_null).forEach((result) => {
-              const { id, custom_data } = result;
-              const proposal = new_proposal_list.find((p) => p.id === id);
-              if (proposal == null) {
-                console.error(`Proposal ${id} not found`);
-                return;
-              }
-              proposal.custom_data = custom_data;
+          )
+            .then((results) => {
+              // Handle data from custom proposals
+              const new_proposal_list: ProposalState[] = [...proposals_result];
+              // For each custom data result, find the proposal with the same id
+              // and update its `custom_data` field
+              results.filter(is_not_null).forEach((result) => {
+                const { id, custom_data } = result;
+                const proposal = new_proposal_list.find((p) => p.id === id);
+                if (proposal == null) {
+                  console.error(`Proposal ${id} not found`);
+                  return;
+                }
+                proposal.custom_data = custom_data;
+              });
+              // Update the state with the new proposal list
+              setProposals(new_proposal_list);
+            })
+            .catch((e) => {
+              console.error("Error fetching custom proposals data:", e);
             });
-            // Update the state with the new proposal list
-            setProposals(new_proposal_list);
-          }).catch((e) => {
-            console.error("Error fetching custom proposals data:", e);
-          });
         })
         .catch((e) => {
           console.error("Error fetching proposals:", e);
         });
     }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [api]);
 
   async function handleConnect() {

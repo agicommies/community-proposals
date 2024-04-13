@@ -5,7 +5,7 @@ import {
   CUSTOM_PROPOSAL_METADATA_SCHEMA,
   type ProposalState,
 } from "./types";
-import { parse_ipfs_uri, build_ipfs_gateway_url } from "./utils/ipfs";
+import { parse_ipfs_uri, build_ipfs_gateway_url } from "../../../utils/ipfs";
 import { assert } from "tsafe";
 
 const DEBUG = process.env.NODE_ENV === "development";

@@ -9,7 +9,7 @@ import {
 } from "@heroicons/react/20/solid";
 
 import { useState } from "react";
-import { usePolkadot } from "~/polkadot";
+import { usePolkadot } from "~/hooks/polkadot";
 import { parse_ipfs_uri } from "~/utils/ipfs";
 import { useRouter } from "next/navigation";
 

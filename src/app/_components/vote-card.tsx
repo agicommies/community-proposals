@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { Card } from "./card";
 import { type TVote } from "./vote-label";
-import { usePolkadot } from "~/polkadot";
+import { usePolkadot } from "~/hooks/polkadot";
 
 export const VoteCard = () => {
   const { isConnected, addVoting } = usePolkadot();

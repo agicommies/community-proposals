@@ -1,5 +1,5 @@
 import Image from "next/image";
-import { usePolkadot } from "~/polkadot";
+import { usePolkadot } from "~/hooks/polkadot";
 import { Squares2X2Icon, WalletIcon } from "@heroicons/react/20/solid";
 
 export function PolkadotButton() {
