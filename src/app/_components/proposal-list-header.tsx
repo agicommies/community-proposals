@@ -1,7 +1,7 @@
 import { Skeleton } from "./skeleton";
 
 import { CreateProposal } from "./create-proposal";
-// import { format_token } from "~/utils";
+import { format_token } from "~/utils";
 
 type ProposalListHeaderProps = {
   user_stake_weight: number | null;
@@ -15,11 +15,11 @@ export const ProposalListHeader = (props: ProposalListHeaderProps) => {
   return (
     <div className="flex w-full flex-col items-center justify-between gap-6 lg:flex-row">
       <h2 className="text-4xl font-semibold dark:text-white">Proposals</h2>
-      <div className="flex w-full flex-col items-center space-y-4 lg:flex-row lg:space-x-3 lg:space-y-0">
+      <div className="flex w-full flex-col items-center space-y-4 lg:flex-row lg:space-x-3 lg:space-y-0 lg:divide-x">
         <div className="flex w-full justify-center lg:flex-col lg:items-end">
-          {/* <span className="text-base font-medium text-black dark:text-white">
+          <span className="text-base font-medium text-black dark:text-white">
             Your total staked balance:
-          </span> */}
+          </span>
 
           {!user_stake_weight && !accountUnselected && (
             <Skeleton className="ml-2 w-1/5 py-2 md:mt-1 lg:w-2/5" />
@@ -31,12 +31,12 @@ export const ProposalListHeader = (props: ProposalListHeaderProps) => {
             </button>
           )}
 
-          {/* {user_stake_weight && (
+          {user_stake_weight && (
             <span className="ml-1 text-base font-semibold text-blue-500">
               {format_token(user_stake_weight)}
               <span className="text-xs font-light"> COMAI</span>
             </span>
-          )} */}
+          )}
         </div>
 
         {/* <div className="flex w-full flex-row-reverse justify-center gap-4 lg:w-auto lg:flex-row lg:gap-0 lg:pl-3">
