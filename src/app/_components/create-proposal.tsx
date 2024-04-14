@@ -14,12 +14,12 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 // import { parse_ipfs_uri } from "~/utils/ipfs";
 import { usePolkadot } from "~/hooks/polkadot";
-import { getStoredTheme } from "~/styles/theming";
+import { getCurrentTheme } from "~/styles/theming";
 import { toast } from "react-toastify";
 
 export function CreateProposal() {
   const { isConnected, createNewProposal } = usePolkadot();
-  const theme = getStoredTheme();
+  const theme = getCurrentTheme();
   const router = useRouter();
 
   const [ipfsUri, setIpfsUri] = useState("");

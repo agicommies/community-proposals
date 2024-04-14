@@ -6,7 +6,7 @@ import React, { useState } from "react";
 import { CheckCircleIcon, XMarkIcon } from "@heroicons/react/20/solid";
 import { type InjectedAccountWithMeta } from "@polkadot/extension-inject/types";
 import { toast } from "react-toastify";
-import { getStoredTheme } from "~/styles/theming";
+import { getCurrentTheme } from "~/styles/theming";
 
 export function WalletModal({
   open,
@@ -19,7 +19,7 @@ export function WalletModal({
   wallets: InjectedAccountWithMeta[];
   handleWalletSelections: (arg: InjectedAccountWithMeta) => void;
 }) {
-  const theme = getStoredTheme();
+  const theme = getCurrentTheme();
 
   const [selectedAccount, setSelectedAccount] =
     useState<InjectedAccountWithMeta>();

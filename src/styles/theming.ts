@@ -25,6 +25,16 @@ export function getStoredTheme() {
   }
 }
 
+export function getCurrentTheme(): TThemes {
+  const storedTheme = getStoredTheme();
+
+  if (storedTheme === SYSTEM_THEME_CLASSNAME) {
+    return isDarkSystemTheme() ? DARK_THEME_CLASSNAME : LIGHT_THEME_CLASSNAME;
+  }
+
+  return storedTheme as TThemes;
+}
+
 export function setTheme(theme: TThemes) {
   const root = getHtml();
 
