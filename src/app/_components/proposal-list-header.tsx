@@ -4,9 +4,9 @@ import { CreateProposal } from "./create-proposal";
 import { format_token } from "~/utils";
 
 type ProposalListHeaderProps = {
-  user_stake_weight: number | null;
-  accountUnselected: boolean
-  handleConnect: () => void
+  user_stake_weight: bigint | null;
+  accountUnselected: boolean;
+  handleConnect: () => void;
 };
 
 export const ProposalListHeader = (props: ProposalListHeaderProps) => {
@@ -21,20 +21,15 @@ export const ProposalListHeader = (props: ProposalListHeaderProps) => {
             Your total staked balance:
           </span>
 
-          {!user_stake_weight && !accountUnselected && (
-            <Skeleton className="ml-2 w-1/5 py-2 md:mt-1 lg:w-2/5" />
-          )}
-
-          {!user_stake_weight && accountUnselected && (
-            <button
-              className="text-blue-500"
-              onClick={() => handleConnect()}
-            >
-              Connect your wallet
-            </button>
-          )}
-
-          {user_stake_weight && (
+          {user_stake_weight == null ? (
+            !accountUnselected ? (
+              <Skeleton className="ml-2 w-1/5 py-2 md:mt-1 lg:w-2/5" />
+            ) : (
+              <button className="text-blue-500" onClick={() => handleConnect()}>
+                Connect your wallet
+              </button>
+            )
+          ) : (
             <span className="ml-1 text-base font-semibold text-blue-500">
               {format_token(user_stake_weight)}
               <span className="text-xs font-light"> COMAI</span>

@@ -14,15 +14,12 @@ import { type TVote } from "./_components/vote-label";
 export default function HomePage() {
   const { proposals, stake_data, selectedAccount, handleConnect } = usePolkadot();
 
-  let user_stake_weight = null;
+  let user_stake_weight: bigint | null = null;
   if (stake_data != null && selectedAccount != null) {
     const user_stake_entry = stake_data.stake_out.per_addr.get(
       selectedAccount.address,
     );
-    if (user_stake_entry != null) {
-      user_stake_weight = user_stake_entry;
-    }
-    user_stake_weight = 11 * 10 ** 9;
+    user_stake_weight = user_stake_entry ?? 0n;
   }
 
   const isProposalsLoading = proposals == null;
