@@ -44,7 +44,7 @@ export default function HomePage() {
       <div className="my-12 h-full w-full bg-[url(/dots-bg.svg)] bg-repeat py-12 dark:bg-[url(/dots-bg-dark.svg)]">
         <Container>
           <ProposalListHeader
-            user_stake_weight={user_stake_weight as number}
+            user_stake_weight={user_stake_weight}
             accountUnselected={!selectedAccount}
             handleConnect={handleConnect}
           />
