@@ -92,6 +92,9 @@ export function handle_custom_proposals(
       subnetParams: async function () {
         return null;
       },
+      expired: async function () {
+        return null;
+      }
     });
     promises.push(prom);
   }
@@ -112,6 +115,9 @@ export function get_proposal_netuid(proposal: Proposal): number | null {
     subnetCustom: function ({ netuid }): number {
       return netuid;
     },
+    expired: function (): null {
+      return null;
+    }
   });
 }
 
@@ -129,6 +135,9 @@ export function is_proposal_custom(proposal: Proposal): boolean {
     subnetCustom: function (/*{ netuid }*/): boolean {
       return true;
     },
+    expired: function (): boolean {
+      return false;
+    }
   });
 }
 

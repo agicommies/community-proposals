@@ -57,6 +57,7 @@ export type ProposalData = Enum<{
   globalParams: Record<string, unknown>;
   subnetParams: { netuid: number; params: Record<string, unknown> };
   subnetCustom: { netuid: number; data: string };
+  expired: null;
 }>;
 
 export interface Proposal {
@@ -141,6 +142,7 @@ export const PROPOSAL_DATA_SCHEMA = z.union([
       data: z.string(),
     }),
   }),
+  z.object({ expired: z.null() }),
 ]);
 
 assert<Extends<z.infer<typeof PROPOSAL_DATA_SCHEMA>, ProposalData>>();
@@ -178,7 +180,7 @@ export function parse_proposal(value_raw: Codec): Proposal | null {
   const value = value_raw.toPrimitive();
   const validated = PROPOSAL_SHEMA.safeParse(value);
   if (!validated.success) {
-    console.error(validated.error.issues);
+    console.warn("Invalid proposal:", validated.error.issues);
     return null;
   } else {
     return validated.data;

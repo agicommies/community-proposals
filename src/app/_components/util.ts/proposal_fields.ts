@@ -95,4 +95,12 @@ export const handle_proposal = (proposal: ProposalState): ProposalCardFields =>
     subnetParams: function ({ netuid, params }): ProposalCardFields {
       return handle_proposal_params(proposal.id, params, netuid);
     },
+    expired: function (): ProposalCardFields {
+      return {
+        title: `Proposal #${proposal.id} has expired`,
+        body: "This proposal has expired.",
+        netuid: "GLOBAL",
+        invalid: true,
+      };
+    }
   });
