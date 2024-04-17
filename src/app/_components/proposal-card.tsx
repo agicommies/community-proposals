@@ -24,6 +24,60 @@ export type ProposalCardProps = {
   voted: TVote;
 };
 
+function handle_favorable_percent(favorable_percent: number) {
+  const against_percent = 100 - favorable_percent;
+  // const winning = favorable_percent >= 50; // Are you winning son?
+  if (Number.isNaN(favorable_percent)) {
+    return (
+      <Label className="w-full bg-gray-100 py-1.5 text-center text-yellow-500 md:w-auto lg:text-left dark:bg-light-dark">
+        – %
+      </Label>
+    );
+  }
+  return (
+    // TODO: render red-ish label if losing and green-ish label if winning
+    <Label className="flex w-full items-center justify-center gap-1.5 bg-gray-100 py-1.5 text-center md:w-auto lg:text-left dark:bg-light-dark">
+      <span className="text-green-500">{favorable_percent?.toFixed(0)}%</span>
+      <Image
+        src={"/favorable-up.svg"}
+        height={14}
+        width={10}
+        alt="favorable arrow up icon"
+      />
+      {" / "}
+      <span className="text-red-500"> {against_percent?.toFixed(0)}% </span>
+      <Image
+        src={"/against-down.svg"}
+        height={14}
+        width={10}
+        alt="against arrow down icon"
+      />
+    </Label>
+  );
+}
+
+function render_favorable_percent(stake_info: ProposalStakeInfo) {
+  const { stake_for, stake_against, stake_voted } = stake_info;
+  assert(
+    stake_for + stake_against == stake_voted,
+    "stake_for + stake_against != stake_voted",
+  );
+  const favorable_percent = bigint_division(stake_for, stake_voted) * 100;
+  return handle_favorable_percent(favorable_percent);
+}
+
+function render_quorum_percent(stake_info: ProposalStakeInfo) {
+  const { stake_voted, stake_total } = stake_info;
+  const quorum_percent = bigint_division(stake_voted, stake_total) * 100;
+  return (
+    <span className="text-yellow-600">
+      {" ("}
+      {quorum_percent.toFixed(2)} %{")"}
+    </span>
+  );
+}
+
+
 export const ProposalCard = (props: ProposalCardProps) => {
   const { proposal, stake_info, voted } = props;
   const theme = getCurrentTheme();
@@ -106,56 +160,3 @@ export const ProposalCard = (props: ProposalCardProps) => {
     </Card.Root>
   );
 };
-
-function handle_favorable_percent(favorable_percent: number) {
-  const against_percent = 100 - favorable_percent;
-  // const winning = favorable_percent >= 50; // Are you winning son?
-  if (Number.isNaN(favorable_percent)) {
-    return (
-      <Label className="w-full bg-gray-100 py-1.5 text-center text-yellow-500 md:w-auto lg:text-left dark:bg-light-dark">
-        – %
-      </Label>
-    );
-  }
-  return (
-    // TODO: render red-ish label if losing and green-ish label if winning
-    <Label className="flex w-full items-center justify-center gap-1.5 bg-gray-100 py-1.5 text-center md:w-auto lg:text-left dark:bg-light-dark">
-      <span className="text-green-500">{favorable_percent?.toFixed(0)}%</span>
-      <Image
-        src={"/favorable-up.svg"}
-        height={14}
-        width={10}
-        alt="favorable arrow up icon"
-      />
-      {" / "}
-      <span className="text-red-500"> {against_percent?.toFixed(0)}% </span>
-      <Image
-        src={"/against-down.svg"}
-        height={14}
-        width={10}
-        alt="against arrow down icon"
-      />
-    </Label>
-  );
-}
-
-function render_favorable_percent(stake_info: ProposalStakeInfo) {
-  const { stake_for, stake_against, stake_voted } = stake_info;
-  assert(
-    stake_for + stake_against == stake_voted,
-    "stake_for + stake_against != stake_voted",
-  );
-  const favorable_percent = bigint_division(stake_for, stake_voted) * 100;
-  return handle_favorable_percent(favorable_percent);
-}
-
-function render_quorum_percent(stake_info: ProposalStakeInfo) {
-  const { stake_voted, stake_total } = stake_info;
-  const quorum_percent = bigint_division(stake_voted, stake_total) * 100;
-  return (
-    <span className="text-yellow-600">
-      {" ("}
-      {quorum_percent.toFixed(2)} %{")"}
-    </span>
-  );
-}

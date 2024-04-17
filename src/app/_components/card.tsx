@@ -18,7 +18,7 @@ const CardHeader = (props: TCardProps) => {
   const { children, className = "" } = props;
   return (
     <div
-      className={`relative flex w-full items-center justify-center rounded-t-xl border-b border-black bg-[url('/grid-bg.svg')] bg-no-repeat px-6 py-3 md:flex-row lg:justify-start dark:border-white ${className}`}
+      className={`relative flex w-full items-center justify-center rounded-t-xl border-b border-black bg-[url('/grids.svg')] bg-no-repeat px-6 py-3 md:flex-row lg:justify-start dark:border-white ${className}`}
     >
       {children}
     </div>

@@ -38,20 +38,6 @@ assert<
 
 export type ProposalStatus = "Pending" | "Accepted" | "Refused" | "Expired";
 
-/*
-pub enum ProposalData<T: Config> {
-    Custom(Vec<u8>),
-    GlobalParams(GlobalParams),
-    SubnetParams {
-        netuid: u16,
-        params: SubnetParams<T>,
-    },
-    SubnetCustom {
-        netuid: u16,
-        data: Vec<u8>,
-    },
-}
-*/
 export type ProposalData = Enum<{
   custom: string;
   globalParams: Record<string, unknown>;

@@ -136,18 +136,7 @@ export const PolkadotProvider: React.FC<PolkadotProviderProps> = ({
       .then((proposals_result) => {
         setProposals(proposals_result);
 
-        handle_custom_proposals(
-          proposals_result,
-          // (id, new_proposal) => {
-          //   if (proposals == null) {
-          //     console.error(`New proposal ${id} is null`); // Should not happen
-          //     return;
-          //   }
-          //   const new_proposal_list = [...proposals];
-          //   new_proposal_list[id] = new_proposal;
-          //   setProposals(new_proposal_list);
-          // }
-        )
+        handle_custom_proposals(proposals_result)
           .then((results) => {
             // Handle data from custom proposals
             const new_proposal_list: ProposalState[] = [...proposals_result];
