@@ -175,9 +175,7 @@ export const PolkadotProvider: React.FC<PolkadotProviderProps> = ({
           setStakeData(stake_data_result);
         })
         .catch((e) => {
-          toast.success(`Error fetching stake out map", ${e}`, {
-            theme: theme === "dark" ? "dark" : "light",
-          });
+          console.error("Error fetching stake data:", e);
         });
 
       handleGetProposals(api);

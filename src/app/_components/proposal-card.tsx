@@ -29,14 +29,14 @@ function handle_favorable_percent(favorable_percent: number) {
   // const winning = favorable_percent >= 50; // Are you winning son?
   if (Number.isNaN(favorable_percent)) {
     return (
-      <Label className="w-full bg-gray-100 py-1.5 text-center text-yellow-500 md:w-auto lg:text-left dark:bg-light-dark">
+      <Label className="w-full bg-gray-100 py-1.5 text-center text-yellow-500 md:w-auto dark:bg-light-dark">
         – %
       </Label>
     );
   }
   return (
     // TODO: render red-ish label if losing and green-ish label if winning
-    <Label className="flex w-full items-center justify-center gap-1.5 bg-gray-100 py-1.5 text-center md:w-auto lg:text-left dark:bg-light-dark">
+    <Label className="flex w-full items-center justify-center gap-1.5 bg-gray-100 py-1.5 text-center md:w-auto dark:bg-light-dark">
       <span className="text-green-500">{favorable_percent?.toFixed(0)}%</span>
       <Image
         src={"/favorable-up.svg"}
@@ -77,7 +77,6 @@ function render_quorum_percent(stake_info: ProposalStakeInfo) {
   );
 }
 
-
 export const ProposalCard = (props: ProposalCardProps) => {
   const { proposal, stake_info, voted } = props;
   const theme = getCurrentTheme();
@@ -95,11 +94,11 @@ export const ProposalCard = (props: ProposalCardProps) => {
 
         <div className="mb-2 flex w-full flex-row-reverse justify-center gap-2 md:mb-0 md:ml-auto md:w-auto md:flex-row md:justify-end md:pl-4">
           <VoteLabel vote={voted} />
-          <Label>
-            {(netuid !== "GLOBAL" && <span> Subnet {netuid} </span>) || (
-              <span> Global </span>
-            )}
-          </Label>
+          <div className="flex items-center">
+            <span className="rounded-full border-2 border-black bg-white px-4 py-1.5 text-center text-sm font-medium dark:border-white dark:bg-light-dark">
+              {netuid !== "GLOBAL" ? `Subnet ${netuid}` : "Global"}
+            </span>
+          </div>
           <StatusLabel result={proposal.status as TProposalStatus} />
         </div>
       </Card.Header>
