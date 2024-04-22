@@ -41,7 +41,7 @@ interface PolkadotContextType {
 
   blockNumber: number;
   accounts: InjectedAccountWithMeta[];
-  selectedAccount: InjectedAccountWithMeta | undefined;
+  selectedAccount: InjectedAccountWithMeta | null;
 
   proposals: ProposalState[] | null;
   stake_data: StakeData | null;
@@ -57,9 +57,7 @@ export type VoteStatus = {
   message: string | null;
 };
 
-const PolkadotContext = createContext<PolkadotContextType | undefined>(
-  undefined,
-);
+const PolkadotContext = createContext<PolkadotContextType | null>(null);
 
 interface PolkadotProviderProps {
   children: React.ReactNode;
@@ -88,6 +86,9 @@ export const PolkadotProvider: React.FC<PolkadotProviderProps> = ({
   const [stakeData, setStakeData] = useState<StakeData | null>(null);
 
   const [openModal, setOpenModal] = useState(false);
+
+  const [selectedAccount, setSelectedAccount] = useState<InjectedAccountWithMeta | null>(null);
+
 
   async function loadPolkadotApi() {
     const { web3Accounts, web3Enable, web3FromAddress } = await import(
@@ -212,8 +213,6 @@ export const PolkadotProvider: React.FC<PolkadotProviderProps> = ({
     }
   }
 
-  const [selectedAccount, setSelectedAccount] =
-    useState<InjectedAccountWithMeta>();
 
   async function handleWalletSelections(wallet: InjectedAccountWithMeta) {
     localStorage.setItem("favoriteWalletAddress", wallet.address);
@@ -361,7 +360,7 @@ export const PolkadotProvider: React.FC<PolkadotProviderProps> = ({
 
 export const usePolkadot = (): PolkadotContextType => {
   const context = useContext(PolkadotContext);
-  if (context === undefined) {
+  if (context === null) {
     throw new Error("usePolkadot must be used within a PolkadotProvider");
   }
   return context;
