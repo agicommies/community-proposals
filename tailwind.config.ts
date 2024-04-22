@@ -21,6 +21,7 @@ export default {
         "custom-blue-clicked":
           "0px 2px 0 0 rgb(59 130 246 / var(--tw-text-opacity))",
         "custom-orange": "0px 4px 0 0 rgba(249,115,22,1)",
+        "custom-orange-hover": "0px 4px 0 0 rgba(251,146,60,1)",
         "custom-orange-clicked": "0px 2px 0 0 rgba(249,115,22,1)",
         "custom-gray": "0px 4px 0 0 rgba(115,115,115,1)",
         "custom-gray-clicked": "0px 2px 0 0 rgba(115,115,115,1)",

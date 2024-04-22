@@ -1,12 +1,13 @@
 "use client";
 
 import Image from "next/image";
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 
 import { CheckCircleIcon, XMarkIcon } from "@heroicons/react/20/solid";
 import { type InjectedAccountWithMeta } from "@polkadot/extension-inject/types";
 import { toast } from "react-toastify";
 import { getCurrentTheme } from "~/styles/theming";
+import { usePolkadot } from "~/hooks/polkadot";
 
 export function WalletModal({
   open,
@@ -20,9 +21,15 @@ export function WalletModal({
   handleWalletSelections: (arg: InjectedAccountWithMeta) => void;
 }) {
   const theme = getCurrentTheme();
+  const { selectedAccount } = usePolkadot()
+  const [selectedWallet, setSelectedWallet] = useState<InjectedAccountWithMeta | null>(null);
 
-  const [selectedAccount, setSelectedAccount] =
-    useState<InjectedAccountWithMeta>();
+  const handleSelectAccount = (item: InjectedAccountWithMeta) => {
+    if (item.address == selectedWallet?.address) return setSelectedWallet(null)
+    return setSelectedWallet(item)
+  }
+
+  useEffect(() => { setSelectedWallet(selectedAccount) }, [selectedAccount])
 
   return (
     <div
@@ -37,17 +44,18 @@ export function WalletModal({
         <div className="flex min-h-full items-center justify-center p-4 text-center">
           <div className="relative w-[100%] max-w-3xl transform overflow-hidden rounded-3xl border-2 border-zinc-800 bg-white text-left shadow-custom dark:border-white dark:bg-light-dark dark:shadow-custom-dark">
             {/* Modal Header */}
-            <div className="flex flex-col items-center justify-between gap-3 border-b-2 border-zinc-800 bg-[url(/grids.svg)] bg-cover bg-center bg-no-repeat p-6 md:flex-row dark:border-white">
-              <div className="flex flex-col items-center md:flex-row">
+            <div className="flex items-center justify-between gap-3 border-b-2 border-zinc-800 bg-[url(/grids.svg)] bg-cover bg-center bg-no-repeat p-4 flex-row dark:border-white">
+              <div className="flex items-center flex-row">
                 <Image
                   src="/polkadot-logo.svg"
                   alt="Module Logo"
                   width={32}
                   height={32}
+                  className="w-6 h-6 md:h-8 md:w-8"
                 />
 
                 <h3
-                  className="pl-2 text-xl font-bold leading-6 dark:text-white"
+                  className="pl-2 text-transparent md:text-lg font-bold leading-6 dark:text-white"
                   id="modal-title"
                 >
                   Select Wallet
@@ -57,33 +65,34 @@ export function WalletModal({
               <button
                 type="button"
                 onClick={() => setOpen(false)}
-                className="rounded-2xl border-2 border-black p-2 transition duration-200 dark:border-white dark:bg-light-dark hover:dark:bg-dark"
+                className="rounded-xl md:rounded-2xl border-2 border-black p-1.5 md:p-2 transition duration-200 dark:border-white dark:bg-light-dark hover:dark:bg-dark"
               >
-                <XMarkIcon className="h-6 w-6 dark:fill-white" />
+                <XMarkIcon className="h-4 w-4 md:h-6 md:w-6 dark:fill-white" />
               </button>
             </div>
 
             {/* Modal Body */}
-            <div className="flex flex-col gap-y-4 overflow-y-auto p-6">
+            <div className="flex flex-col gap-y-4 overflow-y-auto p-4 md:p-4">
               {wallets.map((item) => (
                 <button
                   key={item.address}
-                  onClick={() => setSelectedAccount(item)}
-                  className={`text-md flex cursor-pointer items-center gap-x-3 overflow-auto rounded-xl border-2 p-5 shadow-white dark:text-white ${selectedAccount === item ? "border-green-500" : "border-black dark:border-white "}`}
+                  onClick={() => handleSelectAccount(item)}
+                  className={`text-md flex cursor-pointer items-center gap-x-2.5 overflow-auto rounded-xl border-2 p-2.5 shadow-white dark:text-white ${selectedWallet?.address === item.address ? "border-green-500 dark:border-green-300" : "border-black dark:border-white "} hover:border-green-500 hover:dark:border-green-300`}
                 >
                   <CheckCircleIcon
-                    className={`h-6 w-6 ${
-                      selectedAccount === item
-                        ? "fill-green-500"
-                        : "fill-black dark:fill-white"
-                    }`}
+                    className={`min-h-6 min-w-6 max-w-6 max-h-6 ${selectedWallet?.address === item.address
+                      ? "fill-green-500 dark:fill-green-300"
+                      : "fill-black dark:fill-white"
+                      }`}
                   />
-                  <div className="flex flex-col items-start gap-1">
+
+                  <div className="flex flex-col items-start gap-0.5">
                     <span className="font-semibold">{item.meta.name}</span>
                     <span>{item.address}</span>
                   </div>
                 </button>
               ))}
+
               {!wallets.length && (
                 <div className="flex h-full flex-col items-center justify-center gap-4 text-center text-sm text-gray-500">
                   <div>No wallet found.</div>
@@ -101,16 +110,18 @@ export function WalletModal({
                   </a>
                 </div>
               )}
+
               <button
-                className="w-full rounded-xl border-2 border-orange-500 p-4 text-xl font-semibold text-orange-500"
+                disabled={selectedWallet == null}
+                className={`w-full rounded-xl border-2 ${selectedWallet ? 'border-orange-400 text-orange-400 hover:border-orange-500 hover:text-orange-500' : 'border-gray-400 text-gray-400 cursor-not-allowed'} p-2 text-base md:text-lg font-semibold`}
                 onClick={() => {
-                  if (!selectedAccount) {
+                  if (!selectedWallet) {
                     toast.error("No account selected", {
                       theme: theme === "dark" ? "dark" : "light",
                     });
                     return;
                   }
-                  handleWalletSelections(selectedAccount);
+                  handleWalletSelections(selectedWallet);
                 }}
               >
                 Connect Now
