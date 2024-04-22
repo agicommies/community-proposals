@@ -12,29 +12,36 @@ type ProposalListHeaderProps = {
 export const ProposalListHeader = (props: ProposalListHeaderProps) => {
   const { user_stake_weight, accountUnselected, handleConnect } = props;
 
+  const handleShowStakeWeight = () => {
+    if (user_stake_weight != null) {
+      return (
+        <span className="ml-1 text-base font-semibold text-blue-500">
+          {format_token(user_stake_weight)}
+          <span className="text-xs font-light"> COMAI</span>
+        </span>
+      )
+    }
+
+    if (!accountUnselected) return <Skeleton className="ml-2 w-1/5 py-2 md:mt-1 lg:w-2/5" />
+
+    return (
+      <button className="text-blue-500 flex" onClick={() => handleConnect()}>
+        Connect wallet
+      </button>
+    )
+  }
+
   return (
     <div className="flex w-full flex-col items-center justify-between gap-6 lg:flex-row">
       <h2 className="text-4xl font-semibold dark:text-white">Proposals</h2>
       <div className="flex w-full flex-col items-center space-y-4 lg:flex-row lg:space-x-3 lg:space-y-0 lg:divide-x">
-        <div className="flex w-full justify-center lg:flex-col lg:items-end">
-          <span className="text-base font-medium text-black dark:text-white">
+        <div className="flex w-full flex-col items-center justify-center md:flex-row lg:flex-col lg:items-end">
+          <span className="text-base font-medium text-black dark:text-white mr-0 md:mr-1 lg:mr-0">
             Your total staked balance:
           </span>
 
-          {user_stake_weight == null ? (
-            !accountUnselected ? (
-              <Skeleton className="ml-2 w-1/5 py-2 md:mt-1 lg:w-2/5" />
-            ) : (
-              <button className="text-blue-500" onClick={() => handleConnect()}>
-                Connect your wallet
-              </button>
-            )
-          ) : (
-            <span className="ml-1 text-base font-semibold text-blue-500">
-              {format_token(user_stake_weight)}
-              <span className="text-xs font-light"> COMAI</span>
-            </span>
-          )}
+          {handleShowStakeWeight()}
+
         </div>
 
         {/* <div className="flex w-full flex-row-reverse justify-center gap-4 lg:w-auto lg:flex-row lg:gap-0 lg:pl-3">
