@@ -103,7 +103,7 @@ export const ProposalCard = (props: ProposalCardProps) => {
         </div>
       </Card.Header>
       <Card.Body>
-        <div className="pb-2 md:pb-6">
+        <div className="pb-3 md:pb-6">
           <div
             className="rounded-xl p-3 dark:bg-black/20"
             data-color-mode={theme === "dark" ? "dark" : "light"}
@@ -115,8 +115,8 @@ export const ProposalCard = (props: ProposalCardProps) => {
 
         <div className="flex flex-col items-start justify-between md:flex-row md:items-center">
           <div className="w-[240px] space-x-2 pb-4 text-gray-500 md:pb-0">
-            <span className="line-clamp-1 block w-full truncate">
-              posted by {small_address(proposal.proposer)}
+            <span className="line-clamp-1 block w-full truncate text-sm">
+              Posted by {small_address(proposal.proposer)}
             </span>
           </div>
 

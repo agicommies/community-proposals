@@ -84,7 +84,7 @@ export default function ProposalExpandedCard(props: ProposalCardProps) {
       <button
         type="button"
         onClick={toggleModalMenu}
-        className="min-w-auto w-full rounded-xl border-2 border-blue-500 px-4 py-2 text-blue-500 shadow-custom-blue lg:w-auto dark:bg-light-dark"
+        className="min-w-auto w-full rounded-xl border-2 border-blue-500 px-4 py-2 text-blue-500 shadow-custom-blue md:w-auto dark:bg-light-dark"
       >
         Click to view proposal {"->"}
       </button>
