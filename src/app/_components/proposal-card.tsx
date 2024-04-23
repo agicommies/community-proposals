@@ -114,7 +114,7 @@ export const ProposalCard = (props: ProposalCardProps) => {
         </div>
 
         <div className="flex flex-col items-start justify-between md:flex-row md:items-center">
-          <div className="w-[240px] space-x-2 pb-4 text-gray-500 md:pb-0">
+          <div className="space-x-2 pb-4 text-gray-500 md:pb-0">
             <span className="line-clamp-1 block w-full truncate text-sm">
               Posted by {small_address(proposal.proposer)}
             </span>
