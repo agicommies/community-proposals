@@ -1,3 +1,4 @@
+import { type ApiPromise } from "@polkadot/api";
 import type { Codec } from "@polkadot/types/types";
 import type { Enum, Tagged } from "rustie";
 import { assert, type Extends } from "tsafe";
@@ -23,6 +24,17 @@ export type CustomProposalDataError = { message: string };
 export interface CustomProposalData {
   title?: string;
   body?: string; // Markdown description
+}
+
+export type CallbackStatus = {
+  finalized: boolean;
+  message: string | null;
+  status: "SUCCESS" | "ERROR" | "PENDING" | null;
+};
+
+export interface SendProposalData {
+  IpfsHash: string;
+  callback?: (status: CallbackStatus) => void;
 }
 
 export const CUSTOM_PROPOSAL_METADATA_SCHEMA = z.object({
@@ -69,6 +81,11 @@ export interface Proposal {
   votesAgainst: SS58Address[];
   finalizationBlock: number | null;
   data: ProposalData;
+}
+
+export interface GetBalance {
+  api: ApiPromise | null;
+  address: string;
 }
 
 const PARAM_FIELD_DISPLAY_NAMES: Record<string, string> = {

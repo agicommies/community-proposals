@@ -4,14 +4,18 @@ import Link from "next/link";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { usePolkadot } from "~/hooks/polkadot";
+import { getCurrentTheme } from "~/styles/theming";
 import MarkdownPreview from "@uiw/react-markdown-preview";
 import { InformationCircleIcon, XMarkIcon } from "@heroicons/react/20/solid";
-import { getCurrentTheme } from "~/styles/theming";
+import { toast } from "react-toastify";
+import { type CallbackStatus } from "~/hooks/polkadot/functions/types";
+import { Loading } from "./loading";
 
 export function CreateProposal() {
   const router = useRouter();
   const theme = getCurrentTheme();
-  const { isConnected } = usePolkadot();
+  const { isConnected, createNewProposal, balance, isBalanceLoading } =
+    usePolkadot();
 
   const [title, setTitle] = useState("");
   const [body, setBody] = useState("");
@@ -23,6 +27,21 @@ export function CreateProposal() {
   const [editMode, setEditMode] = useState(true);
   const toggleEditMode = () => setEditMode(!editMode);
 
+  const [transactionStatus, setTransactionStatus] = useState<CallbackStatus>({
+    status: null,
+    message: null,
+    finalized: false,
+  });
+
+  const handleCallback = (callbackReturn: CallbackStatus) => {
+    setTransactionStatus(callbackReturn);
+  };
+
+  const parseBalance = (balanceStr: string) => {
+    const cleanedBalance = balanceStr.replace(/,/g, "").replace(" COMAI", "");
+    return BigInt(cleanedBalance);
+  };
+
   const uploadFile = async (fileToUpload: File) => {
     try {
       setUploading(true);
@@ -32,18 +51,43 @@ export function CreateProposal() {
         method: "POST",
         body: data,
       });
-      const resData = (await res.json()) as { IpfsHash: string };
-      console.log(resData);
+      const ipfs = (await res.json()) as { IpfsHash: string };
       setUploading(false);
+
+      const ProposalCost = BigInt(100000);
+      const userBalance = parseBalance(balance);
+
+      if (isBalanceLoading) {
+        toast.error("Balance is still loading");
+        return;
+      }
+
+      if (userBalance >= ProposalCost) {
+        createNewProposal({
+          IpfsHash: `ipfs://${ipfs.IpfsHash}`,
+          callback: handleCallback,
+        });
+      } else {
+        toast.error(
+          `Insufficient balance to create proposal. Required: ${ProposalCost} but got ${userBalance}`,
+        );
+      }
       router.refresh();
     } catch (e) {
       console.error(e);
       setUploading(false);
-      alert("Trouble uploading file");
+      toast.error("Error uploading proposal");
     }
   };
 
-  const HandleSubmit = () => {
+  const HandleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    setTransactionStatus({
+      status: null,
+      finalized: false,
+      message: null,
+    });
+
     const proposalData = JSON.stringify({
       title: title,
       body: body,
@@ -95,7 +139,7 @@ export function CreateProposal() {
                 </button>
               </div>
               {/* Modal Body */}
-              <main className="dark:bg-light-dark">
+              <form onSubmit={HandleSubmit} className="dark:bg-light-dark">
                 <div className="flex flex-col gap-4 p-6">
                   <div className="flex gap-2">
                     <button
@@ -134,19 +178,31 @@ export function CreateProposal() {
                         className="rounded-xl bg-gray-100 p-3 dark:bg-dark"
                         data-color-mode={theme === "dark" ? "dark" : "light"}
                       >
-                        <MarkdownPreview source={`## ${title}\n${body}`} />
+                        <MarkdownPreview source={`# ${title}\n${body}`} />
                       </div>
                     )}
                   </div>
-                  <div className="flex gap-4">
+                  <div className="flex flex-col gap-1">
+                    <p className="text-sm text-blue-300">
+                      After clicking the button wait a few seconds for the
+                      proposal to be created.
+                    </p>
                     <button
                       className={` relative w-full rounded-xl border-2 px-4 py-2 font-semibold dark:bg-dark ${isConnected ? "border-blue-500 text-blue-500 shadow-custom-blue active:top-1 active:shadow-custom-blue-clicked" : "border-gray-500 text-gray-500 shadow-custom-gray"}`}
                       disabled={!isConnected}
-                      onClick={HandleSubmit}
+                      type="submit"
                     >
                       {uploading ? "Uploading..." : "Submit Proposal"}
                     </button>
                   </div>
+                  {transactionStatus.status && (
+                    <p
+                      className={` pt-6 ${transactionStatus.status === "PENDING" && "text-yellow-400"}  ${transactionStatus.status === "ERROR" && "text-red-400"} ${transactionStatus.status === "SUCCESS" && "text-green-400"} flex text-left text-base`}
+                    >
+                      {transactionStatus.status === "PENDING" && <Loading />}
+                      {transactionStatus.message}
+                    </p>
+                  )}
 
                   <div className="flex flex-wrap items-center gap-1 pt-2 text-sm text-white">
                     <div className="flex items-center gap-1">
@@ -164,7 +220,7 @@ export function CreateProposal() {
                     </span>
                   </div>
                 </div>
-              </main>
+              </form>
             </div>
           </div>
         </div>

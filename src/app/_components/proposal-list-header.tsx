@@ -1,7 +1,9 @@
-import { Skeleton } from "./skeleton";
+"use client";
 
-import { CreateProposal } from "./create-proposal";
+import { Skeleton } from "./skeleton";
 import { format_token } from "~/utils";
+import { usePolkadot } from "~/hooks/polkadot";
+import { CreateProposal } from "./create-proposal";
 
 type ProposalListHeaderProps = {
   user_stake_weight: bigint | null;
@@ -10,31 +12,51 @@ type ProposalListHeaderProps = {
 };
 
 export const ProposalListHeader = (props: ProposalListHeaderProps) => {
+  const { isBalanceLoading, balance } = usePolkadot();
   const { user_stake_weight, accountUnselected, handleConnect } = props;
 
   return (
     <div className="flex w-full flex-col items-center justify-between gap-6 lg:flex-row">
       <h2 className="text-4xl font-semibold dark:text-white">Proposals</h2>
       <div className="flex w-full flex-col items-center space-y-4 lg:flex-row lg:space-x-3 lg:space-y-0 lg:divide-x">
-        <div className="flex w-full justify-center lg:flex-col lg:items-end">
-          <span className="text-base font-medium text-black dark:text-white">
-            Your total staked balance:
-          </span>
-
-          {user_stake_weight == null ? (
-            !accountUnselected ? (
-              <Skeleton className="ml-2 w-1/5 py-2 md:mt-1 lg:w-2/5" />
+        <div className="flex w-full flex-col justify-end lg:items-end">
+          <div>
+            {user_stake_weight == null ? (
+              !accountUnselected ? (
+                <Skeleton className="ml-2 w-1/5 py-2 md:mt-1 lg:w-2/5" />
+              ) : (
+                <button
+                  className="pl-2 text-blue-500"
+                  onClick={() => handleConnect()}
+                >
+                  Connect your wallet
+                </button>
+              )
             ) : (
-              <button className="text-blue-500" onClick={() => handleConnect()}>
-                Connect your wallet
-              </button>
-            )
-          ) : (
-            <span className="ml-1 text-base font-semibold text-blue-500">
-              {format_token(user_stake_weight)}
-              <span className="text-xs font-light"> COMAI</span>
-            </span>
-          )}
+              <div>
+                <span className="text-base font-medium text-black dark:text-white">
+                  Total balance:
+                </span>
+                <span className="ml-1 text-base font-semibold text-green-500">
+                  {isBalanceLoading ? (
+                    <Skeleton className="w-1/5 py-2 md:mt-1 lg:w-2/5" />
+                  ) : (
+                    balance
+                  )}
+                  <span className="text-xs font-light"> COMAI</span>
+                </span>
+                <div>
+                  <span className="text-base font-medium text-black dark:text-white">
+                    Total staked balance:
+                  </span>
+                  <span className="ml-1 text-base font-semibold text-blue-500">
+                    {format_token(user_stake_weight)}
+                    <span className="text-xs font-light"> COMAI</span>
+                  </span>
+                </div>
+              </div>
+            )}
+          </div>
         </div>
 
         {/* <div className="flex w-full flex-row-reverse justify-center gap-4 lg:w-auto lg:flex-row lg:gap-0 lg:pl-3">

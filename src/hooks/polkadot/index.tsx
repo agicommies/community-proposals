@@ -18,8 +18,11 @@ import {
   type StakeData,
 } from "~/hooks/polkadot/functions/chain_queries";
 import { handle_custom_proposals } from "~/hooks/polkadot/functions/proposals";
-import type { ProposalState } from "~/hooks/polkadot/functions/types";
-import { is_not_null } from "~/utils";
+import type {
+  ProposalState,
+  SendProposalData,
+} from "~/hooks/polkadot/functions/types";
+import { get_balance, is_not_null } from "~/utils";
 import { toast } from "react-toastify";
 import { getCurrentTheme } from "~/styles/theming";
 
@@ -39,6 +42,9 @@ interface PolkadotContextType {
   isConnected: boolean;
   isInitialized: boolean;
 
+  balance: string;
+  isBalanceLoading: boolean;
+
   blockNumber: number;
   accounts: InjectedAccountWithMeta[];
   selectedAccount: InjectedAccountWithMeta | undefined;
@@ -48,7 +54,7 @@ interface PolkadotContextType {
 
   handleConnect: () => void;
   send_vote: (args: Vote, callback?: (arg: VoteStatus) => void) => void;
-  createNewProposal: (args: string) => void;
+  createNewProposal: (args: SendProposalData) => void;
 }
 
 export type VoteStatus = {
@@ -83,6 +89,9 @@ export const PolkadotProvider: React.FC<PolkadotProviderProps> = ({
   const [isConnected, setIsConnected] = useState(false);
   const [accounts, setAccounts] = useState<InjectedAccountWithMeta[]>([]);
   const [blockNumber, setBlockNumber] = useState(0);
+
+  const [balance, setBalance] = useState("");
+  const [isBalanceLoading, setIsBalanceLoading] = useState(true);
 
   const [proposals, setProposals] = useState<ProposalState[] | null>(null);
   const [stakeData, setStakeData] = useState<StakeData | null>(null);
@@ -235,6 +244,25 @@ export const PolkadotProvider: React.FC<PolkadotProviderProps> = ({
     setOpenModal(false);
   }
 
+  useEffect(() => {
+    const fetchBalance = async () => {
+      if (!api || !selectedAccount?.address) {
+        console.error("API or user address is not defined");
+        setIsBalanceLoading(false);
+        return;
+      }
+
+      const fetchedBalance = await get_balance({
+        api,
+        address: selectedAccount.address,
+      });
+      setBalance(fetchedBalance);
+      setIsBalanceLoading(false);
+    };
+
+    void fetchBalance();
+  }, [api, selectedAccount?.address]);
+
   async function send_vote(
     { vote, proposal_id: proposalId }: Vote,
     callback?: (vote_status: VoteStatus) => void,
@@ -319,7 +347,7 @@ export const PolkadotProvider: React.FC<PolkadotProviderProps> = ({
       });
   }
 
-  async function createNewProposal(data: string) {
+  async function createNewProposal({ IpfsHash, callback }: SendProposalData) {
     if (
       !api ||
       !selectedAccount ||
@@ -329,17 +357,64 @@ export const PolkadotProvider: React.FC<PolkadotProviderProps> = ({
       return;
 
     const injector = await polkadotApi.web3FromAddress(selectedAccount.address);
-    api.tx.subspaceModule
-      .addCustomProposal(data)
-      .signAndSend(selectedAccount.address, { signer: injector.signer })
-      .then(() => {
-        window.location.reload();
-      })
-      .catch((err) => {
-        toast.error(`${err}`, {
-          theme: theme === "dark" ? "dark" : "light",
-        });
-      });
+    void api.tx.subspaceModule
+      .addCustomProposal(IpfsHash)
+      .signAndSend(
+        selectedAccount.address,
+        { signer: injector.signer },
+        (result: SubmittableResult) => {
+          if (result.status.isInBlock) {
+            callback?.({
+              finalized: false,
+              status: "PENDING",
+              message: "Creating proposal...",
+            });
+          }
+
+          if (result.status.isFinalized) {
+            result.events.forEach(({ event }) => {
+              if (api.events.system?.ExtrinsicSuccess?.is(event)) {
+                toast.success("Proposal created", {
+                  theme: theme === "dark" ? "dark" : "light",
+                });
+                callback?.({
+                  finalized: true,
+                  status: "SUCCESS",
+                  message: "Proposal created",
+                });
+                handleGetProposals(api);
+              } else if (api.events.system?.ExtrinsicFailed?.is(event)) {
+                const [dispatchError] = event.data as unknown as [
+                  DispatchError,
+                ];
+
+                let msg;
+                if (dispatchError.isModule) {
+                  const mod = dispatchError.asModule;
+                  const error = api.registry.findMetaError(mod);
+
+                  if (error.section && error.name && error.docs) {
+                    const errorMessage = `${error.name}`;
+                    msg = `Proposal creation failed: ${errorMessage}`;
+                  } else {
+                    msg = `Proposal creation failed: Unknown error`;
+                  }
+                } else {
+                  msg = `Proposal creation failed: ${dispatchError.type}`;
+                }
+                toast(msg, {
+                  theme: theme === "dark" ? "dark" : "light",
+                });
+                callback?.({
+                  finalized: true,
+                  status: "ERROR",
+                  message: msg,
+                });
+              }
+            });
+          }
+        },
+      );
   }
 
   return (
@@ -348,6 +423,9 @@ export const PolkadotProvider: React.FC<PolkadotProviderProps> = ({
         api,
         isConnected,
         isInitialized,
+
+        balance,
+        isBalanceLoading,
 
         accounts,
         blockNumber,
