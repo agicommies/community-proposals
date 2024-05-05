@@ -201,10 +201,6 @@ export function CreateProposal() {
                     )}
                   </div>
                   <div className="flex flex-col gap-1">
-                    <p className="text-sm text-blue-300">
-                      After clicking the button wait a few seconds for the
-                      proposal to be created.
-                    </p>
                     <button
                       className={` relative w-full rounded-xl border-2 px-4 py-2 font-semibold dark:bg-dark ${isConnected ? "border-blue-500 text-blue-500 shadow-custom-blue active:top-1 active:shadow-custom-blue-clicked" : "border-gray-500 text-gray-500 shadow-custom-gray"}`}
                       disabled={!isConnected}
@@ -215,7 +211,7 @@ export function CreateProposal() {
                   </div>
                   {transactionStatus.status && (
                     <p
-                      className={` pt-6 ${transactionStatus.status === "PENDING" && "text-yellow-400"}  ${transactionStatus.status === "ERROR" && "text-red-400"} ${transactionStatus.status === "SUCCESS" && "text-green-400"} ${transactionStatus.status === "STARTING" && "text-white"} flex text-left text-base`}
+                      className={`pt-2 ${transactionStatus.status === "PENDING" && "text-yellow-400"}  ${transactionStatus.status === "ERROR" && "text-red-400"} ${transactionStatus.status === "SUCCESS" && "text-green-400"} ${transactionStatus.status === "STARTING" && "text-blue-400"} flex text-left text-base`}
                     >
                       {transactionStatus.status === "PENDING" ||
                         (transactionStatus.status === "STARTING" && (
