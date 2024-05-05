@@ -143,12 +143,14 @@ export function CreateProposal() {
                 <div className="flex flex-col gap-4 p-6">
                   <div className="flex gap-2">
                     <button
+                      type="button"
                       onClick={toggleEditMode}
                       className={`rounded-xl border-2 px-4 py-1 dark:text-white ${editMode && "bg-blue-500"}`}
                     >
                       Edit
                     </button>
                     <button
+                      type="button"
                       onClick={toggleEditMode}
                       className={`rounded-xl border-2 px-4 py-1 dark:text-white ${!editMode && "bg-blue-500"}`}
                     >
