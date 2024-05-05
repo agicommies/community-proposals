@@ -54,7 +54,8 @@ export async function __get_all_stake(
     const netuid = n_raw.toPrimitive();
     const address = address_raw.toHuman();
 
-    if (typeof netuid !== "number") throw new Error("Invalid stake storage key (n)");
+    if (typeof netuid !== "number")
+      throw new Error("Invalid stake storage key (n)");
     if (typeof address !== "string")
       throw new Error("Invalid stake storage key (address)");
 
@@ -169,8 +170,30 @@ export async function get_proposals(api: ApiPromise): Promise<Proposal[]> {
     proposals.push(proposal);
   }
 
-  proposals.reverse()
+  proposals.reverse();
   return proposals;
+}
+
+export async function get_daos(api: ApiPromise): Promise<Proposal[]> {
+  const daos_raw =
+    await api.query.subspaceModule?.curatorApplications?.entries();
+
+  if (!daos_raw) throw new Error("No DAOs found");
+
+  const daos = [];
+  for (const dao_item of daos_raw) {
+    if (!Array.isArray(dao_item) || dao_item.length != 2) {
+      console.error("Invalid DAO item:", dao_item);
+      continue;
+    }
+    const [, value_raw] = dao_item;
+    const dao = parse_proposal(value_raw);
+    if (dao == null) throw new Error("Invalid DAO");
+    daos.push(dao);
+  }
+
+  daos.reverse();
+  return daos;
 }
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars

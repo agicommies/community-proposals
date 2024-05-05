@@ -10,10 +10,13 @@ import {
 } from "~/hooks/polkadot/functions/proposals";
 import type { SS58Address } from "~/hooks/polkadot/functions/types";
 import { type TVote } from "./_components/vote-label";
+import { useState } from "react";
 
 export default function HomePage() {
-  const { proposals, stake_data, selectedAccount, handleConnect } =
+  const { proposals, daos, stake_data, selectedAccount, handleConnect } =
     usePolkadot();
+
+  const [viewMode, setViewMode] = useState("proposals");
 
   let user_stake_weight: bigint | null = null;
   if (stake_data != null && selectedAccount != null) {
@@ -23,7 +26,7 @@ export default function HomePage() {
     user_stake_weight = user_stake_entry ?? 0n;
   }
 
-  const isProposalsLoading = proposals == null;
+  const isLoading = proposals == null;
 
   const handleUserVotes = ({
     votesAgainst,
@@ -39,6 +42,73 @@ export default function HomePage() {
     return "UNVOTED";
   };
 
+  const content =
+    viewMode === "proposals"
+      ? proposals?.map((proposal) => {
+          const voted = handleUserVotes({
+            votesAgainst: proposal.votesAgainst,
+            votesFor: proposal.votesFor,
+            selectedAccountAddress: selectedAccount?.address as SS58Address,
+          });
+
+          const netuid = get_proposal_netuid(proposal);
+          let proposal_stake_info = null;
+          if (stake_data != null) {
+            const stake_map =
+              netuid != null
+                ? stake_data.stake_out.per_addr_per_net.get(netuid) ??
+                  new Map<string, bigint>()
+                : stake_data.stake_out.per_addr;
+            proposal_stake_info = compute_votes(
+              stake_map,
+              proposal.votesFor,
+              proposal.votesAgainst,
+            );
+          }
+          return (
+            <div key={proposal.id} className="animate-fade-in-down">
+              <ProposalCard
+                key={proposal.id}
+                proposal={proposal}
+                stake_info={proposal_stake_info}
+                voted={voted}
+              />
+            </div>
+          );
+        })
+      : daos?.map((dao) => {
+          const voted = handleUserVotes({
+            votesAgainst: dao.votesAgainst,
+            votesFor: dao.votesFor,
+            selectedAccountAddress: selectedAccount?.address as SS58Address,
+          });
+
+          const netuid = get_proposal_netuid(dao);
+          let proposal_stake_info = null;
+          if (stake_data != null) {
+            const stake_map =
+              netuid != null
+                ? stake_data.stake_out.per_addr_per_net.get(netuid) ??
+                  new Map<string, bigint>()
+                : stake_data.stake_out.per_addr;
+            proposal_stake_info = compute_votes(
+              stake_map,
+              dao.votesFor,
+              dao.votesAgainst,
+            );
+          }
+          return (
+            <div key={dao.id} className="animate-fade-in-down">
+              <ProposalCard
+                key={dao.id}
+                proposal={dao}
+                stake_info={proposal_stake_info}
+                voted={voted}
+              />
+            </div>
+          );
+        });
+
   return (
     <main className="flex flex-col items-center justify-center dark:bg-light-dark">
       <div className="my-12 h-full w-full bg-[url(/dots-bg.svg)] bg-repeat py-12 dark:bg-[url(/dots-bg-dark.svg)]">
@@ -47,42 +117,12 @@ export default function HomePage() {
             user_stake_weight={user_stake_weight}
             accountUnselected={!selectedAccount}
             handleConnect={handleConnect}
+            viewMode={viewMode}
+            setViewMode={setViewMode}
           />
           <div className="space-y-8 py-8">
-            {!isProposalsLoading &&
-              proposals?.map((proposal) => {
-                const voted = handleUserVotes({
-                  votesAgainst: proposal.votesAgainst,
-                  votesFor: proposal.votesFor,
-                  selectedAccountAddress:
-                    selectedAccount?.address as SS58Address,
-                });
-
-                const netuid = get_proposal_netuid(proposal);
-                let proposal_stake_info = null;
-                if (stake_data != null) {
-                  const stake_map =
-                    netuid != null
-                      ? stake_data.stake_out.per_addr_per_net.get(netuid) ??
-                        new Map<string, bigint>()
-                      : stake_data.stake_out.per_addr;
-                  proposal_stake_info = compute_votes(
-                    stake_map,
-                    proposal.votesFor,
-                    proposal.votesAgainst,
-                  );
-                }
-                return (
-                  <ProposalCard
-                    key={proposal.id}
-                    proposal={proposal}
-                    stake_info={proposal_stake_info}
-                    voted={voted}
-                  />
-                );
-              })}
-
-            {isProposalsLoading && (
+            {!isLoading && content}
+            {isLoading && (
               <Card.Root>
                 <Card.Header className="flex-col-reverse">
                   <span className="w-3/5 animate-pulse rounded-lg bg-gray-700 py-3" />

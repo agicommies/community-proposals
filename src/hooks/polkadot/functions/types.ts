@@ -37,6 +37,12 @@ export interface SendProposalData {
   callback?: (status: CallbackStatus) => void;
 }
 
+export interface SendDaoData {
+  IpfsHash: string;
+  applicationKey: string;
+  callback?: (status: CallbackStatus) => void;
+}
+
 export const CUSTOM_PROPOSAL_METADATA_SCHEMA = z.object({
   title: z.string().optional(),
   body: z.string().optional(),

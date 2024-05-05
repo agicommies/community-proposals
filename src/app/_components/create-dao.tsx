@@ -11,19 +11,25 @@ import { Loading } from "./loading";
 import { z } from "zod";
 
 // Define Zod schemas
-const proposalSchema = z.object({
+const daoSchema = z.object({
+  applicationKey: z.string().min(1, "Application Key is required"),
+  discordId: z.string().min(16, "Discord ID is required"),
   title: z.string().min(1, "Title is required"),
   body: z.string().min(1, "Body is required"),
 });
 
-export function CreateProposal() {
+export function CreateDao() {
   const router = useRouter();
   const theme = getCurrentTheme();
-  const { isConnected, createNewProposal, balance, isBalanceLoading } =
+  const { isConnected, createNewDao, balance, isBalanceLoading } =
     usePolkadot();
 
+  const [applicationKey, setApplicationKey] = useState("");
+
+  const [discordId, setDiscordId] = useState("");
   const [title, setTitle] = useState("");
   const [body, setBody] = useState("");
+
   const [uploading, setUploading] = useState(false);
 
   const [modalOpen, setModalOpen] = useState(false);
@@ -61,16 +67,17 @@ export function CreateProposal() {
         return;
       }
 
-      const proposalCost = 10000;
+      const daoCost = 10000;
 
-      if (balance > proposalCost) {
-        createNewProposal({
+      if (balance > daoCost) {
+        createNewDao({
+          applicationKey,
           IpfsHash: `ipfs://${ipfs.IpfsHash}`,
           callback: handleCallback,
         });
       } else {
         toast.error(
-          `Insufficient balance to create proposal. Required: ${proposalCost} but got ${balance}`,
+          `Insufficient balance to create DAO. Required: ${daoCost} but got ${balance}`,
           {
             theme: theme === "dark" ? "dark" : "light",
           },
@@ -78,14 +85,14 @@ export function CreateProposal() {
         setTransactionStatus({
           status: "ERROR",
           finalized: true,
-          message: "Insufficient balance",
+          message: "Insufficient balance to create DAO",
         });
       }
       router.refresh();
     } catch (e) {
       console.error(e);
       setUploading(false);
-      toast.error("Error uploading proposal");
+      toast.error("Error uploading DAO");
     }
   };
 
@@ -94,12 +101,14 @@ export function CreateProposal() {
     setTransactionStatus({
       status: "STARTING",
       finalized: false,
-      message: "Starting proposal creation...",
+      message: "Starting DAO creation...",
     });
 
-    const result = proposalSchema.safeParse({
+    const result = daoSchema.safeParse({
       title,
       body,
+      applicationKey,
+      discordId,
     });
 
     if (!result.success) {
@@ -109,17 +118,21 @@ export function CreateProposal() {
       setTransactionStatus({
         status: "ERROR",
         finalized: true,
-        message: "Error on form validation",
+        message: "Error creating DAO",
       });
       return;
     }
 
-    const proposalData = JSON.stringify({
-      title: title,
-      body: body,
+    const daoData = JSON.stringify({
+      application_key: applicationKey,
+      data: {
+        discord_id: discordId,
+        title: title,
+        body: body,
+      },
     });
-    const blob = new Blob([proposalData], { type: "application/json" });
-    const fileToUpload = new File([blob], "proposal.json", {
+    const blob = new Blob([daoData], { type: "application/json" });
+    const fileToUpload = new File([blob], "dao.json", {
       type: "application/json",
     });
     void uploadFile(fileToUpload);
@@ -132,7 +145,7 @@ export function CreateProposal() {
         onClick={toggleModalMenu}
         className="min-w-auto w-full rounded-xl border-2 border-blue-500 px-4 py-2 text-blue-500 shadow-custom-blue lg:w-auto dark:bg-light-dark"
       >
-        New Proposal
+        New DAO
       </button>
       <div
         role="dialog"
@@ -152,7 +165,7 @@ export function CreateProposal() {
                     className="pl-2 text-xl font-bold leading-6 dark:text-white"
                     id="modal-title"
                   >
-                    Build Custom Global Proposal
+                    Build DAO Application
                   </h3>
                 </div>
 
@@ -188,13 +201,27 @@ export function CreateProposal() {
                       <div className="flex flex-col gap-3">
                         <input
                           type="text"
-                          placeholder="Your proposal title here..."
+                          placeholder="Your Application Key here..."
+                          value={applicationKey}
+                          onChange={(e) => setApplicationKey(e.target.value)}
+                          className="w-full rounded-xl border-black bg-gray-100 p-3  dark:border-white dark:bg-dark dark:text-white"
+                        />
+                        <input
+                          type="text"
+                          placeholder="Your Discord ID here..."
+                          value={discordId}
+                          onChange={(e) => setDiscordId(e.target.value)}
+                          className="w-full rounded-xl border-black bg-gray-100 p-3  dark:border-white dark:bg-dark dark:text-white"
+                        />
+                        <input
+                          type="text"
+                          placeholder="Your DAO title here..."
                           value={title}
                           onChange={(e) => setTitle(e.target.value)}
                           className="w-full rounded-xl border-black bg-gray-100 p-3  dark:border-white dark:bg-dark dark:text-white"
                         />
                         <textarea
-                          placeholder="Your proposal here... (Markdown supported)"
+                          placeholder="Your DAO body here... (Markdown supported)"
                           value={body}
                           rows={5}
                           onChange={(e) => setBody(e.target.value)}
@@ -216,7 +243,7 @@ export function CreateProposal() {
                       disabled={!isConnected}
                       type="submit"
                     >
-                      {uploading ? "Uploading..." : "Submit Proposal"}
+                      {uploading ? "Uploading..." : "Submit DAO"}
                     </button>
                   </div>
                   {transactionStatus.status && (
@@ -231,19 +258,19 @@ export function CreateProposal() {
                     </p>
                   )}
 
-                  <div className="flex flex-wrap items-center gap-1 pt-2 text-sm text-white">
-                    <div className="flex items-center gap-1">
-                      <InformationCircleIcon className="h-4 w-4 fill-blue-500" />
-                      <span>Want a diferent aproach?</span>
-                    </div>
-                    <span>
+                  <div className="mt-1 flex items-start gap-1 dark:text-white">
+                    <InformationCircleIcon className="mt-0.5 h-4 w-4 fill-blue-500 text-sm" />
+                    <span className="text-sm">
+                      Please make sure, that your application passes all of the
+                      criteria, defined in this{" "}
                       <Link
                         href="https://mirror.xyz/0xD80E194aBe2d8084fAecCFfd72877e63F5822Fc5/FUvj1g9rPyVm8Ii_qLNu-IbRQPiCHkfZDLAmlP00M1Q"
                         className="text-blue-500 hover:underline"
                         target="_blank"
                       >
-                        Check how to create a proposal with the CLI tool
+                        article
                       </Link>
+                      , otherwise the DAO, won&apos;t accept you.
                     </span>
                   </div>
                 </div>
