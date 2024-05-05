@@ -1,21 +1,21 @@
 "use client";
 
-import MarkdownPreview from "@uiw/react-markdown-preview";
-import { InformationCircleIcon, XMarkIcon } from "@heroicons/react/20/solid";
-
 import Link from "next/link";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { usePolkadot } from "~/hooks/polkadot";
+import MarkdownPreview from "@uiw/react-markdown-preview";
+import { InformationCircleIcon, XMarkIcon } from "@heroicons/react/20/solid";
 import { getCurrentTheme } from "~/styles/theming";
 
 export function CreateProposal() {
-  const { isConnected, createNewProposal } = usePolkadot();
-  const theme = getCurrentTheme();
   const router = useRouter();
+  const theme = getCurrentTheme();
+  const { isConnected } = usePolkadot();
 
   const [title, setTitle] = useState("");
   const [body, setBody] = useState("");
+  const [uploading, setUploading] = useState(false);
 
   const [modalOpen, setModalOpen] = useState(false);
   const toggleModalMenu = () => setModalOpen(!modalOpen);
@@ -23,9 +23,36 @@ export function CreateProposal() {
   const [editMode, setEditMode] = useState(true);
   const toggleEditMode = () => setEditMode(!editMode);
 
+  const uploadFile = async (fileToUpload: File) => {
+    try {
+      setUploading(true);
+      const data = new FormData();
+      data.set("file", fileToUpload);
+      const res = await fetch("/api/files", {
+        method: "POST",
+        body: data,
+      });
+      const resData = (await res.json()) as { IpfsHash: string };
+      console.log(resData);
+      setUploading(false);
+      router.refresh();
+    } catch (e) {
+      console.error(e);
+      setUploading(false);
+      alert("Trouble uploading file");
+    }
+  };
+
   const HandleSubmit = () => {
-    createNewProposal(`${title}\n${body}`);
-    router.refresh();
+    const proposalData = JSON.stringify({
+      title: title,
+      body: body,
+    });
+    const blob = new Blob([proposalData], { type: "application/json" });
+    const fileToUpload = new File([blob], "proposal.json", {
+      type: "application/json",
+    });
+    void uploadFile(fileToUpload);
   };
 
   return (
@@ -117,7 +144,7 @@ export function CreateProposal() {
                       disabled={!isConnected}
                       onClick={HandleSubmit}
                     >
-                      Submit Proposal
+                      {uploading ? "Uploading..." : "Submit Proposal"}
                     </button>
                   </div>
 
