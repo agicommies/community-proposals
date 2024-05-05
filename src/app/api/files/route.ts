@@ -2,12 +2,13 @@ export const runtime = "edge";
 
 import { NextResponse, type NextRequest } from "next/server";
 
-export const config = {
-  api: {
-    bodyParser: false,
-  },
-};
-
+export function config() {
+  return {
+    api: {
+      bodyParser: false,
+    },
+  };
+}
 export async function POST(request: NextRequest) {
   try {
     const data = await request.formData();
