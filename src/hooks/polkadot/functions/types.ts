@@ -29,7 +29,7 @@ export interface CustomProposalData {
 export type CallbackStatus = {
   finalized: boolean;
   message: string | null;
-  status: "SUCCESS" | "ERROR" | "PENDING" | null;
+  status: "SUCCESS" | "ERROR" | "PENDING" | "STARTING" | null;
 };
 
 export interface SendProposalData {

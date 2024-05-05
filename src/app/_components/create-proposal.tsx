@@ -87,9 +87,9 @@ export function CreateProposal() {
   const HandleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     setTransactionStatus({
-      status: null,
+      status: "STARTING",
       finalized: false,
-      message: null,
+      message: "Starting proposal creation...",
     });
 
     const result = proposalSchema.safeParse({
@@ -215,9 +215,12 @@ export function CreateProposal() {
                   </div>
                   {transactionStatus.status && (
                     <p
-                      className={` pt-6 ${transactionStatus.status === "PENDING" && "text-yellow-400"}  ${transactionStatus.status === "ERROR" && "text-red-400"} ${transactionStatus.status === "SUCCESS" && "text-green-400"} flex text-left text-base`}
+                      className={` pt-6 ${transactionStatus.status === "PENDING" && "text-yellow-400"}  ${transactionStatus.status === "ERROR" && "text-red-400"} ${transactionStatus.status === "SUCCESS" && "text-green-400"} ${transactionStatus.status === "STARTING" && "text-white"} flex text-left text-base`}
                     >
-                      {transactionStatus.status === "PENDING" && <Loading />}
+                      {transactionStatus.status === "PENDING" ||
+                        (transactionStatus.status === "STARTING" && (
+                          <Loading />
+                        ))}
                       {transactionStatus.message}
                     </p>
                   )}
