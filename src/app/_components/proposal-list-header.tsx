@@ -4,11 +4,14 @@ import { Skeleton } from "./skeleton";
 import { format_token } from "~/utils";
 import { usePolkadot } from "~/hooks/polkadot";
 import { CreateProposal } from "./create-proposal";
+import { CreateDao } from "./create-dao";
 
 type ProposalListHeaderProps = {
   user_stake_weight: bigint | null;
   accountUnselected: boolean;
   handleConnect: () => void;
+  viewMode: string;
+  setViewMode: (mode: string) => void;
 };
 
 export const ProposalListHeader = (props: ProposalListHeaderProps) => {
@@ -17,7 +20,20 @@ export const ProposalListHeader = (props: ProposalListHeaderProps) => {
 
   return (
     <div className="flex w-full flex-col items-center justify-between gap-6 lg:flex-row">
-      <h2 className="text-4xl font-semibold dark:text-white">Proposals</h2>
+      <div className="flex gap-1 text-2xl font-medium dark:text-white">
+        <button
+          className={`toggle-btn rounded-xl border-2 px-5 py-2 shadow-custom dark:shadow-custom-dark ${props.viewMode === "proposals" ? "active bg-blue-200 dark:bg-blue-950" : ""}`}
+          onClick={() => props.setViewMode("proposals")}
+        >
+          Proposals
+        </button>
+        <button
+          className={`toggle-btn ml-2 rounded-xl border-2 px-5 py-2 shadow-custom dark:shadow-custom-dark ${props.viewMode === "daos" ? "active bg-blue-200 dark:bg-blue-950" : ""}`}
+          onClick={() => props.setViewMode("daos")}
+        >
+          DAOs
+        </button>
+      </div>
       <div className="flex w-full flex-col items-center space-y-4 lg:flex-row lg:space-x-3 lg:space-y-0 lg:divide-x">
         <div className="flex w-full flex-col justify-end lg:items-end">
           <div>
@@ -69,8 +85,9 @@ export const ProposalListHeader = (props: ProposalListHeaderProps) => {
           </button>
         </div> */}
 
-        <div className="flex w-full min-w-max lg:w-auto lg:pl-3">
+        <div className="flex w-full min-w-max gap-3 lg:w-auto lg:pl-3">
           <CreateProposal />
+          <CreateDao />
         </div>
       </div>
     </div>
