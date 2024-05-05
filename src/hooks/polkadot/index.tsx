@@ -42,7 +42,7 @@ interface PolkadotContextType {
   isConnected: boolean;
   isInitialized: boolean;
 
-  balance: string;
+  balance: number;
   isBalanceLoading: boolean;
 
   blockNumber: number;
@@ -90,7 +90,7 @@ export const PolkadotProvider: React.FC<PolkadotProviderProps> = ({
   const [accounts, setAccounts] = useState<InjectedAccountWithMeta[]>([]);
   const [blockNumber, setBlockNumber] = useState(0);
 
-  const [balance, setBalance] = useState("");
+  const [balance, setBalance] = useState(0);
   const [isBalanceLoading, setIsBalanceLoading] = useState(true);
 
   const [proposals, setProposals] = useState<ProposalState[] | null>(null);

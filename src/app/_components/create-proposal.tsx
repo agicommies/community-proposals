@@ -1,5 +1,3 @@
-"use client";
-
 import Link from "next/link";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
@@ -10,6 +8,13 @@ import { InformationCircleIcon, XMarkIcon } from "@heroicons/react/20/solid";
 import { toast } from "react-toastify";
 import { type CallbackStatus } from "~/hooks/polkadot/functions/types";
 import { Loading } from "./loading";
+import { z } from "zod";
+
+// Define Zod schemas
+const proposalSchema = z.object({
+  title: z.string().min(1, "Title is required"),
+  body: z.string().min(1, "Body is required"),
+});
 
 export function CreateProposal() {
   const router = useRouter();
@@ -37,11 +42,6 @@ export function CreateProposal() {
     setTransactionStatus(callbackReturn);
   };
 
-  const parseBalance = (balanceStr: string) => {
-    const cleanedBalance = balanceStr.replace(/,/g, "").replace(" COMAI", "");
-    return BigInt(cleanedBalance);
-  };
-
   const uploadFile = async (fileToUpload: File) => {
     try {
       setUploading(true);
@@ -54,22 +54,26 @@ export function CreateProposal() {
       const ipfs = (await res.json()) as { IpfsHash: string };
       setUploading(false);
 
-      const ProposalCost = BigInt(100000);
-      const userBalance = parseBalance(balance);
-
       if (isBalanceLoading) {
-        toast.error("Balance is still loading");
+        toast.error("Balance is still loading", {
+          theme: theme === "dark" ? "dark" : "light",
+        });
         return;
       }
 
-      if (userBalance >= ProposalCost) {
+      const proposalCost = 10000;
+
+      if (balance > proposalCost) {
         createNewProposal({
           IpfsHash: `ipfs://${ipfs.IpfsHash}`,
           callback: handleCallback,
         });
       } else {
         toast.error(
-          `Insufficient balance to create proposal. Required: ${ProposalCost} but got ${userBalance}`,
+          `Insufficient balance to create proposal. Required: ${proposalCost} but got ${balance}`,
+          {
+            theme: theme === "dark" ? "dark" : "light",
+          },
         );
       }
       router.refresh();
@@ -87,6 +91,18 @@ export function CreateProposal() {
       finalized: false,
       message: null,
     });
+
+    const result = proposalSchema.safeParse({
+      title,
+      body,
+    });
+
+    if (!result.success) {
+      toast.error(result.error.errors.map((e) => e.message).join(", "), {
+        theme: theme === "dark" ? "dark" : "light",
+      });
+      return;
+    }
 
     const proposalData = JSON.stringify({
       title: title,
