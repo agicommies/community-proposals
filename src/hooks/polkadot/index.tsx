@@ -178,25 +178,32 @@ export const PolkadotProvider: React.FC<PolkadotProviderProps> = ({
   };
 
   const handleGetDaos = async (api: ApiPromise) => {
-    get_daos(api)
-      .then((daos_result) => {
-        setDaos(daos_result);
+    try {
+      const daos_result = await get_daos(api);
+      setDaos(daos_result);
 
-        handle_custom_daos(daos_result)
-          .then((results) => {
-            console.log(results);
-          })
-          .catch((e) => {
-            console.error("Error fetching custom proposals data:", e);
-          });
-      })
-      .catch((e) => {
-        console.error("Error fetching proposals:", e);
+      const customDaoResults = await handle_custom_daos(daos_result);
+
+      customDaoResults.forEach((result, index) => {
+        const dao = daos_result[index];
+
+        if (dao == null) {
+          console.error(`Dao ${index} not found`);
+          return;
+        }
+        if ("Ok" in result && result.Ok) {
+          dao.body = result.Ok;
+        }
       });
+
+      console.log("here");
+      console.log(daos_result);
+    } catch (error) {
+      console.error("Error fetching custom proposals data:", error);
+    }
   };
 
   useEffect(() => {
-    // console.log("useEffect for api", api); // DEBUG
     if (api) {
       void api.rpc.chain.subscribeNewHeads((header) => {
         setBlockNumber(header.number.toNumber());
