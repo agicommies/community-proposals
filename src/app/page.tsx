@@ -11,6 +11,7 @@ import {
 import type { SS58Address } from "~/hooks/polkadot/functions/types";
 import { type TVote } from "./_components/vote-label";
 import { useState } from "react";
+import { DaoCard } from "./_components/dao-card";
 
 export default function HomePage() {
   const { proposals, daos, stake_data, selectedAccount, handleConnect } =
@@ -77,34 +78,11 @@ export default function HomePage() {
           );
         })
       : daos?.map((dao) => {
-          const voted = handleUserVotes({
-            votesAgainst: dao.votesAgainst,
-            votesFor: dao.votesFor,
-            selectedAccountAddress: selectedAccount?.address as SS58Address,
-          });
+          // const netuid = get_proposal_netuid(dao);
 
-          const netuid = get_proposal_netuid(dao);
-          let proposal_stake_info = null;
-          if (stake_data != null) {
-            const stake_map =
-              netuid != null
-                ? stake_data.stake_out.per_addr_per_net.get(netuid) ??
-                  new Map<string, bigint>()
-                : stake_data.stake_out.per_addr;
-            proposal_stake_info = compute_votes(
-              stake_map,
-              dao.votesFor,
-              dao.votesAgainst,
-            );
-          }
           return (
             <div key={dao.id} className="animate-fade-in-down">
-              <ProposalCard
-                key={dao.id}
-                proposal={dao}
-                stake_info={proposal_stake_info}
-                voted={voted}
-              />
+              <DaoCard key={dao.id} dao={dao} />
             </div>
           );
         });

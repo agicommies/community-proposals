@@ -20,18 +20,18 @@ export const ProposalListHeader = (props: ProposalListHeaderProps) => {
 
   return (
     <div className="flex w-full flex-col items-center justify-between gap-6 lg:flex-row">
-      <div className="flex gap-1 text-2xl font-medium dark:text-white">
+      <div className="flex w-fit gap-2  dark:text-blue-500">
         <button
-          className={`toggle-btn rounded-xl border-2 px-5 py-2 shadow-custom dark:shadow-custom-dark ${props.viewMode === "proposals" ? "active bg-blue-200 dark:bg-blue-950" : ""}`}
+          className={`toggle-btn rounded-xl border-2 border-black px-5 py-2 shadow-custom dark:border-blue-500 dark:shadow-custom-blue ${props.viewMode === "proposals" ? "active bg-red-200 dark:bg-blue-950 dark:text-white" : ""}`}
           onClick={() => props.setViewMode("proposals")}
         >
           Proposals
         </button>
         <button
-          className={`toggle-btn ml-2 rounded-xl border-2 px-5 py-2 shadow-custom dark:shadow-custom-dark ${props.viewMode === "daos" ? "active bg-blue-200 dark:bg-blue-950" : ""}`}
+          className={`toggle-btn rounded-xl border-2 border-black px-5 py-2 shadow-custom dark:border-blue-500 dark:shadow-custom-blue ${props.viewMode === "daos" ? "active bg-red-200 dark:bg-blue-950 dark:text-white" : ""}`}
           onClick={() => props.setViewMode("daos")}
         >
-          S0 DAO Applications
+          DAO Applications
         </button>
       </div>
       <div className="flex w-full flex-col items-center space-y-4 lg:flex-row lg:space-x-3 lg:space-y-0 lg:divide-x">
@@ -49,18 +49,20 @@ export const ProposalListHeader = (props: ProposalListHeaderProps) => {
                 </button>
               )
             ) : (
-              <div>
-                <span className="text-base font-medium text-black dark:text-white">
-                  Total balance:
-                </span>
-                <span className="ml-1 text-base font-semibold text-green-500">
-                  {isBalanceLoading ? (
-                    <Skeleton className="w-1/5 py-2 md:mt-1 lg:w-2/5" />
-                  ) : (
-                    balance
-                  )}
-                  <span className="text-xs font-light"> COMAI</span>
-                </span>
+              <div className="flex w-full flex-col">
+                <div>
+                  <span className="text-base font-medium text-black dark:text-white">
+                    Total balance:
+                  </span>
+                  <span className="ml-1 text-base font-semibold text-green-500">
+                    {isBalanceLoading ? (
+                      <Skeleton className="w-1/5 py-2 md:mt-1 lg:w-2/5" />
+                    ) : (
+                      balance
+                    )}
+                    <span className="text-xs font-light"> COMAI</span>
+                  </span>
+                </div>
                 <div>
                   <span className="text-base font-medium text-black dark:text-white">
                     Total staked balance:
