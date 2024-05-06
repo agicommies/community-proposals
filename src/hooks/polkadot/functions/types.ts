@@ -13,6 +13,12 @@ export interface ProposalState extends Proposal {
   custom_data?: CustomProposalDataState;
 }
 
+export interface DaoState extends Dao {
+  custom_data?: CustomProposalDataState;
+}
+
+export type CustomDaoDataState = Result<CustomDaoData, CustomProposalDataError>;
+
 export type CustomProposalDataState = Result<
   CustomProposalData,
   CustomProposalDataError
@@ -24,6 +30,12 @@ export type CustomProposalDataError = { message: string };
 export interface CustomProposalData {
   title?: string;
   body?: string; // Markdown description
+}
+
+export interface CustomDaoData {
+  discord_id: string;
+  title?: string;
+  body?: string;
 }
 
 export type CallbackStatus = {
@@ -87,6 +99,14 @@ export interface Proposal {
   votesAgainst: SS58Address[];
   finalizationBlock: number | null;
   data: ProposalData;
+}
+export interface Dao {
+  id: number;
+  userId: SS58Address;
+  payingFor: SS58Address;
+  data: ProposalData;
+  status: ProposalStatus;
+  applicationCost: number;
 }
 
 export interface GetBalance {
@@ -199,11 +219,37 @@ export const PROPOSAL_SHEMA = z
     }
   });
 
+export const DAO_SHEMA = z.object({
+  id: z.number(),
+  userId: ADDRESS_SCHEMA, // TODO: validate SS58 address
+  payingFor: ADDRESS_SCHEMA, // TODO: validate SS58 address
+  data: PROPOSAL_DATA_SCHEMA,
+  status: z
+    .string()
+    .refine(
+      (value) => ["Pending", "Accepted", "Refused", "Expired"].includes(value),
+      "Invalid proposal status",
+    )
+    .transform((value) => value as ProposalStatus),
+  applicationCost: z.number(),
+});
+
 export function parse_proposal(value_raw: Codec): Proposal | null {
   const value = value_raw.toPrimitive();
   const validated = PROPOSAL_SHEMA.safeParse(value);
   if (!validated.success) {
     console.warn("Invalid proposal:", validated.error.issues);
+    return null;
+  } else {
+    return validated.data;
+  }
+}
+
+export function parse_daos(value_raw: Codec): Dao | null {
+  const value = value_raw.toPrimitive();
+  const validated = DAO_SHEMA.safeParse(value);
+  if (!validated.success) {
+    console.warn("Invalid DAO:", validated.error.issues);
     return null;
   } else {
     return validated.data;

@@ -18,9 +18,13 @@ import {
   get_proposals,
   type StakeData,
 } from "~/hooks/polkadot/functions/chain_queries";
-import { handle_custom_proposals } from "~/hooks/polkadot/functions/proposals";
+import {
+  handle_custom_daos,
+  handle_custom_proposals,
+} from "~/hooks/polkadot/functions/proposals";
 import type {
   CallbackStatus,
+  DaoState,
   ProposalState,
   SendDaoData,
   SendProposalData,
@@ -52,7 +56,7 @@ interface PolkadotContextType {
   accounts: InjectedAccountWithMeta[];
   selectedAccount: InjectedAccountWithMeta | undefined;
 
-  daos: ProposalState[] | null;
+  daos: DaoState[] | null;
   proposals: ProposalState[] | null;
   stake_data: StakeData | null;
 
@@ -93,7 +97,7 @@ export const PolkadotProvider: React.FC<PolkadotProviderProps> = ({
   const [balance, setBalance] = useState(0);
   const [isBalanceLoading, setIsBalanceLoading] = useState(true);
 
-  const [daos, setDaos] = useState<ProposalState[] | null>(null);
+  const [daos, setDaos] = useState<DaoState[] | null>(null);
   const [proposals, setProposals] = useState<ProposalState[] | null>(null);
   const [stakeData, setStakeData] = useState<StakeData | null>(null);
 
@@ -178,9 +182,9 @@ export const PolkadotProvider: React.FC<PolkadotProviderProps> = ({
       .then((daos_result) => {
         setDaos(daos_result);
 
-        handle_custom_proposals(daos_result)
+        handle_custom_daos(daos_result)
           .then((results) => {
-            const new_dao_list: ProposalState[] = [...daos_result];
+            const new_dao_list: DaoState[] = [...daos_result];
 
             results.filter(is_not_null).forEach((result) => {
               const { id, custom_data } = result;
