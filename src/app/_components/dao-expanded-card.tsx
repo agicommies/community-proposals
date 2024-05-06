@@ -31,7 +31,7 @@ export default function ProposalExpandedCard(props: DaoCardProps) {
         onClick={toggleModalMenu}
         className="min-w-auto w-full rounded-xl border-2 border-blue-500 px-4 py-2 text-blue-500 shadow-custom-blue lg:w-auto dark:bg-light-dark"
       >
-        Click to view proposal {"->"}
+        Click to view S0 Application {"->"}
       </button>
 
       <div
@@ -48,7 +48,7 @@ export default function ProposalExpandedCard(props: DaoCardProps) {
           <main className="flex flex-col items-center justify-center">
             <div className="my-12 h-full w-full bg-repeat py-12 ">
               <Container>
-                <div className="flex items-center justify-between">
+                <div className="flex items-center justify-end">
                   <button
                     type="button"
                     onClick={toggleModalMenu}
@@ -63,7 +63,7 @@ export default function ProposalExpandedCard(props: DaoCardProps) {
                     <>
                       <Card.Header>
                         <div className="flex w-full justify-between">
-                          <h3 className="text-base font-semibold">
+                          <h3 className="mt-1 text-base font-semibold">
                             {dao.body?.title}
                           </h3>
                           <div className="mb-2 flex w-full flex-row-reverse justify-center gap-2 md:mb-0 md:ml-auto md:w-auto md:flex-row md:justify-end md:pl-4">
@@ -99,7 +99,7 @@ export default function ProposalExpandedCard(props: DaoCardProps) {
                           />
                           {dao.id}
                           <span className="ml-1 text-xs text-gray-600">
-                            | Proposal ID
+                            | S0 Application ID
                           </span>
                         </span>
 
@@ -113,7 +113,7 @@ export default function ProposalExpandedCard(props: DaoCardProps) {
                           />
                           {small_address(dao.userId)}
                           <span className="ml-1 text-xs text-gray-600">
-                            | Proposal Author
+                            | S0 Author
                           </span>
                         </span>
                       </Card.Body>
