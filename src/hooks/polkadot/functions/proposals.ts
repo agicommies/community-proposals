@@ -8,6 +8,7 @@ import {
   type Proposal,
   type ProposalState,
   CUSTOM_DAO_METADATA_SCHEMA,
+  type CustomDaoDataState,
 } from "./types";
 
 const DEBUG = process.env.NODE_ENV === "development";
@@ -50,7 +51,7 @@ export async function handle_custom_proposal_data(
 export async function handle_custom_dao_data(
   dao: Dao,
   data: string,
-): Promise<CustomProposalDataState> {
+): Promise<CustomDaoDataState> {
   const cid = parse_ipfs_uri(data);
   if (cid == null) {
     const message = `Invalid IPFS URI '${data}' for dao ${dao.id}`;
@@ -78,6 +79,8 @@ export async function handle_custom_daos(daos: Dao[]) {
     const prom = handle_custom_dao_data(dao, dao.data);
     promises.push(prom);
   }
+
+  return Promise.all(promises);
 }
 
 export function handle_custom_proposals(

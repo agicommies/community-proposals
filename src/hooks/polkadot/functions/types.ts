@@ -26,6 +26,10 @@ export interface CustomProposalData {
   body?: string; // Markdown description
 }
 
+// == Custom Dao  ==
+
+export type CustomDaoDataState = Result<CustomDaoData, CustomDataError>;
+
 export interface CustomDaoData {
   discord_id?: string;
   title?: string;
@@ -108,7 +112,7 @@ export interface Dao {
   userId: SS58Address;
   payingFor: SS58Address;
   data: string;
-  body?: string;
+  body?: CustomDaoData;
   status: DaoStatus;
   applicationCost: number;
 }
