@@ -31,7 +31,7 @@ export const ProposalListHeader = (props: ProposalListHeaderProps) => {
           className={`toggle-btn ml-2 rounded-xl border-2 px-5 py-2 shadow-custom dark:shadow-custom-dark ${props.viewMode === "daos" ? "active bg-blue-200 dark:bg-blue-950" : ""}`}
           onClick={() => props.setViewMode("daos")}
         >
-          DAOs
+          S0 DAO Applications
         </button>
       </div>
       <div className="flex w-full flex-col items-center space-y-4 lg:flex-row lg:space-x-3 lg:space-y-0 lg:divide-x">
