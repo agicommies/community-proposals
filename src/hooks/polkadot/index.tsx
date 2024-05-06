@@ -19,7 +19,7 @@ import {
   type StakeData,
 } from "~/hooks/polkadot/functions/chain_queries";
 import {
-  handle_custom_daos,
+  handle_custom_dao_data,
   handle_custom_proposals,
 } from "~/hooks/polkadot/functions/proposals";
 import type {
@@ -182,30 +182,39 @@ export const PolkadotProvider: React.FC<PolkadotProviderProps> = ({
       .then((daos_result) => {
         setDaos(daos_result);
 
-        handle_custom_daos(daos_result)
-          .then((results) => {
-            const new_dao_list: DaoState[] = [...daos_result];
-
-            results.filter(is_not_null).forEach((result) => {
-              const { id, custom_data } = result;
-              const proposal = new_dao_list.find((p) => p.id === id);
-              if (proposal == null) {
-                console.error(`Proposal ${id} not found`);
-                return;
-              }
-              proposal.custom_data = custom_data;
-            });
-
-            setDaos(new_dao_list);
-          })
-          .catch((e) => {
-            console.error("Error fetching custom DAOs data:", e);
-          });
+        daos_result.forEach((dao) => {
+          if (dao.data) {
+            handle_custom_dao_data(dao)
+              .then((result) => {
+                if (result) {
+                  setDaos((prevDaos) => {
+                    if (prevDaos) {
+                      return prevDaos.map((prevDao) =>
+                        prevDao.id === dao.id
+                          ? { ...prevDao, custom_data: result }
+                          : prevDao,
+                      );
+                    }
+                    return prevDaos;
+                  });
+                }
+              })
+              .catch((e) => {
+                console.error(
+                  `Error fetching custom DAO data for DAO ${dao.id}:`,
+                  e,
+                );
+              });
+          }
+        });
       })
+
       .catch((e) => {
         console.error("Error fetching DAOs:", e);
       });
   };
+
+  console.log(daos);
 
   useEffect(() => {
     // console.log("useEffect for api", api); // DEBUG
