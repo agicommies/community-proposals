@@ -28,10 +28,10 @@ export const ProposalListHeader = (props: ProposalListHeaderProps) => {
           Proposals
         </button>
         <button
-          className={`toggle-btn rounded-xl border-2 border-black px-5 py-2 shadow-custom dark:border-blue-500 dark:shadow-custom-blue ${props.viewMode === "daos" ? "active bg-red-200 dark:bg-blue-950 dark:text-white" : ""}`}
+          className={`toggle-btn rounded-xl border-2 border-black px-5 py-2 shadow-custom xl:text-nowrap dark:border-blue-500 dark:shadow-custom-blue ${props.viewMode === "daos" ? "active bg-red-200 dark:bg-blue-950 dark:text-white" : ""}`}
           onClick={() => props.setViewMode("daos")}
         >
-          DAO Applications
+          S0 Applications
         </button>
       </div>
       <div className="flex w-full flex-col items-center space-y-4 lg:flex-row lg:space-x-3 lg:space-y-0 lg:divide-x">
@@ -58,7 +58,7 @@ export const ProposalListHeader = (props: ProposalListHeaderProps) => {
                     {isBalanceLoading ? (
                       <Skeleton className="w-1/5 py-2 md:mt-1 lg:w-2/5" />
                     ) : (
-                      balance
+                      Math.round(balance)
                     )}
                     <span className="text-xs font-light"> COMAI</span>
                   </span>

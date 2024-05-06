@@ -77,7 +77,7 @@ export function CreateDao() {
         });
       } else {
         toast.error(
-          `Insufficient balance to create DAO. Required: ${daoCost} but got ${balance}`,
+          `Insufficient balance to create S0 Applicaiton. Required: ${daoCost} but got ${balance}`,
           {
             theme: theme === "dark" ? "dark" : "light",
           },
@@ -85,14 +85,14 @@ export function CreateDao() {
         setTransactionStatus({
           status: "ERROR",
           finalized: true,
-          message: "Insufficient balance to create DAO",
+          message: "Insufficient balance to create S0 Applicaiton",
         });
       }
       router.refresh();
     } catch (e) {
       console.error(e);
       setUploading(false);
-      toast.error("Error uploading DAO");
+      toast.error("Error uploading S0 Applicaiton");
     }
   };
 
@@ -101,7 +101,7 @@ export function CreateDao() {
     setTransactionStatus({
       status: "STARTING",
       finalized: false,
-      message: "Starting DAO creation...",
+      message: "Starting S0 Applicaiton creation...",
     });
 
     const result = daoSchema.safeParse({
@@ -118,7 +118,7 @@ export function CreateDao() {
       setTransactionStatus({
         status: "ERROR",
         finalized: true,
-        message: "Error creating DAO",
+        message: "Error creating S0 Applicaiton",
       });
       return;
     }
@@ -142,7 +142,7 @@ export function CreateDao() {
         onClick={toggleModalMenu}
         className="min-w-auto w-full rounded-xl border-2 border-blue-500 px-4 py-2 text-blue-500 shadow-custom-blue lg:w-auto dark:bg-light-dark"
       >
-        New DAO Application
+        New S0 Application
       </button>
       <div
         role="dialog"
@@ -162,7 +162,7 @@ export function CreateDao() {
                     className="pl-2 text-xl font-bold leading-6 dark:text-white"
                     id="modal-title"
                   >
-                    Build DAO Application
+                    Build New S0 Application
                   </h3>
                 </div>
 
@@ -240,7 +240,7 @@ export function CreateDao() {
                       disabled={!isConnected}
                       type="submit"
                     >
-                      {uploading ? "Uploading..." : "Submit DAO"}
+                      {uploading ? "Uploading..." : "Submit S0 Application"}
                     </button>
                   </div>
                   {transactionStatus.status && (

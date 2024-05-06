@@ -34,7 +34,9 @@ export const DaoCard = (props: DaoCardProps) => {
         <Card.Root key={dao.id}>
           <Card.Header className="z-10 flex-col-reverse">
             <div className="flex w-full justify-between">
-              <h3 className="text-base font-semibold">{dao.body?.title}</h3>
+              <h3 className="mt-1 text-base font-semibold">
+                {dao.body?.title}
+              </h3>
               <div className="mb-2 flex w-full flex-row-reverse justify-center gap-2 md:mb-0 md:ml-auto md:w-auto md:flex-row md:justify-end md:pl-4">
                 <StatusLabel result={dao.status} />
               </div>

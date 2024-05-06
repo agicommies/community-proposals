@@ -454,7 +454,7 @@ export const PolkadotProvider: React.FC<PolkadotProviderProps> = ({
             callback?.({
               finalized: false,
               status: "PENDING",
-              message: "Creating DAO...",
+              message: "Creating S0 Applicaiton...",
             });
           }
 
@@ -467,7 +467,7 @@ export const PolkadotProvider: React.FC<PolkadotProviderProps> = ({
                 callback?.({
                   finalized: true,
                   status: "SUCCESS",
-                  message: "DAO created",
+                  message: "S0 Applicaiton created",
                 });
                 handleGetProposals(api);
               } else if (api.events.system?.ExtrinsicFailed?.is(event)) {
@@ -482,12 +482,12 @@ export const PolkadotProvider: React.FC<PolkadotProviderProps> = ({
 
                   if (error.section && error.name && error.docs) {
                     const errorMessage = `${error.name}`;
-                    msg = `DAO creation failed: ${errorMessage}`;
+                    msg = `S0 Applicaiton creation failed: ${errorMessage}`;
                   } else {
-                    msg = `DAO creation failed: Unknown error`;
+                    msg = `S0 Applicaiton creation failed: Unknown error`;
                   }
                 } else {
-                  msg = `DAO creation failed: ${dispatchError.type}`;
+                  msg = `S0 Applicaiton creation failed: ${dispatchError.type}`;
                 }
                 toast(msg, {
                   theme: theme === "dark" ? "dark" : "light",
