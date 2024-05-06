@@ -195,9 +195,6 @@ export const PolkadotProvider: React.FC<PolkadotProviderProps> = ({
           dao.body = result.Ok;
         }
       });
-
-      console.log("here");
-      console.log(daos_result);
     } catch (error) {
       console.error("Error fetching custom proposals data:", error);
     }
