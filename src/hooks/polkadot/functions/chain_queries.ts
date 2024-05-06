@@ -1,5 +1,5 @@
 import { ApiPromise, WsProvider } from "@polkadot/api";
-import { parse_proposal, type Proposal } from "./types";
+import { type Dao, parse_proposal, type Proposal, parse_daos } from "./types";
 import { compute_votes } from "./proposals";
 
 export type DoubleMap<K1, K2, V> = Map<K1, Map<K2, V>>;
@@ -174,9 +174,11 @@ export async function get_proposals(api: ApiPromise): Promise<Proposal[]> {
   return proposals;
 }
 
-export async function get_daos(api: ApiPromise): Promise<Proposal[]> {
+export async function get_daos(api: ApiPromise): Promise<Dao[]> {
   const daos_raw =
     await api.query.subspaceModule?.curatorApplications?.entries();
+
+  console.log(daos_raw);
 
   if (!daos_raw) throw new Error("No DAOs found");
 
@@ -187,7 +189,7 @@ export async function get_daos(api: ApiPromise): Promise<Proposal[]> {
       continue;
     }
     const [, value_raw] = dao_item;
-    const dao = parse_proposal(value_raw);
+    const dao = parse_daos(value_raw);
     if (dao == null) throw new Error("Invalid DAO");
     daos.push(dao);
   }

@@ -3,6 +3,8 @@ import { assert } from "tsafe";
 import { build_ipfs_gateway_url, parse_ipfs_uri } from "../../../utils/ipfs";
 import {
   CUSTOM_PROPOSAL_METADATA_SCHEMA,
+  type Dao,
+  type DaoState,
   type CustomProposalDataState,
   type Proposal,
   type ProposalState,
@@ -38,6 +40,31 @@ export async function handle_custom_proposal_data(
   const validated = CUSTOM_PROPOSAL_METADATA_SCHEMA.safeParse(obj);
   if (!validated.success) {
     const message = `Invalid proposal data for proposal ${proposal.id} at ${url}`;
+    console.error(message, validated.error.issues);
+    return { Err: { message } };
+  }
+
+  return { Ok: validated.data };
+}
+
+export async function handle_custom_dao_data(
+  dao: Dao,
+  data: string,
+): Promise<CustomProposalDataState> {
+  const cid = parse_ipfs_uri(data);
+  if (cid == null) {
+    const message = `Invalid IPFS URI '${data}' for DAO ${dao.id}`;
+    console.error(message);
+    return { Err: { message } };
+  }
+
+  const url = build_ipfs_gateway_url(cid);
+  const response = await fetch(url);
+  const obj: unknown = await response.json();
+
+  const validated = CUSTOM_PROPOSAL_METADATA_SCHEMA.safeParse(obj);
+  if (!validated.success) {
+    const message = `Invalid DAO data for DAO ${dao.id} at ${url}`;
     console.error(message, validated.error.issues);
     return { Err: { message } };
   }
@@ -94,7 +121,59 @@ export function handle_custom_proposals(
       },
       expired: async function () {
         return null;
-      }
+      },
+    });
+    promises.push(prom);
+  }
+  return Promise.all(promises);
+}
+
+export function handle_custom_daos(
+  daos: Dao[],
+  handler?: (id: number, dao_state: DaoState) => void,
+) {
+  const promises = [];
+  for (const dao of daos) {
+    const prom = match(dao.data)({
+      custom: async function (data: string) {
+        const metadata = await handle_custom_dao_data(dao, data);
+        if (metadata == null) {
+          console.warn(`Invalid custom DAO data for DAO ${dao.id}: ${data}`);
+          return null;
+        }
+        const dao_state: DaoState = {
+          ...dao,
+          custom_data: metadata,
+        };
+        if (handler != null) {
+          handler(dao.id, dao_state);
+        }
+        return { id: dao.id, custom_data: metadata };
+      },
+      subnetCustom: async function ({ data }) {
+        const metadata = await handle_custom_dao_data(dao, data);
+        if (metadata == null) {
+          console.warn(`Invalid custom DAO data for DAO ${dao.id}: ${data}`);
+          return null;
+        }
+        const dao_state: DaoState = {
+          ...dao,
+          custom_data: metadata,
+        };
+        if (handler != null) {
+          handler(dao.id, dao_state);
+        }
+        return { id: dao.id, custom_data: metadata };
+      },
+      globalParams: async function () {
+        return null;
+      },
+      subnetParams: async function () {
+        return null;
+      },
+      expired: async function () {
+        return null;
+      },
     });
     promises.push(prom);
   }
@@ -117,7 +196,7 @@ export function get_proposal_netuid(proposal: Proposal): number | null {
     },
     expired: function (): null {
       return null;
-    }
+    },
   });
 }
 
@@ -137,7 +216,7 @@ export function is_proposal_custom(proposal: Proposal): boolean {
     },
     expired: function (): boolean {
       return false;
-    }
+    },
   });
 }
 
