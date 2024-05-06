@@ -13,17 +13,11 @@ export interface ProposalState extends Proposal {
   custom_data?: CustomProposalDataState;
 }
 
-export interface DaoState extends Dao {
-  custom_data?: CustomProposalDataState;
-}
-
-export type CustomDaoDataState = Result<CustomDaoData, CustomProposalDataError>;
-
 export type CustomProposalDataState = Result<
   CustomProposalData,
-  CustomProposalDataError
+  CustomDataError
 >;
-export type CustomProposalDataError = { message: string };
+export type CustomDataError = { message: string };
 
 // == Custom Proposal Extra Data ==
 
@@ -33,7 +27,7 @@ export interface CustomProposalData {
 }
 
 export interface CustomDaoData {
-  discord_id: string;
+  discord_id?: string;
   title?: string;
   body?: string;
 }
@@ -69,6 +63,8 @@ export const CUSTOM_DAO_METADATA_SCHEMA = z.object({
 assert<
   Extends<z.infer<typeof CUSTOM_PROPOSAL_METADATA_SCHEMA>, CustomProposalData>
 >();
+
+assert<Extends<z.infer<typeof CUSTOM_DAO_METADATA_SCHEMA>, CustomDaoData>>();
 
 // == Proposal ==
 
@@ -112,7 +108,8 @@ export interface Dao {
   userId: SS58Address;
   payingFor: SS58Address;
   data: string;
-  status: ProposalStatus;
+  body?: string;
+  status: DaoStatus;
   applicationCost: number;
 }
 
@@ -226,6 +223,17 @@ export const PROPOSAL_SHEMA = z
     }
   });
 
+export function parse_proposal(value_raw: Codec): Proposal | null {
+  const value = value_raw.toPrimitive();
+  const validated = PROPOSAL_SHEMA.safeParse(value);
+  if (!validated.success) {
+    console.warn("Invalid proposal:", validated.error.issues);
+    return null;
+  } else {
+    return validated.data;
+  }
+}
+
 export const DAO_SHEMA = z.object({
   id: z.number(),
   userId: ADDRESS_SCHEMA, // TODO: validate SS58 address
@@ -241,17 +249,6 @@ export const DAO_SHEMA = z.object({
   applicationCost: z.number(),
 });
 
-export function parse_proposal(value_raw: Codec): Proposal | null {
-  const value = value_raw.toPrimitive();
-  const validated = PROPOSAL_SHEMA.safeParse(value);
-  if (!validated.success) {
-    console.warn("Invalid proposal:", validated.error.issues);
-    return null;
-  } else {
-    return validated.data;
-  }
-}
-
 export function parse_daos(value_raw: Codec): Dao | null {
   const value = value_raw.toPrimitive();
   const validated = DAO_SHEMA.safeParse(value);
@@ -265,3 +262,6 @@ export function parse_daos(value_raw: Codec): Dao | null {
 
 // eslint-disable-next-line @typescript-eslint/no-unsafe-call
 assert<Extends<z.infer<typeof PROPOSAL_SHEMA>, Proposal>>();
+
+// eslint-disable-next-line @typescript-eslint/no-unsafe-call
+assert<Extends<z.infer<typeof DAO_SHEMA>, Dao>>();

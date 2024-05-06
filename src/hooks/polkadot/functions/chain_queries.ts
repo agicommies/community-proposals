@@ -1,6 +1,5 @@
-import { ApiPromise, WsProvider } from "@polkadot/api";
+import { type ApiPromise } from "@polkadot/api";
 import { type Dao, parse_proposal, type Proposal, parse_daos } from "./types";
-import { compute_votes } from "./proposals";
 
 export type DoubleMap<K1, K2, V> = Map<K1, Map<K2, V>>;
 
@@ -178,8 +177,6 @@ export async function get_daos(api: ApiPromise): Promise<Dao[]> {
   const daos_raw =
     await api.query.subspaceModule?.curatorApplications?.entries();
 
-  console.log(daos_raw);
-
   if (!daos_raw) throw new Error("No DAOs found");
 
   const daos = [];
@@ -197,38 +194,3 @@ export async function get_daos(api: ApiPromise): Promise<Dao[]> {
   daos.reverse();
   return daos;
 }
-
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
-async function _test() {
-  const ws_endpoint = "wss://testnet-commune-api-node-0.communeai.net";
-
-  const provider = new WsProvider(ws_endpoint);
-  const api = await ApiPromise.create({ provider });
-
-  const proposals = await get_proposals(api);
-
-  const stake_data = await get_all_stake_out(api);
-
-  for (const proposal of proposals) {
-    // if (proposal.netuid != null) {
-    //     continue
-    // }
-    console.log(`Proposal #${proposal.id}`, `proposer: ${proposal.proposer}`); // TEST
-
-    const {
-      stake_for,
-      stake_against,
-      stake_voted: stake_total,
-    } = compute_votes(
-      stake_data.stake_out.per_addr,
-      proposal.votesFor,
-      proposal.votesAgainst,
-    );
-
-    console.log(stake_for, stake_against, stake_total); // TEST
-  }
-
-  process.exit();
-}
-
-// await _test();
