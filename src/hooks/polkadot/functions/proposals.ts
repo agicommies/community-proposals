@@ -4,10 +4,11 @@ import { build_ipfs_gateway_url, parse_ipfs_uri } from "../../../utils/ipfs";
 import {
   CUSTOM_PROPOSAL_METADATA_SCHEMA,
   type Dao,
-  type DaoState,
   type CustomProposalDataState,
   type Proposal,
   type ProposalState,
+  type CustomDaoDataState,
+  CUSTOM_DAO_METADATA_SCHEMA,
 } from "./types";
 
 const DEBUG = process.env.NODE_ENV === "development";
@@ -49,11 +50,12 @@ export async function handle_custom_proposal_data(
 
 export async function handle_custom_dao_data(
   dao: Dao,
-  data: string,
-): Promise<CustomProposalDataState> {
-  const cid = parse_ipfs_uri(data);
+): Promise<CustomDaoDataState> {
+  console.log("here");
+  console.log(dao.data);
+  const cid = parse_ipfs_uri(`ipfs://${dao.data}`);
   if (cid == null) {
-    const message = `Invalid IPFS URI '${data}' for DAO ${dao.id}`;
+    const message = `Invalid IPFS URI '${dao.data}' for DAO ${dao.id}`;
     console.error(message);
     return { Err: { message } };
   }
@@ -62,7 +64,7 @@ export async function handle_custom_dao_data(
   const response = await fetch(url);
   const obj: unknown = await response.json();
 
-  const validated = CUSTOM_PROPOSAL_METADATA_SCHEMA.safeParse(obj);
+  const validated = CUSTOM_DAO_METADATA_SCHEMA.safeParse(obj);
   if (!validated.success) {
     const message = `Invalid DAO data for DAO ${dao.id} at ${url}`;
     console.error(message, validated.error.issues);
@@ -112,58 +114,6 @@ export function handle_custom_proposals(
           handler(proposal.id, proposal_state);
         }
         return { id: proposal.id, custom_data: metadata };
-      },
-      globalParams: async function () {
-        return null;
-      },
-      subnetParams: async function () {
-        return null;
-      },
-      expired: async function () {
-        return null;
-      },
-    });
-    promises.push(prom);
-  }
-  return Promise.all(promises);
-}
-
-export function handle_custom_daos(
-  daos: Dao[],
-  handler?: (id: number, dao_state: DaoState) => void,
-) {
-  const promises = [];
-  for (const dao of daos) {
-    const prom = match(dao.data)({
-      custom: async function (data: string) {
-        const metadata = await handle_custom_dao_data(dao, data);
-        if (metadata == null) {
-          console.warn(`Invalid custom DAO data for DAO ${dao.id}: ${data}`);
-          return null;
-        }
-        const dao_state: DaoState = {
-          ...dao,
-          custom_data: metadata,
-        };
-        if (handler != null) {
-          handler(dao.id, dao_state);
-        }
-        return { id: dao.id, custom_data: metadata };
-      },
-      subnetCustom: async function ({ data }) {
-        const metadata = await handle_custom_dao_data(dao, data);
-        if (metadata == null) {
-          console.warn(`Invalid custom DAO data for DAO ${dao.id}: ${data}`);
-          return null;
-        }
-        const dao_state: DaoState = {
-          ...dao,
-          custom_data: metadata,
-        };
-        if (handler != null) {
-          handler(dao.id, dao_state);
-        }
-        return { id: dao.id, custom_data: metadata };
       },
       globalParams: async function () {
         return null;

@@ -60,6 +60,12 @@ export const CUSTOM_PROPOSAL_METADATA_SCHEMA = z.object({
   body: z.string().optional(),
 });
 
+export const CUSTOM_DAO_METADATA_SCHEMA = z.object({
+  discord_id: z.string(),
+  title: z.string().optional(),
+  body: z.string().optional(),
+});
+
 assert<
   Extends<z.infer<typeof CUSTOM_PROPOSAL_METADATA_SCHEMA>, CustomProposalData>
 >();
@@ -105,7 +111,7 @@ export interface Dao {
   id: number;
   userId: SS58Address;
   payingFor: SS58Address;
-  data: ProposalData;
+  data: string;
   status: ProposalStatus;
   applicationCost: number;
 }
