@@ -7,7 +7,6 @@ import {
   type CustomProposalDataState,
   type Proposal,
   type ProposalState,
-  type CustomDaoDataState,
   CUSTOM_DAO_METADATA_SCHEMA,
 } from "./types";
 
@@ -50,12 +49,11 @@ export async function handle_custom_proposal_data(
 
 export async function handle_custom_dao_data(
   dao: Dao,
-): Promise<CustomDaoDataState> {
-  console.log("here");
-  console.log(dao.data);
-  const cid = parse_ipfs_uri(`ipfs://${dao.data}`);
+  data: string,
+): Promise<CustomProposalDataState> {
+  const cid = parse_ipfs_uri(data);
   if (cid == null) {
-    const message = `Invalid IPFS URI '${dao.data}' for DAO ${dao.id}`;
+    const message = `Invalid IPFS URI '${data}' for dao ${dao.id}`;
     console.error(message);
     return { Err: { message } };
   }
@@ -66,12 +64,20 @@ export async function handle_custom_dao_data(
 
   const validated = CUSTOM_DAO_METADATA_SCHEMA.safeParse(obj);
   if (!validated.success) {
-    const message = `Invalid DAO data for DAO ${dao.id} at ${url}`;
+    const message = `Invalid dao data for dao ${dao.id} at ${url}`;
     console.error(message, validated.error.issues);
     return { Err: { message } };
   }
 
   return { Ok: validated.data };
+}
+
+export async function handle_custom_daos(daos: Dao[]) {
+  const promises = [];
+  for (const dao of daos) {
+    const prom = handle_custom_dao_data(dao, dao.data);
+    promises.push(prom);
+  }
 }
 
 export function handle_custom_proposals(

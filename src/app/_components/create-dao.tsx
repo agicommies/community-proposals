@@ -124,12 +124,9 @@ export function CreateDao() {
     }
 
     const daoData = JSON.stringify({
-      application_key: applicationKey,
-      data: {
-        discord_id: discordId,
-        title: title,
-        body: body,
-      },
+      discord_id: discordId,
+      title: title,
+      body: body,
     });
     const blob = new Blob([daoData], { type: "application/json" });
     const fileToUpload = new File([blob], "dao.json", {

@@ -19,12 +19,12 @@ import {
   type StakeData,
 } from "~/hooks/polkadot/functions/chain_queries";
 import {
-  handle_custom_dao_data,
   handle_custom_proposals,
+  handle_custom_daos,
 } from "~/hooks/polkadot/functions/proposals";
 import type {
   CallbackStatus,
-  DaoState,
+  Dao,
   ProposalState,
   SendDaoData,
   SendProposalData,
@@ -56,7 +56,7 @@ interface PolkadotContextType {
   accounts: InjectedAccountWithMeta[];
   selectedAccount: InjectedAccountWithMeta | undefined;
 
-  daos: DaoState[] | null;
+  daos: Dao[] | null;
   proposals: ProposalState[] | null;
   stake_data: StakeData | null;
 
@@ -97,7 +97,7 @@ export const PolkadotProvider: React.FC<PolkadotProviderProps> = ({
   const [balance, setBalance] = useState(0);
   const [isBalanceLoading, setIsBalanceLoading] = useState(true);
 
-  const [daos, setDaos] = useState<DaoState[] | null>(null);
+  const [daos, setDaos] = useState<Dao[] | null>(null);
   const [proposals, setProposals] = useState<ProposalState[] | null>(null);
   const [stakeData, setStakeData] = useState<StakeData | null>(null);
 
@@ -177,44 +177,23 @@ export const PolkadotProvider: React.FC<PolkadotProviderProps> = ({
       });
   };
 
-  const handleGetDaos = (api: ApiPromise) => {
+  const handleGetDaos = async (api: ApiPromise) => {
     get_daos(api)
       .then((daos_result) => {
         setDaos(daos_result);
 
-        daos_result.forEach((dao) => {
-          if (dao.data) {
-            handle_custom_dao_data(dao)
-              .then((result) => {
-                if (result) {
-                  setDaos((prevDaos) => {
-                    if (prevDaos) {
-                      return prevDaos.map((prevDao) =>
-                        prevDao.id === dao.id
-                          ? { ...prevDao, custom_data: result }
-                          : prevDao,
-                      );
-                    }
-                    return prevDaos;
-                  });
-                }
-              })
-              .catch((e) => {
-                console.error(
-                  `Error fetching custom DAO data for DAO ${dao.id}:`,
-                  e,
-                );
-              });
-          }
-        });
+        handle_custom_daos(daos_result)
+          .then((results) => {
+            console.log(results);
+          })
+          .catch((e) => {
+            console.error("Error fetching custom proposals data:", e);
+          });
       })
-
       .catch((e) => {
-        console.error("Error fetching DAOs:", e);
+        console.error("Error fetching proposals:", e);
       });
   };
-
-  console.log(daos);
 
   useEffect(() => {
     // console.log("useEffect for api", api); // DEBUG
@@ -234,7 +213,7 @@ export const PolkadotProvider: React.FC<PolkadotProviderProps> = ({
         });
 
       handleGetProposals(api);
-      handleGetDaos(api);
+      void handleGetDaos(api);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [api]);
@@ -317,10 +296,6 @@ export const PolkadotProvider: React.FC<PolkadotProviderProps> = ({
         selectedAccount.address,
         { signer: injector.signer },
         (result: SubmittableResult) => {
-          // toast.success(`Transaction hash: ${result.txHash.toHex()}`, {
-          //   theme: theme === "dark" ? "dark" : "light",
-          // });
-
           if (result.status.isInBlock) {
             callback?.({
               finalized: false,
