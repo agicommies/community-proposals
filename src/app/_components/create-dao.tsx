@@ -145,7 +145,7 @@ export function CreateDao() {
         onClick={toggleModalMenu}
         className="min-w-auto w-full rounded-xl border-2 border-blue-500 px-4 py-2 text-blue-500 shadow-custom-blue lg:w-auto dark:bg-light-dark"
       >
-        New DAO
+        New DAO Application
       </button>
       <div
         role="dialog"
