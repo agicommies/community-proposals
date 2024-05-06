@@ -67,6 +67,7 @@ assert<
 // == Proposal ==
 
 export type ProposalStatus = "Pending" | "Accepted" | "Refused" | "Expired";
+export type DaoStatus = "Pending" | "Accepted" | "Refused";
 
 /*
 pub enum ProposalData<T: Config> {
@@ -223,14 +224,14 @@ export const DAO_SHEMA = z.object({
   id: z.number(),
   userId: ADDRESS_SCHEMA, // TODO: validate SS58 address
   payingFor: ADDRESS_SCHEMA, // TODO: validate SS58 address
-  data: PROPOSAL_DATA_SCHEMA,
+  data: z.string(),
   status: z
     .string()
     .refine(
-      (value) => ["Pending", "Accepted", "Refused", "Expired"].includes(value),
+      (value) => ["Pending", "Accepted", "Refused"].includes(value),
       "Invalid proposal status",
     )
-    .transform((value) => value as ProposalStatus),
+    .transform((value) => value as DaoStatus),
   applicationCost: z.number(),
 });
 
