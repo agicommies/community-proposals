@@ -1,5 +1,8 @@
+import "@polkadot/api-augment";
 import { type ApiPromise } from "@polkadot/api";
+
 import { type Dao, parse_proposal, type Proposal, parse_daos } from "./types";
+import { from_nano } from "~/utils";
 
 export type DoubleMap<K1, K2, V> = Map<K1, Map<K2, V>>;
 
@@ -38,7 +41,6 @@ export async function __get_all_stake(
   const stake_map = new Map<string, bigint>();
 
   let max_stake = 0n;
-  let max_addr;
 
   for (const stake_item of stake_items) {
     if (!Array.isArray(stake_item) || stake_item.length != 2)
@@ -195,11 +197,11 @@ export async function get_daos(api: ApiPromise): Promise<Dao[]> {
   return daos;
 }
 
-export async function get_dao_treasury(api: ApiPromise): Promise<string> {
-  const dao_treasury =
-    await api.query.subspaceModule?.globalDaoTreasury?.size();
-
-  if (!dao_treasury) throw new Error("No DAOs treasury found");
-
-  return dao_treasury.toHuman();
+export async function get_dao_treasury(api: ApiPromise) {
+  if (!api.query?.subspaceModule?.globalDaoTreasury) {
+    throw new Error("API does not support query for globalDaoTreasury");
+  }
+  const result = await api.query.subspaceModule.globalDaoTreasury();
+  const parsed_result = JSON.stringify(result);
+  return Math.round(from_nano(BigInt(parsed_result)));
 }

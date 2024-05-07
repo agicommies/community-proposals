@@ -58,7 +58,7 @@ interface PolkadotContextType {
   selectedAccount: InjectedAccountWithMeta | undefined;
 
   daos: Dao[] | null;
-  daosTreasuries: string;
+  daosTreasuries: number;
   proposals: ProposalState[] | null;
   stake_data: StakeData | null;
 
@@ -100,7 +100,7 @@ export const PolkadotProvider: React.FC<PolkadotProviderProps> = ({
   const [isBalanceLoading, setIsBalanceLoading] = useState(true);
 
   const [daos, setDaos] = useState<Dao[] | null>(null);
-  const [daosTreasuries, setDaosTreasuries] = useState("");
+  const [daosTreasuries, setDaosTreasuries] = useState(0);
 
   const [proposals, setProposals] = useState<ProposalState[] | null>(null);
   const [stakeData, setStakeData] = useState<StakeData | null>(null);
