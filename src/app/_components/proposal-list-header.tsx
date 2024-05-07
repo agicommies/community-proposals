@@ -72,7 +72,7 @@ export const ProposalListHeader = (props: ProposalListHeaderProps) => {
         <div className="r mt-6 flex w-full flex-col items-center justify-around rounded-xl border border-black bg-white p-3 shadow-custom md:flex-row dark:border-white dark:bg-dark dark:shadow-custom-dark">
           <div>
             <span className="text-base font-medium text-black dark:text-white">
-              DAOs treasuries:
+              DAO treasury funds:
             </span>
             <span className="ml-1 text-base font-semibold text-cyan-500">
               {daosTreasuries}

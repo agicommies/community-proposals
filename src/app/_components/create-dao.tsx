@@ -198,27 +198,27 @@ export function CreateDao() {
                       <div className="flex flex-col gap-3">
                         <input
                           type="text"
-                          placeholder="Your Application Key here..."
+                          placeholder="Application Key (ss58)"
                           value={applicationKey}
                           onChange={(e) => setApplicationKey(e.target.value)}
                           className="w-full rounded-xl border-black bg-gray-100 p-3  dark:border-white dark:bg-dark dark:text-white"
                         />
                         <input
                           type="text"
-                          placeholder="Your Discord ID here..."
+                          placeholder="Discord ID"
                           value={discordId}
                           onChange={(e) => setDiscordId(e.target.value)}
                           className="w-full rounded-xl border-black bg-gray-100 p-3  dark:border-white dark:bg-dark dark:text-white"
                         />
                         <input
                           type="text"
-                          placeholder="Your DAO title here..."
+                          placeholder="Application title"
                           value={title}
                           onChange={(e) => setTitle(e.target.value)}
                           className="w-full rounded-xl border-black bg-gray-100 p-3  dark:border-white dark:bg-dark dark:text-white"
                         />
                         <textarea
-                          placeholder="Your DAO body here... (Markdown supported)"
+                          placeholder="Application body... (Markdown supported)"
                           value={body}
                           rows={5}
                           onChange={(e) => setBody(e.target.value)}
@@ -258,16 +258,17 @@ export function CreateDao() {
                   <div className="mt-1 flex items-start gap-1 dark:text-white">
                     <InformationCircleIcon className="mt-0.5 h-4 w-4 fill-blue-500 text-sm" />
                     <span className="text-sm">
-                      Please make sure, that your application passes all of the
-                      criteria, defined in this{" "}
+                      Please make sure, that your application meets all of the
+                      criteria defined in this
                       <Link
-                        href="https://mirror.xyz/0xD80E194aBe2d8084fAecCFfd72877e63F5822Fc5/FUvj1g9rPyVm8Ii_qLNu-IbRQPiCHkfZDLAmlP00M1Q"
+                        href="https://mirror.xyz/0xD80E194aBe2d8084fAecCFfd72877e63F5822Fc5/SuhIlcUugotYhf2QmVTd3mI05RCycqSFrJfCxuEHet0"
                         className="text-blue-500 hover:underline"
                         target="_blank"
                       >
                         article
                       </Link>
-                      , otherwise the DAO, won&apos;t accept you.
+                      , or you are at risk of getting denied by the Module
+                      Curation DAO.
                     </span>
                   </div>
                 </div>
