@@ -14,6 +14,7 @@ import {
 import { WalletModal } from "~/app/_components/wallet-modal";
 import {
   get_all_stake_out,
+  get_dao_treasury,
   get_daos,
   get_proposals,
   type StakeData,
@@ -57,6 +58,7 @@ interface PolkadotContextType {
   selectedAccount: InjectedAccountWithMeta | undefined;
 
   daos: Dao[] | null;
+  daosTreasuries: string;
   proposals: ProposalState[] | null;
   stake_data: StakeData | null;
 
@@ -98,6 +100,8 @@ export const PolkadotProvider: React.FC<PolkadotProviderProps> = ({
   const [isBalanceLoading, setIsBalanceLoading] = useState(true);
 
   const [daos, setDaos] = useState<Dao[] | null>(null);
+  const [daosTreasuries, setDaosTreasuries] = useState("");
+
   const [proposals, setProposals] = useState<ProposalState[] | null>(null);
   const [stakeData, setStakeData] = useState<StakeData | null>(null);
 
@@ -200,6 +204,15 @@ export const PolkadotProvider: React.FC<PolkadotProviderProps> = ({
     }
   };
 
+  const handleGetDaosTreasuries = async (api: ApiPromise) => {
+    try {
+      const dao_treasury = await get_dao_treasury(api);
+      setDaosTreasuries(dao_treasury);
+    } catch (error) {
+      console.error("Error fetching DAO treasuries:", error);
+    }
+  };
+
   useEffect(() => {
     if (api) {
       void api.rpc.chain.subscribeNewHeads((header) => {
@@ -218,6 +231,7 @@ export const PolkadotProvider: React.FC<PolkadotProviderProps> = ({
 
       handleGetProposals(api);
       void handleGetDaos(api);
+      void handleGetDaosTreasuries(api);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [api]);
@@ -519,6 +533,8 @@ export const PolkadotProvider: React.FC<PolkadotProviderProps> = ({
         selectedAccount,
 
         daos,
+        daosTreasuries,
+
         proposals,
         stake_data: stakeData,
 
