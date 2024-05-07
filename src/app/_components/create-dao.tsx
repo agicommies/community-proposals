@@ -259,7 +259,7 @@ export function CreateDao() {
                     <InformationCircleIcon className="mt-0.5 h-4 w-4 fill-blue-500 text-sm" />
                     <span className="text-sm">
                       Please make sure, that your application meets all of the
-                      criteria defined in this
+                      criteria defined in this{" "}
                       <Link
                         href="https://mirror.xyz/0xD80E194aBe2d8084fAecCFfd72877e63F5822Fc5/SuhIlcUugotYhf2QmVTd3mI05RCycqSFrJfCxuEHet0"
                         className="text-blue-500 hover:underline"
