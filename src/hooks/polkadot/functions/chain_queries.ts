@@ -60,7 +60,7 @@ export async function __get_all_stake(
 
     if (stake > max_stake) {
       max_stake = stake;
-      max_addr = address;
+      // max_addr = address;
     }
 
     if (stake_map.get(address) == null) {
@@ -70,7 +70,7 @@ export async function __get_all_stake(
       stake_map.set(address, old_stake + stake);
     }
   }
-  console.log("Max stake key:", max_addr, max_stake);
+
   return stake_map;
 }
 
@@ -193,4 +193,13 @@ export async function get_daos(api: ApiPromise): Promise<Dao[]> {
 
   daos.reverse();
   return daos;
+}
+
+export async function get_dao_treasury(api: ApiPromise): Promise<string> {
+  const dao_treasury =
+    await api.query.subspaceModule?.globalDaoTreasury?.size();
+
+  if (!dao_treasury) throw new Error("No DAOs treasury found");
+
+  return dao_treasury.toHuman();
 }

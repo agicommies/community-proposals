@@ -79,7 +79,6 @@ export default function HomePage() {
         })
       : daos?.map((dao) => {
           // const netuid = get_proposal_netuid(dao);
-
           return (
             <div key={dao.id} className="animate-fade-in-down">
               <DaoCard key={dao.id} dao={dao} />
