@@ -76,13 +76,13 @@ export const ProposalListHeader = (props: ProposalListHeaderProps) => {
             </span>
             <span className="ml-1 text-base font-semibold text-cyan-500">
               {daosTreasuries}
-              <span className="text-xs font-light"></span>
+              <span className="text-xs font-light"> COMAI</span>
             </span>
           </div>
           <div className="hidden h-6 w-0.5 bg-black md:block dark:bg-white" />
           <div>
             <span className="text-base font-medium text-black dark:text-white">
-              Total balance:
+              Your on balance:
             </span>
             <span className="ml-1 text-base font-semibold text-green-500">
               {isBalanceLoading ? (
@@ -96,7 +96,7 @@ export const ProposalListHeader = (props: ProposalListHeaderProps) => {
           <div className="hidden h-6 w-0.5 bg-black md:block dark:bg-white" />
           <div>
             <span className="text-base font-medium text-black dark:text-white">
-              Total staked balance:
+              Your total staked balance:
             </span>
             <span className="ml-1 text-base font-semibold text-blue-500">
               {format_token(user_stake_weight)}
