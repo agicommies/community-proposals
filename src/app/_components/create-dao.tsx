@@ -67,7 +67,7 @@ export function CreateDao() {
         return;
       }
 
-      const daoCost = 10000;
+      const daoCost = 1000;
 
       if (balance > daoCost) {
         createNewDao({
