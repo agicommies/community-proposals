@@ -410,6 +410,10 @@ export const PolkadotProvider: React.FC<PolkadotProviderProps> = ({
                   message: "Proposal created",
                 });
                 handleGetProposals(api);
+
+                setTimeout(() => {
+                  window.location.reload();
+                }, 2000);
               } else if (api.events.system?.ExtrinsicFailed?.is(event)) {
                 const [dispatchError] = event.data as unknown as [
                   DispatchError,
@@ -484,6 +488,10 @@ export const PolkadotProvider: React.FC<PolkadotProviderProps> = ({
                   message: "S0 Applicaiton created",
                 });
                 handleGetProposals(api);
+
+                setTimeout(() => {
+                  window.location.reload();
+                }, 2000);
               } else if (api.events.system?.ExtrinsicFailed?.is(event)) {
                 const [dispatchError] = event.data as unknown as [
                   DispatchError,

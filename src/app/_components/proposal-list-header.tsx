@@ -15,7 +15,8 @@ type ProposalListHeaderProps = {
 };
 
 export const ProposalListHeader = (props: ProposalListHeaderProps) => {
-  const { isBalanceLoading, balance, daosTreasuries } = usePolkadot();
+  const { isBalanceLoading, balance, daosTreasuries, isInitialized } =
+    usePolkadot();
   const { user_stake_weight, accountUnselected, handleConnect } = props;
 
   return (
@@ -68,47 +69,53 @@ export const ProposalListHeader = (props: ProposalListHeaderProps) => {
           </div>
         </div>
       </div>
-      {user_stake_weight !== null ? (
-        <div className="r mt-6 flex w-full flex-col items-center justify-around rounded-xl border border-black bg-white p-3 shadow-custom md:flex-row dark:border-white dark:bg-dark dark:shadow-custom-dark">
-          <div>
-            <span className="text-base font-medium text-black dark:text-white">
-              DAO treasury funds:
-            </span>
+
+      <div className="r mt-6 flex w-full flex-col items-center justify-around rounded-xl border border-black bg-white p-3 shadow-custom md:flex-row dark:border-white dark:bg-dark dark:shadow-custom-dark">
+        <div className="flex items-center gap-1">
+          <span className="text-base font-medium text-black dark:text-white">
+            DAO treasury funds:
+          </span>
+          {isInitialized ? (
             <span className="ml-1 text-base font-semibold text-cyan-500">
               {daosTreasuries}
               <span className="text-xs font-light"> COMAI</span>
             </span>
-          </div>
-          <div className="hidden h-6 w-0.5 bg-black md:block dark:bg-white" />
-          <div>
-            <span className="text-base font-medium text-black dark:text-white">
-              Your on balance:
-            </span>
-            <span className="ml-1 text-base font-semibold text-green-500">
-              {isBalanceLoading ? (
-                <Skeleton className="w-1/5 py-2 md:mt-1 lg:w-2/5" />
-              ) : (
-                Math.round(balance)
-              )}
-              <span className="text-xs font-light"> COMAI</span>
-            </span>
-          </div>
-          <div className="hidden h-6 w-0.5 bg-black md:block dark:bg-white" />
-          <div>
-            <span className="text-base font-medium text-black dark:text-white">
-              Your total staked balance:
-            </span>
+          ) : (
+            <Skeleton className="h-2 w-6 py-2" />
+          )}
+        </div>
+        <div className="hidden h-6 w-0.5 bg-black md:block dark:bg-white" />
+        <div className="flex items-center gap-1">
+          <span className="text-base font-medium text-black dark:text-white">
+            Your on balance:
+          </span>
+          <span className="ml-1 text-base font-semibold text-green-500">
+            {isBalanceLoading || accountUnselected ? (
+              <Skeleton className="h-2 w-6 py-2" />
+            ) : (
+              <>
+                {Math.round(balance)}
+                <span className="text-xs font-light"> COMAI</span>
+              </>
+            )}
+          </span>
+        </div>
+        <div className="hidden h-6 w-0.5 bg-black md:block dark:bg-white" />
+        <div className="flex items-center gap-1">
+          <span className="text-base font-medium text-black dark:text-white">
+            Your total staked balance:
+          </span>
+
+          {user_stake_weight == null ? (
+            <Skeleton className="h-2 w-6 py-2" />
+          ) : (
             <span className="ml-1 text-base font-semibold text-blue-500">
               {format_token(user_stake_weight)}
               <span className="text-xs font-light"> COMAI</span>
             </span>
-          </div>
+          )}
         </div>
-      ) : (
-        <div className="mt-6 flex w-full flex-row justify-around rounded-xl border border-black bg-white p-3 shadow-custom dark:border-white dark:bg-dark dark:shadow-custom-dark">
-          <Skeleton className="h-8 w-full py-2" />
-        </div>
-      )}
+      </div>
     </>
   );
 };
