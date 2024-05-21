@@ -84,7 +84,7 @@ export const VoteCard = (props: { proposalId: number, voted: TVote }) => {
         {!isConnected &&
           <button
             onClick={handleConnect}
-            className=" w-full rounded-2xl flex items-center border-2 p-1.5 text-black justify-center gap-3 border-orange-500 bg-white px-4 py-2 shadow-custom-orange active:top-1 active:shadow-custom-orange-clicked dark:bg-light-dark"
+            className=" w-full rounded-2xl flex items-center border-2 p-1.5 text-black justify-center gap-3 border-orange-500 bg-white px-4 py-2 shadow-custom-orange active:top-1 active:shadow-custom-orange-clicked"
 
           >
             <span className="flex gap-3 font-medium text-orange-500">

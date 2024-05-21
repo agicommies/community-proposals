@@ -14,12 +14,10 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 // import { parse_ipfs_uri } from "~/utils/ipfs";
 import { usePolkadot } from "~/hooks/polkadot";
-import { getCurrentTheme } from "~/styles/theming";
 import { toast } from "react-toastify";
 
 export function CreateProposal() {
   const { isConnected, createNewProposal } = usePolkadot();
-  const theme = getCurrentTheme();
   const router = useRouter();
 
   const [ipfsUri, setIpfsUri] = useState("");
@@ -46,14 +44,10 @@ export function CreateProposal() {
   const copyJSONToClipboard = () => {
     navigator.clipboard.writeText(generateJSON()).then(
       () => {
-        toast.success("Copied to clipboard", {
-          theme: theme === "dark" ? "dark" : "light",
-        });
+        toast.success("Copied to clipboard");
       },
       () => {
-        toast.error("Failed to copy to clipboard", {
-          theme: theme === "dark" ? "dark" : "light",
-        });
+        toast.error("Failed to copy to clipboard");
       },
     );
   };
@@ -82,26 +76,26 @@ export function CreateProposal() {
       <button
         type="button"
         onClick={toggleModalMenu}
-        className="min-w-auto w-full rounded-xl border-2 border-blue-500 px-4 py-2 text-blue-500 shadow-custom-blue lg:w-auto dark:bg-light-dark"
+        className="w-full px-4 py-2 text-gray-300 border border-gray-500 hover:border-white hover:text-white min-w-auto lg:w-auto "
       >
         New Proposal
       </button>
       <div
         role="dialog"
-        className={`relative z-50 ${modalOpen ? "visible" : "hidden"}`}
+        className={`relative z-50 ${modalOpen ? "visible" : "hidden"} `}
       >
         {/* Backdrop */}
-        <div className="fixed inset-0 bg-dark bg-opacity-60 backdrop-blur-sm transition-opacity" />
+        <div className="fixed inset-0 transition-opacity bg-dark bg-opacity-60 backdrop-blur-sm" />
 
         {/* Modal */}
-        <div className="fixed inset-0 z-10 w-screen animate-fade-in-down overflow-y-auto">
-          <div className="flex min-h-full items-center justify-center p-4 text-center">
-            <div className="relative w-[100%] max-w-5xl transform overflow-hidden rounded-3xl border-2 border-zinc-800 bg-white text-left shadow-custom md:w-[80%] dark:border-white dark:bg-light-dark dark:shadow-custom-dark">
+        <div className="fixed inset-0 z-10 w-screen overflow-y-auto animate-fade-in-down">
+          <div className="flex items-center justify-center min-h-full p-4 text-center">
+            <div className="relative w-[100%] max-w-5xl transform overflow-hidden border border-gray-500 bg-white text-white text-left md:w-[80%] bg-[url('/bg-pattern.svg')] bg-cover">
               {/* Modal Header */}
-              <div className="flex items-center justify-between gap-3 border-b-2 border-zinc-800 bg-[url(/grids.svg)] bg-cover bg-center bg-no-repeat p-6 md:flex-row dark:border-white">
+              <div className="flex items-center justify-between gap-3 p-6 bg-center bg-no-repeat bg-cover border-b-2 border-gray-500 md:flex-row">
                 <div className="flex flex-col items-center md:flex-row">
                   <h3
-                    className="pl-2 text-xl font-bold leading-6 dark:text-white"
+                    className="pl-2 text-xl font-bold leading-6"
                     id="modal-title"
                   >
                     Send Custom Global Proposal
@@ -111,13 +105,13 @@ export function CreateProposal() {
                 <button
                   type="button"
                   onClick={toggleModalMenu}
-                  className="rounded-2xl border-2 border-black p-2 transition duration-200 dark:border-white dark:bg-light-dark hover:dark:bg-dark"
+                  className="p-2 transition duration-200 border-gray-500 border-1"
                 >
-                  <XMarkIcon className="h-6 w-6 dark:fill-white" />
+                  <XMarkIcon className="w-6 h-6" />
                 </button>
               </div>
               {/* Modal Body */}
-              <main className="dark:bg-light-dark">
+              <main>
                 <div className="flex flex-col gap-4 p-6">
                   <div className="flex gap-3">
                     <input
@@ -126,7 +120,7 @@ export function CreateProposal() {
                       value={ipfsUri}
                       disabled={true}
                       onChange={(e) => setIpfsUri(e.target.value)}
-                      className="w-full rounded-xl border-2 border-gray-500 bg-gray-100 p-3 shadow-custom-gray dark:bg-dark dark:text-white"
+                      className="w-full p-3 bg-gray-200 border-gray-500 border-1"
                     />
                     <button
                       disabled={true}
@@ -136,14 +130,13 @@ export function CreateProposal() {
                       //     setIsUriValid(true);
                       //   }
                       // }}
-                      className={` relative rounded-xl border-2 px-4 py-2 font-semibold dark:bg-dark ${isConnected && isUriValid ? "border-blue-500 text-blue-500 shadow-custom-blue active:top-1 active:shadow-custom-blue-clicked" : "border-gray-500 text-gray-500 shadow-custom-gray"}`}
-                      // className="relative w-1/3 rounded-xl border-2 border-black bg-gray-100 p-3 font-semibold shadow-custom active:top-1 active:shadow-custom-clicked dark:border-white dark:bg-dark dark:text-white dark:shadow-custom-dark dark:active:shadow-custom-dark-clicked"
+                      className={` relative border px-4 py-2 font-semibold ${isConnected && isUriValid ? "border-green-500 text-green-500 active:top-1" : "border-gray-500 text-gray-500"}`}
                     >
                       Check
                     </button>
                   </div>
                   <button
-                    className={` relative rounded-xl border-2 px-4 py-2 font-semibold dark:bg-dark ${isConnected && isUriValid ? "border-blue-500 text-blue-500 shadow-custom-blue active:top-1 active:shadow-custom-blue-clicked" : "border-gray-500 text-gray-500 shadow-custom-gray"}`}
+                    className={` relative border px-4 py-2 font-semibold ${isConnected && isUriValid ? "border-green-500 text-green-500 active:top-1" : "border-gray-500 text-gray-500"}`}
                     // disabled={!isConnected || !isUriValid}
                     onClick={HandleSubmit}
                     disabled={true}
@@ -155,11 +148,11 @@ export function CreateProposal() {
                         : "Invalid IPFS URI"} */}
                     Comming Soon
                   </button>
-                  <div className="my-2 rounded-xl bg-gray-500 p-0.5 dark:bg-dark"></div>
+                  <div className="my-2 bg-gray-500 p-0.5"></div>
 
                   <div className="flex flex-wrap items-center gap-1 text-white">
                     <div className="flex items-center gap-1">
-                      <InformationCircleIcon className="h-6 w-6 fill-blue-500" />
+                      <InformationCircleIcon className="w-6 h-6 fill-green-500" />
                       <span>in construction...</span>
                     </div>
                     <span>
@@ -173,9 +166,9 @@ export function CreateProposal() {
                     </span>
                   </div>
                   {/* Accordion */}
-                  <div className="rounded-xl border-2 p-1 ">
+                  <div className="p-1 border ">
                     <button
-                      className="flex w-full items-center justify-between rounded-xl p-3 text-left font-semibold  dark:text-white"
+                      className="flex items-center justify-between w-full p-3 font-semibold text-left"
                       onClick={toggleAccordion}
                     >
                       <span>Build a Proposal File</span>{" "}
@@ -184,25 +177,25 @@ export function CreateProposal() {
                       />
                     </button>
                     {accordionOpen && (
-                      <div className="flex animate-fade-in-down flex-col gap-3">
-                        <div className="flex flex-col gap-3 rounded-xl p-3 ">
+                      <div className="flex flex-col gap-3 animate-fade-in-down">
+                        <div className="flex flex-col gap-3 p-3 ">
                           <div className="flex flex-col">
                             <div className="flex items-center justify-start gap-1">
                               <button
                                 onClick={toggleEditMode}
-                                className={`rounded-t-xl border-x-2 border-t-2 px-6 py-2 dark:text-white ${editMode && "bg-blue-500"}`}
+                                className={`border-x-2 border-t-2 px-6 py-2 ${editMode && "bg-green-500"}`}
                               >
                                 Edit
                               </button>
                               <button
                                 onClick={toggleEditMode}
-                                className={`rounded-t-xl border-x-2 border-t-2 px-6 py-2 dark:text-white ${!editMode && "bg-blue-500"}`}
+                                className={`border-x-2 border-t-2 px-6 py-2 ${!editMode && "bg-green-500"}`}
                               >
                                 Preview
                               </button>
                             </div>
 
-                            <div className="rounded-b-xl border-2 p-3">
+                            <div className="p-3 border">
                               {editMode ? (
                                 <div className="flex flex-col gap-3">
                                   <input
@@ -210,22 +203,20 @@ export function CreateProposal() {
                                     placeholder="Your proposal title here..."
                                     value={title}
                                     onChange={(e) => setTitle(e.target.value)}
-                                    className="w-full rounded-xl border-black bg-gray-100 p-3  dark:border-white dark:bg-dark dark:text-white"
+                                    className="w-full p-3 bg-gray-100 border-gray-500"
                                   />
                                   <textarea
                                     placeholder="Your proposal here... (Markdown supported)"
                                     value={body}
                                     rows={5}
                                     onChange={(e) => setBody(e.target.value)}
-                                    className="w-full rounded-xl border-black bg-gray-100 p-3  dark:border-white dark:bg-dark dark:text-white"
+                                    className="w-full p-3 bg-gray-100 border-gray-500"
                                   />
                                 </div>
                               ) : (
                                 <div
-                                  className="rounded-xl bg-gray-100 p-3 dark:bg-dark"
-                                  data-color-mode={
-                                    theme === "dark" ? "dark" : "light"
-                                  }
+                                  className="p-3 bg-gray-100"
+                                  data-color-mode={"light"}
                                 >
                                   <MarkdownPreview
                                     source={`## ${title}\n${body}`}
@@ -235,24 +226,24 @@ export function CreateProposal() {
                             </div>
                           </div>
 
-                          <div className="relative mt-4 rounded-xl border-2 p-6">
-                            <h4 className="mb-2 font-semibold dark:text-white">
+                          <div className="relative p-6 mt-4">
+                            <h4 className="mb-2 font-semibold text-white">
                               Download or copy this JSON Data to build your
                               proposal file
                             </h4>
-                            <pre className="max-h-40 overflow-auto rounded-xl bg-gray-100 p-3 pt-12 md:pt-3 dark:bg-dark dark:text-white">
-                              <div className="absolute right-8 top-28 flex gap-2 md:top-16">
+                            <pre className="p-3 pt-12 overflow-auto text-black bg-gray-100 max-h-40 md:pt-3">
+                              <div className="absolute flex gap-2 text-gray-500 right-8 top-28 md:top-16">
                                 <button
                                   onClick={copyJSONToClipboard}
-                                  className="rounded-xl border-2 border-black bg-gray-100 p-1 font-semibold  dark:border-white dark:bg-dark dark:text-white"
+                                  className="p-1 font-semibold bg-gray-100 border border-gray-500"
                                 >
-                                  <DocumentDuplicateIcon className="h-5 w-5" />
+                                  <DocumentDuplicateIcon className="w-5 h-5" />
                                 </button>
                                 <button
                                   onClick={downloadJSON}
-                                  className="rounded-xl border-2 border-black bg-gray-100 p-1 font-semibold  dark:border-white dark:bg-dark dark:text-white"
+                                  className="p-1 font-semibold bg-gray-100 border border-gray-500"
                                 >
-                                  <ArchiveBoxArrowDownIcon className="h-5 w-5" />
+                                  <ArchiveBoxArrowDownIcon className="w-5 h-5" />
                                 </button>
                               </div>
                               {generateJSON()}

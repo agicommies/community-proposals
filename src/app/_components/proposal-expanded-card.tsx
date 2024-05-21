@@ -16,12 +16,14 @@ import { VoteLabel } from "~/app/_components/vote-label";
 import { type ProposalStakeInfo } from "~/hooks/polkadot/functions/proposals";
 import { bigint_division, format_token, small_address } from "~/utils";
 
-import { getCurrentTheme } from "~/styles/theming";
 import { Container } from "./container";
 import { Label } from "./label";
 import { type ProposalCardProps } from "./proposal-card";
 import { Skeleton } from "./skeleton";
 import { handle_proposal } from "./util.ts/proposal_fields";
+import { cairo } from "~/styles/fonts";
+import { ArrowRight } from 'lucide-react'
+
 
 function render_vote_data(stake_info: ProposalStakeInfo) {
   const { stake_for, stake_against, stake_voted } = stake_info;
@@ -48,7 +50,7 @@ function render_vote_data(stake_info: ProposalStakeInfo) {
           }}
         />
       </div>
-      <div className="mt-8 flex justify-between">
+      <div className="flex justify-between mt-8">
         <span className="font-semibold">Against</span>
         <div className="flex items-center gap-2 divide-x">
           <span className="text-xs">{format_token(stake_against)} COMAI</span>
@@ -72,7 +74,6 @@ function render_vote_data(stake_info: ProposalStakeInfo) {
 export default function ProposalExpandedCard(props: ProposalCardProps) {
   const [modalOpen, setModalOpen] = useState(false);
   const toggleModalMenu = () => setModalOpen(!modalOpen);
-  const theme = getCurrentTheme();
 
   const { proposal, stake_info, voted } = props;
   const { title, body, netuid, invalid } = handle_proposal(proposal);
@@ -84,9 +85,10 @@ export default function ProposalExpandedCard(props: ProposalCardProps) {
       <button
         type="button"
         onClick={toggleModalMenu}
-        className="min-w-auto w-full rounded-xl border-2 border-blue-500 px-4 py-2 text-blue-500 shadow-custom-blue md:w-auto dark:bg-light-dark"
+        className="flex items-center w-full px-2 py-2 text-sm text-green-500 border border-green-500 lg:px-4 min-w-auto lg:w-auto"
       >
-        Click to view proposal {"->"}
+        View full proposal
+        <ArrowRight className="w-5 ml-auto lg:ml-2 stroke-green-500" />
       </button>
 
       <div
@@ -94,7 +96,7 @@ export default function ProposalExpandedCard(props: ProposalCardProps) {
         className={`relative z-50 ${modalOpen ? "visible" : "hidden"}`}
       >
         {/* Backdrop */}
-        <div className="fixed inset-0 bg-dark/95 backdrop-blur-sm transition-opacity" />
+        <div className="fixed inset-0 transition-opacity bg-dark/95 backdrop-blur-sm" />
         {/* Modal */}
         className={``}
         {/* Red corner if invalid */}
@@ -102,7 +104,7 @@ export default function ProposalExpandedCard(props: ProposalCardProps) {
           className={`fixed inset-0 z-10 w-screen animate-fade-in-down overflow-y-auto ${invalid ? "corner-red" : ""}`}
         >
           <main className="flex flex-col items-center justify-center">
-            <div className="my-12 h-full w-full bg-repeat py-12 ">
+            <div className="w-full h-full p-6 py-12 my-12 bg-repeat">
               <Container>
                 <div className="flex items-center justify-between">
                   <div className="flex gap-3">
@@ -117,13 +119,13 @@ export default function ProposalExpandedCard(props: ProposalCardProps) {
                   <button
                     type="button"
                     onClick={toggleModalMenu}
-                    className="rounded-2xl border-2 border-black bg-white p-2 transition duration-200 dark:border-white dark:bg-light-dark hover:dark:bg-dark"
+                    className="p-2 transition duration-200 bg-white border-2 border-black"
                   >
-                    <XMarkIcon className="h-6 w-6 dark:fill-white" />
+                    <XMarkIcon className="w-6 h-6" />
                   </button>
                 </div>
 
-                <div className="mt-6 flex flex-col gap-4 lg:flex-row">
+                <div className="flex flex-col gap-4 mt-6 lg:flex-row">
                   <Card.Root className="w-full lg:w-8/12">
                     <>
                       <Card.Header>
@@ -135,16 +137,13 @@ export default function ProposalExpandedCard(props: ProposalCardProps) {
                       <Card.Body>
                         {body != null && (
                           <div
-                            className="rounded-xl p-3 dark:bg-black/20"
-                            data-color-mode={
-                              theme === "dark" ? "dark" : "light"
-                            }
+                            className="p-3 rounded-xl"
                           >
-                            <MarkdownPreview source={body} />
+                            <MarkdownPreview source={body} style={{ backgroundColor: 'transparent', color: 'white' }} className={`${cairo.className}`} />
                           </div>
                         )}
                         {body == null && (
-                          <Skeleton className="w-full rounded-xl py-3" />
+                          <Skeleton className="w-full py-3 rounded-xl" />
                         )}
                       </Card.Body>
                     </>

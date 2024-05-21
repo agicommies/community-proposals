@@ -161,7 +161,7 @@ export function compute_votes(
   for (const vote_addr of votes_for) {
     const stake = stake_map.get(vote_addr);
     if (stake == null) {
-      console.warn(`Key ${vote_addr} not found in stake map`);
+      // console.warn(`Key ${vote_addr} not found in stake map`);
       continue;
     }
     stake_for += stake;

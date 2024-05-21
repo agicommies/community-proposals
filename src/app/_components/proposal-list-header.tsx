@@ -1,60 +1,11 @@
-import { Skeleton } from "./skeleton";
-
 import { CreateProposal } from "./create-proposal";
-import { format_token } from "~/utils";
 
-type ProposalListHeaderProps = {
-  user_stake_weight: bigint | null;
-  accountUnselected: boolean;
-  handleConnect: () => void;
-};
-
-export const ProposalListHeader = (props: ProposalListHeaderProps) => {
-  const { user_stake_weight, accountUnselected, handleConnect } = props;
-
-  const handleShowStakeWeight = () => {
-    if (user_stake_weight != null) {
-      return (
-        <span className="ml-1 text-base font-semibold text-blue-500">
-          {format_token(user_stake_weight)}
-          <span className="text-xs font-light"> COMAI</span>
-        </span>
-      )
-    }
-
-    if (!accountUnselected) return <Skeleton className="ml-2 w-1/5 py-2 md:mt-1 lg:w-2/5" />
-
-    return (
-      <button className="text-blue-500 flex" onClick={() => handleConnect()}>
-        Connect wallet
-      </button>
-    )
-  }
+export const ProposalListHeader = () => {
 
   return (
-    <div className="flex w-full flex-col items-center justify-between gap-6 lg:flex-row">
-      <h2 className="text-4xl font-semibold dark:text-white">Proposals</h2>
-      <div className="flex w-full flex-col items-center space-y-4 lg:flex-row lg:space-x-3 lg:space-y-0 lg:divide-x">
-        <div className="flex w-full flex-col items-center justify-center md:flex-row lg:flex-col lg:items-end">
-          <span className="text-base font-medium text-black dark:text-white mr-0 md:mr-1 lg:mr-0">
-            Your total staked balance:
-          </span>
-
-          {handleShowStakeWeight()}
-
-        </div>
-
-        {/* <div className="flex w-full flex-row-reverse justify-center gap-4 lg:w-auto lg:flex-row lg:gap-0 lg:pl-3">
-          <input
-            className="w-8/12 rounded-xl border-2 border-black bg-white px-4 py-2 shadow-custom placeholder:text-black lg:mr-3 lg:w-auto dark:border-white dark:bg-light-dark dark:text-white dark:shadow-custom-dark dark:placeholder:text-white"
-            placeholder="Search"
-          ></input>
-          <button className="w-4/12 rounded-xl border-2 border-black px-4 shadow-custom lg:w-auto dark:border-white dark:bg-light-dark dark:text-white dark:shadow-custom-dark">
-            Filter
-          </button>
-        </div> */}
-
-        <div className="flex w-full min-w-max lg:w-auto lg:pl-3">
+    <div className="flex-col items-center justify-between hidden w-full gap-6 py-6 border-b border-gray-500 lg:flex lg:flex-row ">
+      <div className="w-full max-w-6xl mx-auto lg:px-4">
+        <div className="flex justify-end w-full">
           <CreateProposal />
         </div>
       </div>
