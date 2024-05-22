@@ -3,9 +3,12 @@ import { assert } from "tsafe";
 import { build_ipfs_gateway_url, parse_ipfs_uri } from "../../../utils/ipfs";
 import {
   CUSTOM_PROPOSAL_METADATA_SCHEMA,
+  type Dao,
   type CustomProposalDataState,
   type Proposal,
   type ProposalState,
+  CUSTOM_DAO_METADATA_SCHEMA,
+  type CustomDaoDataState,
 } from "./types";
 
 const DEBUG = process.env.NODE_ENV === "development";
@@ -43,6 +46,41 @@ export async function handle_custom_proposal_data(
   }
 
   return { Ok: validated.data };
+}
+
+export async function handle_custom_dao_data(
+  dao: Dao,
+  data: string,
+): Promise<CustomDaoDataState> {
+  const cid = parse_ipfs_uri(data);
+  if (cid == null) {
+    const message = `Invalid IPFS URI '${data}' for dao ${dao.id}`;
+    console.error(message);
+    return { Err: { message } };
+  }
+
+  const url = build_ipfs_gateway_url(cid);
+  const response = await fetch(url);
+  const obj: unknown = await response.json();
+
+  const validated = CUSTOM_DAO_METADATA_SCHEMA.safeParse(obj);
+  if (!validated.success) {
+    const message = `Invalid dao data for dao ${dao.id} at ${url}`;
+    console.error(message, validated.error.issues);
+    return { Err: { message } };
+  }
+
+  return { Ok: validated.data };
+}
+
+export async function handle_custom_daos(daos: Dao[]) {
+  const promises = [];
+  for (const dao of daos) {
+    const prom = handle_custom_dao_data(dao, dao.data);
+    promises.push(prom);
+  }
+
+  return Promise.all(promises);
 }
 
 export function handle_custom_proposals(
@@ -94,7 +132,7 @@ export function handle_custom_proposals(
       },
       expired: async function () {
         return null;
-      }
+      },
     });
     promises.push(prom);
   }
@@ -117,7 +155,7 @@ export function get_proposal_netuid(proposal: Proposal): number | null {
     },
     expired: function (): null {
       return null;
-    }
+    },
   });
 }
 
@@ -137,7 +175,7 @@ export function is_proposal_custom(proposal: Proposal): boolean {
     },
     expired: function (): boolean {
       return false;
-    }
+    },
   });
 }
 

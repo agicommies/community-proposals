@@ -6,9 +6,10 @@ import { useState } from "react";
 
 import { EllipsisVerticalIcon, XMarkIcon } from "@heroicons/react/20/solid";
 import { PolkadotButton } from "./polkadot-button";
-import { Globe, Landmark, WalletMinimalIcon } from "lucide-react";
 import { CreateProposal } from "./create-proposal";
 import { socials } from "~/utils/links";
+import { CreateDao } from "./create-dao";
+import { BalanceSection } from "./balance-section";
 
 export function Header() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
@@ -22,7 +23,7 @@ export function Header() {
         <nav className="fixed z-40 w-full h-full">
           <div className={`min-w-1/4 sticky right-3 top-3 z-[50] ml-auto h-auto w-[70%] lg:w-[30%] bg-[url('/bg-pattern.svg')] border border-gray-500 bg-cover`}>
             <div className="flow-root">
-              <div className="flex items-center justify-between w-full p-4 border border-white">
+              <div className="flex items-center justify-between w-full p-4 border-b border-gray-500">
                 <h3 className="text-lg">Wallet Info</h3>
                 <button
                   type='button'
@@ -36,42 +37,14 @@ export function Header() {
                   />
                 </button>
               </div>
+              <BalanceSection />
 
-              <div className="w-full p-4 py-6 text-green-500 border border-white">
-                <div className="flex flex-row items-center justify-between w-full text-lg">
-                  <div >
-                    <p>164,342 <span className="text-base text-white">COMAI</span></p>
-                    <span className="text-base font-thin text-gray-400">DAO treasury funds</span>
-                  </div>
-                  <Landmark size={40} />
-                </div>
-              </div>
-
-              <div className="w-full p-4 py-6 text-green-500 border border-white">
-                <div className="flex flex-row items-center justify-between w-full text-lg">
-                  <div >
-                    <p>164,342 <span className="text-base text-white">COMAI</span></p>
-                    <span className="text-base font-thin text-gray-400">DAO treasury funds</span>
-                  </div>
-                  <Landmark size={40} />
-                </div>
-              </div>
-
-              <div className="w-full p-4 py-6 text-green-500 border border-white">
-                <div className="flex flex-row items-center justify-between w-full text-lg">
-                  <div >
-                    <p>164,342 <span className="text-base text-white">COMAI</span></p>
-                    <span className="text-base font-thin text-gray-400">DAO treasury funds</span>
-                  </div>
-                  <Landmark size={40} />
-                </div>
-              </div>
-
-              <div className="w-full p-4 text-green-500 border border-white">
+              <div className="flex flex-col w-full gap-3 p-4 text-green-500 border-b border-gray-500">
+                <CreateDao />
                 <CreateProposal />
               </div>
 
-              <div className="flex justify-between w-full p-4 text-green-500 border border-white">
+              <div className="flex justify-between w-full p-4 text-green-500 ">
                 {socials.map((value) => {
                   return (
                     <Link key={value.name} href={value.link} target="_blank">

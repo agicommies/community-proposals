@@ -9,22 +9,17 @@ import {
 } from "~/hooks/polkadot/functions/proposals";
 import type { SS58Address } from "~/hooks/polkadot/functions/types";
 import { type TVote } from "./_components/vote-label";
+import { useState } from "react";
+import { DaoCard } from "./_components/dao-card";
 import { BalanceSection } from "./_components/balance-section";
 import { CardSkeleton } from "./_components/skeletons/card-skeleton";
 
 export default function HomePage() {
-  const { proposals, stake_data, selectedAccount, handleConnect, isInitialized } =
-    usePolkadot();
+  const { proposals, daos, stake_data, selectedAccount } = usePolkadot();
 
-  let user_stake_weight: bigint | null = null;
-  if (stake_data != null && selectedAccount != null) {
-    const user_stake_entry = stake_data.stake_out.per_addr.get(
-      selectedAccount.address,
-    );
-    user_stake_weight = user_stake_entry ?? 0n;
-  }
+  const [viewMode, setViewMode] = useState<'proposals' | 'daos'>("proposals");
 
-  const isProposalsLoading = proposals == null;
+  const isLoading = proposals == null;
 
   const handleUserVotes = ({
     votesAgainst,
@@ -40,54 +35,68 @@ export default function HomePage() {
     return "UNVOTED";
   };
 
+  const renderProposals = () => {
+    return proposals?.map((proposal) => {
+      const voted = handleUserVotes({
+        votesAgainst: proposal.votesAgainst,
+        votesFor: proposal.votesFor,
+        selectedAccountAddress: selectedAccount?.address as SS58Address,
+      });
+
+      const netuid = get_proposal_netuid(proposal);
+      let proposal_stake_info = null;
+      if (stake_data != null) {
+        const stake_map =
+          netuid != null
+            ? stake_data.stake_out.per_addr_per_net.get(netuid) ??
+            new Map<string, bigint>()
+            : stake_data.stake_out.per_addr;
+        proposal_stake_info = compute_votes(
+          stake_map,
+          proposal.votesFor,
+          proposal.votesAgainst,
+        );
+      }
+      return (
+        <div key={proposal.id} className="animate-fade-in-down">
+          <ProposalCard
+            key={proposal.id}
+            proposal={proposal}
+            stake_info={proposal_stake_info}
+            voted={voted}
+          />
+        </div>
+      );
+    })
+  }
+
+  const renderDaos = () => {
+    console.log(daos, 'daos')
+    return daos?.map((dao) => {
+      return (
+        <div key={dao.id}>
+          <DaoCard key={dao.id} dao={dao} />
+        </div>
+      );
+    })
+  }
+
+  const content = viewMode === 'proposals' ? renderProposals() : renderDaos()
+
   return (
     <main className="flex flex-col items-center justify-center w-full">
       <div className="w-full h-full bg-repeat">
         <Container>
-          <BalanceSection
-            user_stake_weight={user_stake_weight}
-            accountUnselected={!selectedAccount}
-            handleConnect={handleConnect}
-            isInitialized={isInitialized}
+          <BalanceSection className="hidden lg:flex" />
+
+          <ProposalListHeader
+            viewMode={viewMode}
+            setViewMode={setViewMode}
           />
 
-          <ProposalListHeader />
-
           <div className="max-w-6xl px-4 py-8 mx-auto space-y-10">
-            {!isProposalsLoading &&
-              proposals?.map((proposal) => {
-                const voted = handleUserVotes({
-                  votesAgainst: proposal.votesAgainst,
-                  votesFor: proposal.votesFor,
-                  selectedAccountAddress:
-                    selectedAccount?.address as SS58Address,
-                });
-
-                const netuid = get_proposal_netuid(proposal);
-                let proposal_stake_info = null;
-                if (stake_data != null) {
-                  const stake_map =
-                    netuid != null
-                      ? stake_data.stake_out.per_addr_per_net.get(netuid) ??
-                      new Map<string, bigint>()
-                      : stake_data.stake_out.per_addr;
-                  proposal_stake_info = compute_votes(
-                    stake_map,
-                    proposal.votesFor,
-                    proposal.votesAgainst,
-                  );
-                }
-                return (
-                  <ProposalCard
-                    key={proposal.id}
-                    proposal={proposal}
-                    stake_info={proposal_stake_info}
-                    voted={voted}
-                  />
-                );
-              })}
-
-            {isProposalsLoading && (
+            {!isLoading && content}
+            {isLoading && (
               <CardSkeleton />
             )}
           </div>

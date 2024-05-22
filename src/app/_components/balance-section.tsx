@@ -1,16 +1,19 @@
-import { Globe, Landmark, WalletMinimalIcon } from "lucide-react"
+"use client"
 import { format_token } from "~/utils";
 import { Skeleton } from "./skeleton";
+import { usePolkadot } from "~/hooks/polkadot";
+import Image from "next/image";
 
-type BalanceSectionProps = {
-  user_stake_weight: bigint | null;
-  accountUnselected: boolean;
-  isInitialized: boolean;
-  handleConnect: () => void;
-};
+export const BalanceSection = ({ className }: { className?: string }) => {
+  const { isInitialized, handleConnect, daosTreasuries, isBalanceLoading, balance, selectedAccount, stake_data } = usePolkadot()
 
-export const BalanceSection = (props: BalanceSectionProps) => {
-  const { user_stake_weight, accountUnselected, handleConnect, isInitialized } = props;
+  let user_stake_weight: bigint | null = null;
+  if (stake_data != null && selectedAccount != null) {
+    const user_stake_entry = stake_data.stake_out.per_addr.get(
+      selectedAccount.address,
+    );
+    user_stake_weight = user_stake_entry ?? 0n;
+  }
 
   const handleShowStakeWeight = () => {
     if (user_stake_weight != null) {
@@ -19,7 +22,7 @@ export const BalanceSection = (props: BalanceSectionProps) => {
       )
     }
 
-    if (isInitialized && accountUnselected) {
+    if (isInitialized && !selectedAccount) {
       return (
         <div>
           <button onClick={() => handleConnect()}>
@@ -32,31 +35,36 @@ export const BalanceSection = (props: BalanceSectionProps) => {
   }
 
   return (
-    <div className="justify-between hidden w-full text-2xl text-green-500 border-b border-gray-500 lg:flex ">
-      <div className="flex w-full px-6 mx-auto divide-x divide-gray-500 lg:max-w-6xl">
-        <div className="flex flex-row items-center justify-between w-1/3 pr-6 lg:pr-10">
+    <div className={`justify-between w-full text-2xl text-green-500 border-b border-gray-500 ${className ?? ''}`}>
+      <div className="flex flex-col w-full mx-auto divide-gray-500 lg:px-6 lg:divide-x lg:flex-row lg:max-w-6xl">
+        <div className="flex flex-row items-center justify-between p-6 pr-6 border-b border-gray-500 lg:border-b-0 lg:w-1/3 lg:pr-10">
           <div>
-            <p>164,342 <span className="text-lg text-white">COMAI</span></p>
+            {!isInitialized ? (
+              <Skeleton className="w-1/5 py-3 md:mt-1 lg:w-2/5" />
+            ) : (
+              <p>{daosTreasuries} <span className="text-lg text-white">COMAI</span></p>)}
             <span className="text-base font-thin text-gray-400">DAO treasury funds</span>
           </div>
-          <Landmark size={40} />
+          <Image src={'/dao-icon.svg'} width={40} height={40} alt="Dao Icon" />
         </div>
 
-        <div className="flex flex-row items-center justify-between w-1/3 p-6 lg:p-10">
+        <div className="flex flex-row items-center justify-between p-6 pr-6 border-b border-gray-500 lg:border-b-0 lg:w-1/3 lg:pr-10">
           <div>
-            <p>727,727<span className="text-lg text-white"> COMAI</span></p>
+            {isBalanceLoading || !selectedAccount ? (
+              <Skeleton className="w-1/5 py-3 md:mt-1 lg:w-2/5" />
+            ) : (
+              <p>{Math.round(balance)}<span className="text-lg text-white"> COMAI</span></p>)}
             <span className="text-base font-thin text-gray-400">Your on balance</span>
           </div>
-          <WalletMinimalIcon size={40} />
+          <Image src={'/wallet-icon.svg'} width={40} height={40} alt="Wallet Icon" />
         </div>
 
-        <div className="flex flex-row items-center justify-between w-1/3 pl-6 lg:pl-10">
+        <div className="flex flex-row items-center justify-between p-6 pr-6 lg:w-1/3 lg:pr-10">
           <div>
             {handleShowStakeWeight()}
             <span className="text-base font-thin text-gray-400">Your total staked balance</span>
           </div>
-          <Globe size={40} />
-
+          <Image src={'/globe-icon.svg'} width={40} height={40} alt="Globe Icon" />
         </div>
       </div>
 

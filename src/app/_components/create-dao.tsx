@@ -11,18 +11,24 @@ import { z } from "zod";
 import { cairo } from "~/styles/fonts";
 
 // Define Zod schemas
-const proposalSchema = z.object({
+const daoSchema = z.object({
+  applicationKey: z.string().min(1, "Application Key is required"),
+  discordId: z.string().min(16, "Discord ID is required"),
   title: z.string().min(1, "Title is required"),
   body: z.string().min(1, "Body is required"),
 });
 
-export function CreateProposal() {
+export function CreateDao() {
   const router = useRouter();
-  const { isConnected, createNewProposal, balance, isBalanceLoading } =
+  const { isConnected, createNewDao, balance, isBalanceLoading } =
     usePolkadot();
 
+  const [applicationKey, setApplicationKey] = useState("");
+
+  const [discordId, setDiscordId] = useState("");
   const [title, setTitle] = useState("");
   const [body, setBody] = useState("");
+
   const [uploading, setUploading] = useState(false);
 
   const [modalOpen, setModalOpen] = useState(false);
@@ -58,28 +64,29 @@ export function CreateProposal() {
         return;
       }
 
-      const proposalCost = 10000;
+      const daoCost = 1000;
 
-      if (balance > proposalCost) {
-        createNewProposal({
+      if (balance > daoCost) {
+        createNewDao({
+          applicationKey,
           IpfsHash: `ipfs://${ipfs.IpfsHash}`,
           callback: handleCallback,
         });
       } else {
         toast.error(
-          `Insufficient balance to create proposal. Required: ${proposalCost} but got ${balance}`
+          `Insufficient balance to create S0 Applicaiton. Required: ${daoCost} but got ${balance}`,
         );
         setTransactionStatus({
           status: "ERROR",
           finalized: true,
-          message: "Insufficient balance",
+          message: "Insufficient balance to create S0 Applicaiton",
         });
       }
       router.refresh();
     } catch (e) {
       console.error(e);
       setUploading(false);
-      toast.error("Error uploading proposal");
+      toast.error("Error uploading S0 Applicaiton");
     }
   };
 
@@ -88,12 +95,14 @@ export function CreateProposal() {
     setTransactionStatus({
       status: "STARTING",
       finalized: false,
-      message: "Starting proposal creation...",
+      message: "Starting S0 Applicaiton creation...",
     });
 
-    const result = proposalSchema.safeParse({
+    const result = daoSchema.safeParse({
       title,
       body,
+      applicationKey,
+      discordId,
     });
 
     if (!result.success) {
@@ -101,17 +110,18 @@ export function CreateProposal() {
       setTransactionStatus({
         status: "ERROR",
         finalized: true,
-        message: "Error on form validation",
+        message: "Error creating S0 Applicaiton",
       });
       return;
     }
 
-    const proposalData = JSON.stringify({
+    const daoData = JSON.stringify({
+      discord_id: discordId,
       title: title,
       body: body,
     });
-    const blob = new Blob([proposalData], { type: "application/json" });
-    const fileToUpload = new File([blob], "proposal.json", {
+    const blob = new Blob([daoData], { type: "application/json" });
+    const fileToUpload = new File([blob], "dao.json", {
       type: "application/json",
     });
     void uploadFile(fileToUpload);
@@ -124,7 +134,7 @@ export function CreateProposal() {
         onClick={toggleModalMenu}
         className="w-full px-4 py-2 text-gray-400 border border-gray-500 hover:border-green-600 hover:text-green-600 hover:bg-green-600/5 min-w-auto lg:w-auto"
       >
-        Create New Proposal
+        Create New S0 Application
       </button>
       <div
         role="dialog"
@@ -136,15 +146,15 @@ export function CreateProposal() {
         {/* Modal */}
         <div className="fixed inset-0 z-10 w-screen overflow-y-auto animate-fade-in-down">
           <div className="flex items-center justify-center min-h-full p-4 text-center">
-            <div className="relative w-[100%] max-w-5xl transform overflow-hidden border border-gray-500 bg-white text-white text-left md:w-[80%] bg-[url('/bg-pattern.svg')] bg-cover">
+            <div className="relative w-[100%] max-w-5xl transform overflow-hidden border border-gray-500 bg-[url('/bg-pattern.svg')] bg-cover text-left md:w-[80%]">
               {/* Modal Header */}
-              <div className="flex items-center justify-between gap-3 p-6 bg-center bg-no-repeat bg-cover border-b border-gray-500 md:flex-row">
+              <div className="flex items-center justify-between gap-3 border-b border-gray-500 bg-[url(/grids.svg)] bg-cover bg-center bg-no-repeat p-6 md:flex-row text-white">
                 <div className="flex flex-col items-center md:flex-row">
                   <h3
-                    className="pl-2 text-xl font-bold leading-6"
+                    className="pl-2 text-xl font-bold leading-6 text-white"
                     id="modal-title"
                   >
-                    Build Custom Global Proposal
+                    Build New S0 Application
                   </h3>
                 </div>
 
@@ -153,11 +163,11 @@ export function CreateProposal() {
                   onClick={toggleModalMenu}
                   className="p-2 transition duration-200"
                 >
-                  <XMarkIcon className="w-6 h-6" />
+                  <XMarkIcon className="w-6 h-6 fill-white" />
                 </button>
               </div>
               {/* Modal Body */}
-              <form onSubmit={HandleSubmit} className="dark:bg-light-dark">
+              <form onSubmit={HandleSubmit}>
                 <div className="flex flex-col gap-4 p-6">
                   <div className="flex gap-2">
                     <button
@@ -170,7 +180,7 @@ export function CreateProposal() {
                     <button
                       type="button"
                       onClick={toggleEditMode}
-                      className={` border px-4 py-1 ${!editMode ? "border-green-500 bg-green-500/5 text-green-500" : 'border-gray-500 text-gray-400'} hover:border-green-600 hover:bg-green-600/5 hover:text-green-600`}
+                      className={`border px-4 py-1 ${!editMode ? "border-green-500 bg-green-500/5 text-green-500" : 'border-gray-500 text-gray-400'} hover:border-green-600 hover:bg-green-600/5 hover:text-green-600`}
                     >
                       Preview
                     </button>
@@ -180,13 +190,27 @@ export function CreateProposal() {
                       <div className="flex flex-col gap-3">
                         <input
                           type="text"
-                          placeholder="Your proposal title here..."
+                          placeholder="Application Key (ss58)"
+                          value={applicationKey}
+                          onChange={(e) => setApplicationKey(e.target.value)}
+                          className="w-full p-3 text-white bg-black"
+                        />
+                        <input
+                          type="text"
+                          placeholder="Discord ID"
+                          value={discordId}
+                          onChange={(e) => setDiscordId(e.target.value)}
+                          className="w-full p-3 text-white bg-black"
+                        />
+                        <input
+                          type="text"
+                          placeholder="Application title"
                           value={title}
                           onChange={(e) => setTitle(e.target.value)}
                           className="w-full p-3 text-white bg-black"
                         />
                         <textarea
-                          placeholder="Your proposal here... (Markdown supported)"
+                          placeholder="Application body... (Markdown supported)"
                           value={body}
                           rows={5}
                           onChange={(e) => setBody(e.target.value)}
@@ -199,7 +223,6 @@ export function CreateProposal() {
                         {/* TODO: skeleton for markdown body */}
                       </div>
                     )}
-
                   </div>
                   <div className="flex flex-col gap-1">
                     <button
@@ -207,7 +230,7 @@ export function CreateProposal() {
                       disabled={!isConnected}
                       type="submit"
                     >
-                      {uploading ? "Uploading..." : "Submit Proposal"}
+                      {uploading ? "Uploading..." : "Submit S0 Application"}
                     </button>
                   </div>
                   {transactionStatus.status && (
@@ -222,19 +245,20 @@ export function CreateProposal() {
                     </p>
                   )}
 
-                  <div className="flex flex-wrap items-center gap-1 pt-2 text-sm text-white">
-                    <div className="flex items-center gap-1">
-                      <InformationCircleIcon className="w-4 h-4 fill-green-500" />
-                      <span>Want a diferent aproach?</span>
-                    </div>
-                    <span>
+                  <div className="flex items-start gap-1 mt-1 text-white">
+                    <InformationCircleIcon className="mt-0.5 h-4 w-4 fill-green-500 text-sm" />
+                    <span className="text-sm">
+                      Please make sure, that your application meets all of the
+                      criteria defined in this{" "}
                       <Link
-                        href="https://mirror.xyz/0xD80E194aBe2d8084fAecCFfd72877e63F5822Fc5/FUvj1g9rPyVm8Ii_qLNu-IbRQPiCHkfZDLAmlP00M1Q"
+                        href="https://mirror.xyz/0xD80E194aBe2d8084fAecCFfd72877e63F5822Fc5/SuhIlcUugotYhf2QmVTd3mI05RCycqSFrJfCxuEHet0"
                         className="text-blue-500 hover:underline"
                         target="_blank"
                       >
-                        Check how to create a proposal with the CLI tool
+                        article
                       </Link>
+                      , or you are at risk of getting denied by the Module
+                      Curation DAO.
                     </span>
                   </div>
                 </div>

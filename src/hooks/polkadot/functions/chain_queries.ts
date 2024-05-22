@@ -1,6 +1,8 @@
-import { ApiPromise, WsProvider } from "@polkadot/api";
-import { parse_proposal, type Proposal } from "./types";
-import { compute_votes } from "./proposals";
+import "@polkadot/api-augment";
+import { type ApiPromise } from "@polkadot/api";
+
+import { type Dao, parse_proposal, type Proposal, parse_daos } from "./types";
+import { from_nano } from "~/utils";
 
 export type DoubleMap<K1, K2, V> = Map<K1, Map<K2, V>>;
 
@@ -39,7 +41,6 @@ export async function __get_all_stake(
   const stake_map = new Map<string, bigint>();
 
   let max_stake = 0n;
-  let max_addr;
 
   for (const stake_item of stake_items) {
     if (!Array.isArray(stake_item) || stake_item.length != 2)
@@ -54,13 +55,14 @@ export async function __get_all_stake(
     const netuid = n_raw.toPrimitive();
     const address = address_raw.toHuman();
 
-    if (typeof netuid !== "number") throw new Error("Invalid stake storage key (n)");
+    if (typeof netuid !== "number")
+      throw new Error("Invalid stake storage key (n)");
     if (typeof address !== "string")
       throw new Error("Invalid stake storage key (address)");
 
     if (stake > max_stake) {
       max_stake = stake;
-      max_addr = address;
+      // max_addr = address;
     }
 
     if (stake_map.get(address) == null) {
@@ -70,7 +72,7 @@ export async function __get_all_stake(
       stake_map.set(address, old_stake + stake);
     }
   }
-  console.log("Max stake key:", max_addr, max_stake);
+
   return stake_map;
 }
 
@@ -169,41 +171,37 @@ export async function get_proposals(api: ApiPromise): Promise<Proposal[]> {
     proposals.push(proposal);
   }
 
-  proposals.reverse()
+  proposals.reverse();
   return proposals;
 }
 
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
-async function _test() {
-  const ws_endpoint = "wss://testnet-commune-api-node-0.communeai.net";
+export async function get_daos(api: ApiPromise): Promise<Dao[]> {
+  const daos_raw =
+    await api.query.subspaceModule?.curatorApplications?.entries();
 
-  const provider = new WsProvider(ws_endpoint);
-  const api = await ApiPromise.create({ provider });
+  if (!daos_raw) throw new Error("No DAOs found");
 
-  const proposals = await get_proposals(api);
-
-  const stake_data = await get_all_stake_out(api);
-
-  for (const proposal of proposals) {
-    // if (proposal.netuid != null) {
-    //     continue
-    // }
-    console.log(`Proposal #${proposal.id}`, `proposer: ${proposal.proposer}`); // TEST
-
-    const {
-      stake_for,
-      stake_against,
-      stake_voted: stake_total,
-    } = compute_votes(
-      stake_data.stake_out.per_addr,
-      proposal.votesFor,
-      proposal.votesAgainst,
-    );
-
-    console.log(stake_for, stake_against, stake_total); // TEST
+  const daos = [];
+  for (const dao_item of daos_raw) {
+    if (!Array.isArray(dao_item) || dao_item.length != 2) {
+      console.error("Invalid DAO item:", dao_item);
+      continue;
+    }
+    const [, value_raw] = dao_item;
+    const dao = parse_daos(value_raw);
+    if (dao == null) throw new Error("Invalid DAO");
+    daos.push(dao);
   }
 
-  process.exit();
+  daos.reverse();
+  return daos;
 }
 
-// await _test();
+export async function get_dao_treasury(api: ApiPromise) {
+  if (!api.query?.subspaceModule?.globalDaoTreasury) {
+    throw new Error("API does not support query for globalDaoTreasury");
+  }
+  const result = await api.query.subspaceModule.globalDaoTreasury();
+  const parsed_result = JSON.stringify(result);
+  return Math.round(from_nano(BigInt(parsed_result)));
+}
