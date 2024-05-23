@@ -9,7 +9,7 @@ import {
 } from "~/hooks/polkadot/functions/proposals";
 import type { SS58Address } from "~/hooks/polkadot/functions/types";
 import { type TVote } from "./_components/vote-label";
-import { useState } from "react";
+import { type ReactElement, useCallback, useEffect, useState } from "react";
 import { DaoCard } from "./_components/dao-card";
 import { BalanceSection } from "./_components/balance-section";
 import { CardSkeleton } from "./_components/skeletons/card-skeleton";
@@ -18,6 +18,8 @@ export default function HomePage() {
   const { proposals, daos, stake_data, selectedAccount } = usePolkadot();
 
   const [viewMode, setViewMode] = useState<'proposals' | 'daos'>("proposals");
+  const [content, setContent] = useState<Array<ReactElement> | null>(null);
+
 
   const isLoading = proposals == null;
 
@@ -35,8 +37,8 @@ export default function HomePage() {
     return "UNVOTED";
   };
 
-  const renderProposals = () => {
-    return proposals?.map((proposal) => {
+  const renderProposals = useCallback(() => {
+    const proposalsContent = proposals?.map((proposal) => {
       const voted = handleUserVotes({
         votesAgainst: proposal.votesAgainst,
         votesFor: proposal.votesFor,
@@ -68,9 +70,12 @@ export default function HomePage() {
         </div>
       );
     })
-  }
 
-  const renderDaos = () => {
+    if (!proposalsContent) return null
+    return proposalsContent
+  }, [proposals, selectedAccount?.address, stake_data])
+
+  const renderDaos = useCallback(() => {
     const daosContent = daos?.map((dao) => {
       return (
         <div key={dao.id}>
@@ -79,10 +84,17 @@ export default function HomePage() {
       );
     })
 
+    if (!daosContent) return null
     return daosContent
-  }
+  }, [daos])
 
-  const content = viewMode === 'proposals' ? renderProposals() : renderDaos()
+  // viewMode === 'proposals' ? renderProposals() : renderDaos()
+
+  useEffect(() => {
+    if (!isLoading) {
+      setContent(viewMode === 'proposals' ? renderProposals() : renderDaos())
+    }
+  }, [viewMode, isLoading, renderProposals, renderDaos])
 
   return (
     <main className="flex flex-col items-center justify-center w-full">
