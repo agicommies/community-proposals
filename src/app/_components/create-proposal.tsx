@@ -136,7 +136,7 @@ export function CreateProposal() {
         {/* Modal */}
         <div className="fixed inset-0 z-10 w-screen overflow-y-auto animate-fade-in-down">
           <div className="flex items-center justify-center min-h-full p-4 text-center">
-            <div className="relative w-[100%] max-w-5xl transform overflow-hidden border border-gray-500 bg-white text-white text-left md:w-[80%] bg-[url('/bg-pattern.svg')] bg-cover">
+            <div className="relative w-[100%] max-w-5xl transform overflow-hidden border border-gray-500 bg-white text-white text-left md:w-[80%] bg-[url('/bg-pattern.svg')]">
               {/* Modal Header */}
               <div className="flex items-center justify-between gap-3 p-6 bg-center bg-no-repeat bg-cover border-b border-gray-500 md:flex-row">
                 <div className="flex flex-col items-center md:flex-row">

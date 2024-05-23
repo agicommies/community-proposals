@@ -40,7 +40,7 @@ export function WalletModal({
       {/* Modal */}
       <div className="fixed inset-0 z-10 w-screen overflow-y-auto">
         <div className="flex items-center justify-center min-h-full p-4 text-center">
-          <div className="relative w-[100%] max-w-3xl transform overflow-hidden border border-gray-500 bg-[url('/bg-pattern.svg')] bg-cover text-left shadow-custom">
+          <div className="relative w-[100%] max-w-3xl transform overflow-hidden border border-gray-500 bg-[url('/bg-pattern.svg')] text-left shadow-custom">
             {/* Modal Header */}
             <div className="flex flex-row items-center justify-between gap-3 p-4 bg-center bg-no-repeat bg-cover border-b border-gray-500">
               <div className="flex flex-row items-center">

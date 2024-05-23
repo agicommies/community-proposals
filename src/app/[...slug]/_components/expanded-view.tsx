@@ -229,11 +229,16 @@ export const ExpandedView = (props: ProposalContent) => {
       <div className="p-6 border-b border-gray-500">
         <div className="flex items-center gap-3">
           <VoteLabel vote={content.voted!} />
-          <span className="border border-white px-4 py-1.5 text-center text-sm font-medium text-white">
-            {(content?.netuid !== "GLOBAL" && (
-              <span> Subnet {content?.netuid} </span>
-            )) || <span> Global </span>}
-          </span>
+          {
+            contentType === 'proposal' && (
+              <span className="border border-white px-4 py-1.5 text-center text-sm font-medium text-white">
+                {(content?.netuid !== "GLOBAL" && (
+                  <span> Subnet {content?.netuid} </span>
+                )) || <span> Global </span>}
+              </span>
+            )
+          }
+
           <StatusLabel result={content?.status} />{" "}
         </div>
       </div>

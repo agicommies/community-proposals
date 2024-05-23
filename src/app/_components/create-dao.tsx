@@ -146,9 +146,9 @@ export function CreateDao() {
         {/* Modal */}
         <div className="fixed inset-0 z-10 w-screen overflow-y-auto animate-fade-in-down">
           <div className="flex items-center justify-center min-h-full p-4 text-center">
-            <div className="relative w-[100%] max-w-5xl transform overflow-hidden border border-gray-500 bg-[url('/bg-pattern.svg')] bg-cover text-left md:w-[80%]">
+            <div className="relative w-[100%] max-w-5xl transform overflow-hidden border border-gray-500 bg-[url('/bg-pattern.svg')] text-left md:w-[80%]">
               {/* Modal Header */}
-              <div className="flex items-center justify-between gap-3 border-b border-gray-500 bg-[url(/grids.svg)] bg-cover bg-center bg-no-repeat p-6 md:flex-row text-white">
+              <div className="flex items-center justify-between gap-3 border-b border-gray-500 bg-center bg-no-repeat p-6 md:flex-row text-white">
                 <div className="flex flex-col items-center md:flex-row">
                   <h3
                     className="pl-2 text-xl font-bold leading-6 text-white"

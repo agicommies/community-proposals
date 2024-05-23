@@ -91,7 +91,7 @@ export const ProposalCard = (props: ProposalCardProps) => {
     >
       <Card.Header className="z-10 flex-col">
         {title && <h2 className="pb-4 text-base font-semibold text-white lg:pb-0">{title}</h2>}
-        {!title && <Skeleton className="w-8/12 py-3 pb-4" />}
+        {!title && <Skeleton className="w-8/12 py-3 pb-4 mb-3" />}
 
         <div className="flex flex-row justify-center w-full gap-2 mb-2 lg:mb-0 lg:ml-auto lg:w-auto lg:flex-row lg:justify-end lg:pl-4">
           <VoteLabel vote={voted} />

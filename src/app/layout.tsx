@@ -21,7 +21,7 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en" className={`${cairo.className}`}>
-      <body className="w-full animate-fade-in-up bg-black bg-[url('/bg-pattern.svg')]  px-0 bg-cover">
+      <body className="w-full animate-fade-in-up bg-black bg-[url('/bg-pattern.svg')] px-0 ">
         <TRPCReactProvider>
           <PolkadotProvider wsEndpoint={env.NEXT_PUBLIC_WS_PROVIDER_URL}>
             <ToastProvider>

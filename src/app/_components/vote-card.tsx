@@ -4,13 +4,13 @@ import { useState } from "react";
 import { Card } from "./card";
 import { type TVote } from "./vote-label";
 import { usePolkadot } from "~/hooks/polkadot";
-import Image from "next/image";
 import { ArrowPathIcon } from "@heroicons/react/20/solid";
 import { type CallbackStatus } from "~/hooks/polkadot/functions/types";
+import { PolkadotButton } from "./polkadot-button";
 
 export const VoteCard = (props: { proposalId: number; voted: TVote }) => {
   const { proposalId, voted = "UNVOTED" } = props;
-  const { isConnected, send_vote, handleConnect } = usePolkadot();
+  const { isConnected, send_vote } = usePolkadot();
 
   const [vote, setVote] = useState("UNVOTED");
   const [votingStatus, setVotingStatus] = useState<CallbackStatus>({
@@ -84,20 +84,7 @@ export const VoteCard = (props: { proposalId: number; voted: TVote }) => {
         )}
 
         {!isConnected && (
-          <button
-            onClick={handleConnect}
-            className=" w-full flex items-center border p-1.5 text-black justify-center gap-3 border-orange-500 bg-white px-4 py-2 shadow-custom-orange active:top-1 active:shadow-custom-orange-clicked"
-          >
-            <span className="flex gap-3 font-medium text-orange-500">
-              <Image
-                src="/polkadot-logo.svg"
-                alt="Polkadot"
-                width={24}
-                height={24}
-              />
-              <p>Connect Wallet to vote</p>
-            </span>
-          </button>
+          <PolkadotButton />
         )}
 
         {isConnected && (

@@ -7,7 +7,7 @@ import { useState } from "react";
 import { EllipsisVerticalIcon, XMarkIcon } from "@heroicons/react/20/solid";
 import { PolkadotButton } from "./polkadot-button";
 import { CreateProposal } from "./create-proposal";
-import { socials } from "~/utils/links";
+import { links, socials } from "~/utils/links";
 import { CreateDao } from "./create-dao";
 import { BalanceSection } from "./balance-section";
 
@@ -21,7 +21,7 @@ export function Header() {
         className={`fixed left-0 top-0 z-50 h-full w-full backdrop-blur-sm backdrop-brightness-75 ${mobileMenuOpen ? "visible" : "hidden"} animate-menu-fade lg:hidden text-white`}
       >
         <nav className="fixed z-40 w-full h-full">
-          <div className={`min-w-1/4 sticky right-3 top-3 z-[50] ml-auto h-auto w-[70%] lg:w-[30%] bg-[url('/bg-pattern.svg')] border border-gray-500 bg-cover`}>
+          <div className={`min-w-1/4 sticky right-3 top-3 z-[50] ml-auto h-auto w-[70%] lg:w-[30%] bg-[url('/bg-pattern.svg')] border border-gray-500`}>
             <div className="flow-root">
               <div className="flex items-center justify-between w-full p-4 border-b border-gray-500">
                 <h3 className="text-lg">Wallet Info</h3>
@@ -37,6 +37,14 @@ export function Header() {
                   />
                 </button>
               </div>
+              <div className="flex flex-col w-full gap-3 p-4 text-green-500 border-b border-gray-500">
+                <Link
+                  className="w-full px-4 py-2.5 text-center text-gray-400 border border-gray-500 hover:border-green-600 hover:text-green-600 hover:bg-green-600/5 min-w-auto lg:w-auto"
+                  href={links.home}>
+                  Homepage
+                </Link>
+              </div>
+
               <BalanceSection />
 
               <div className="flex flex-col w-full gap-3 p-4 text-green-500 border-b border-gray-500">
@@ -78,7 +86,13 @@ export function Header() {
           </Link>
 
           <>
-            <div className="hidden lg:flex lg:flex-row lg:gap-3">
+            <div className="hidden lg:flex items-center lg:flex-row lg:gap-3">
+
+              <Link
+                className="w-full px-4 py-2.5 text-gray-400 border border-gray-500 hover:border-green-600 hover:text-green-600 hover:bg-green-600/5 min-w-auto lg:w-auto"
+                href={links.home}>
+                Homepage
+              </Link>
               <PolkadotButton />
             </div>
             <button
