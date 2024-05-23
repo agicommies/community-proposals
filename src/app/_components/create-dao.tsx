@@ -59,7 +59,7 @@ export function CreateDao() {
       const ipfs = (await res.json()) as { IpfsHash: string };
       setUploading(false);
 
-      if (isBalanceLoading) {
+      if (isBalanceLoading || !balance) {
         toast.error("Balance is still loading");
         return;
       }
