@@ -9,7 +9,7 @@ import {
 } from "~/hooks/polkadot/functions/proposals";
 import type { SS58Address } from "~/hooks/polkadot/functions/types";
 import { type TVote } from "./_components/vote-label";
-import { type ReactElement, useCallback, useEffect, useState } from "react";
+import { useState } from "react";
 import { DaoCard } from "./_components/dao-card";
 import { BalanceSection } from "./_components/balance-section";
 import { CardSkeleton } from "./_components/skeletons/card-skeleton";
@@ -18,10 +18,21 @@ export default function HomePage() {
   const { proposals, daos, stake_data, selectedAccount } = usePolkadot();
 
   const [viewMode, setViewMode] = useState<'proposals' | 'daos'>("proposals");
-  const [content, setContent] = useState<Array<ReactElement> | null>(null);
 
+  const handleIsLoading = (type: 'proposals' | 'daos') => {
+    switch (type) {
+      case "daos":
+        return daos == null;
 
-  const isLoading = proposals == null;
+      case "proposals":
+        return proposals == null;
+
+      default:
+        return false;
+    }
+  };
+
+  const isLoading = handleIsLoading(viewMode)
 
   const handleUserVotes = ({
     votesAgainst,
@@ -37,7 +48,7 @@ export default function HomePage() {
     return "UNVOTED";
   };
 
-  const renderProposals = useCallback(() => {
+  const renderProposals = () => {
     const proposalsContent = proposals?.map((proposal) => {
       const voted = handleUserVotes({
         votesAgainst: proposal.votesAgainst,
@@ -70,12 +81,10 @@ export default function HomePage() {
         </div>
       );
     })
-
-    if (!proposalsContent) return null
     return proposalsContent
-  }, [proposals, selectedAccount?.address, stake_data])
+  }
 
-  const renderDaos = useCallback(() => {
+  const renderDaos = () => {
     const daosContent = daos?.map((dao) => {
       return (
         <div key={dao.id}>
@@ -83,18 +92,10 @@ export default function HomePage() {
         </div>
       );
     })
-
-    if (!daosContent) return null
     return daosContent
-  }, [daos])
+  }
 
-  // viewMode === 'proposals' ? renderProposals() : renderDaos()
-
-  useEffect(() => {
-    if (!isLoading) {
-      setContent(viewMode === 'proposals' ? renderProposals() : renderDaos())
-    }
-  }, [viewMode, isLoading, renderProposals, renderDaos])
+  const content = viewMode === 'proposals' ? renderProposals() : renderDaos()
 
   return (
     <main className="flex flex-col items-center justify-center w-full">
