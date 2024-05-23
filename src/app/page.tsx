@@ -71,14 +71,15 @@ export default function HomePage() {
   }
 
   const renderDaos = () => {
-    console.log(daos, 'daos')
-    return daos?.map((dao) => {
+    const daosContent = daos?.map((dao) => {
       return (
         <div key={dao.id}>
           <DaoCard key={dao.id} dao={dao} />
         </div>
       );
     })
+
+    return daosContent
   }
 
   const content = viewMode === 'proposals' ? renderProposals() : renderDaos()
