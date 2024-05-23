@@ -15,6 +15,7 @@ export type DaoCardProps = {
 export const DaoCard = (props: DaoCardProps) => {
   const { dao } = props;
 
+  console.log(dao, 'daoCard')
   return (
     <>
       {dao ? (

@@ -86,12 +86,14 @@ export default function HomePage() {
 
   const renderDaos = () => {
     const daosContent = daos?.map((dao) => {
+      console.log(dao, 'daoRender page')
       return (
         <div key={dao.id}>
           <DaoCard key={dao.id} dao={dao} />
         </div>
       );
     })
+
     return daosContent
   }
 
