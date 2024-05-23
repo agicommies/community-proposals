@@ -20,7 +20,7 @@ import {
 } from "@heroicons/react/20/solid";
 import Link from "next/link";
 // import { MarkdownView } from "../_components/markdown-view";
-import { ProposalContent } from "./_components/proposal-content";
+import { ExpandedView } from "./_components/expanded-view";
 
 // function render_vote_data(stake_info: ProposalStakeInfo) {
 //   const { stake_for, stake_against, stake_voted } = stake_info;
@@ -82,7 +82,7 @@ import { ProposalContent } from "./_components/proposal-content";
 //   return "UNVOTED";
 // };
 
-export default function ExpandedProposalView({
+export default function CardView({
   params,
 }: {
   params: { slug: string };
@@ -208,8 +208,7 @@ export default function ExpandedProposalView({
         Go Back to Proposals List
       </Link>
       <div className="flex flex-col justify-between w-full mb-6 text-white border border-gray-500 divide-gray-500 border-x-none lg:flex-row lg:divide-x xl:border-x ">
-        <ProposalContent contentType={paramsInfo.contentType ?? ''} paramId={paramsInfo.id} />
-
+        <ExpandedView contentType={paramsInfo.contentType ?? ''} paramId={paramsInfo.id} />
 
         {/* <div className="flex flex-col lg:w-1/3">
           <div className="p-6 pr-20 border-t border-b border-gray-500 lg:border-t-none">
