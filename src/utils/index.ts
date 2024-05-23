@@ -18,7 +18,7 @@ export function bigint_division(a: bigint, b: bigint, precision = 8n): number {
 // == Addresses ==
 
 export const small_address = (address: string) =>
-  address.slice(0, 8) + "…" + address.slice(-8);
+  address.slice(0, 7) + "…" + address.slice(-7);
 
 // == Balances ==
 

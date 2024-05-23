@@ -2,7 +2,7 @@ import "~/styles/globals.css";
 
 import { env } from "~/env";
 
-import { inter } from "~/styles/fonts";
+import { cairo } from "~/styles/fonts";
 import { Header } from "./_components/header";
 import { PolkadotProvider } from "~/hooks/polkadot";
 import { TRPCReactProvider } from "~/hooks/trpc/react";
@@ -20,8 +20,8 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="en" className={`${inter.className}`}>
-      <body className={`dark:bg-light-dark`}>
+    <html lang="en" className={`${cairo.className}`}>
+      <body className="w-full animate-fade-in-up bg-black bg-[url('/bg-pattern.svg')] px-0 ">
         <TRPCReactProvider>
           <PolkadotProvider wsEndpoint={env.NEXT_PUBLIC_WS_PROVIDER_URL}>
             <ToastProvider>

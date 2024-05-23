@@ -7,7 +7,7 @@ const CardRoot = (props: TCardProps) => {
   const { children, className = "" } = props;
   return (
     <div
-      className={`rounded-xl border border-black bg-white shadow-custom dark:border-white dark:bg-dark dark:text-white dark:shadow-custom-dark ${className}`}
+      className={`border border-gray-500 bg-black/50 ${className}`}
     >
       {children}
     </div>
@@ -18,7 +18,7 @@ const CardHeader = (props: TCardProps) => {
   const { children, className = "" } = props;
   return (
     <div
-      className={`relative flex w-full items-center justify-center rounded-t-xl border-b border-black bg-[url('/grid-bg.svg')] bg-no-repeat px-6 py-3 md:flex-row lg:justify-start dark:border-white ${className}`}
+      className={`relative flex w-full items-center justify-center border-b border-gray-500 px-4 py-3 lg:flex-row lg:justify-start ${className}`}
     >
       {children}
     </div>
@@ -27,7 +27,7 @@ const CardHeader = (props: TCardProps) => {
 
 const CardBody = (props: TCardProps) => {
   const { children, className = "" } = props;
-  return <div className={`p-6 ${className}`}>{children}</div>;
+  return <div className={`p-4 ${className}`}>{children}</div>;
 };
 
 export const Card = {

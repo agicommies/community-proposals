@@ -1,16 +1,22 @@
-import Image from "next/image";
+// import Image from "next/image";
 import { usePolkadot } from "~/hooks/polkadot";
-import { Squares2X2Icon, WalletIcon } from "@heroicons/react/20/solid";
+import { Squares2X2Icon } from "@heroicons/react/20/solid";
+import Image from "next/image";
 
 export function PolkadotButton() {
   const { handleConnect, isInitialized, selectedAccount } = usePolkadot();
 
   if (!isInitialized) {
     return (
-      <div className="flex items-center justify-center">
-        <Squares2X2Icon className="h-6 w-6 animate-spin fill-orange-500" />
+      <div className="flex items-center justify-center px-4">
+        <Squares2X2Icon className="w-6 h-6 animate-spin fill-orange-500" />
       </div>
     );
+  }
+
+  const formatString = (text: string) => {
+    if (text.length > 10) return `${text.slice(0, 10)}...`
+    return text
   }
 
   return (
@@ -18,27 +24,21 @@ export function PolkadotButton() {
       type="button"
       onClick={handleConnect}
       disabled={!isInitialized}
-      className="relative inline-flex items-center justify-center gap-3 rounded-2xl border-2 border-orange-500 bg-white px-4 py-2 shadow-custom-orange active:top-1 active:shadow-custom-orange-clicked dark:bg-light-dark"
+      className={`relative inline-flex items-center justify-center gap-3 px-4 py-2 border border-gray-500 text-gray-400 active:top-1 hover:border-green-600 hover:text-green-600 hover:bg-green-600/5 ${selectedAccount && 'text-green-500 border-green-500 bg-green-500/5'}`}
     >
-      {selectedAccount ? (
-        <span className="flex gap-3 font-medium text-orange-500 items-center">
-          <WalletIcon className="h-6 w-6 flex flex-row" />
+      <span className="flex items-center gap-3 font-medium">
+        {/* <Image src={"wallet-icon.svg"} width={24} height={24} alt={"wallet icon"} className="w-6 h-6" /> */}
+        <Image src={'/wallet-icon.svg'} width={40} height={40} alt="Dao Icon" className="w-6" />
+        {!!selectedAccount && (
           <div className="flex flex-col items-start">
-            <p className="text-sm dark:text-orange-400 text-orange-700 font-semibold">{selectedAccount.meta.name}</p>
-            <p className="text-xs dark:text-orange-500 font-extralight">{selectedAccount.address.slice(0, 8)}...</p>
+            <p className="text-lg font-light">{formatString(selectedAccount.meta.name!)}</p>
+            {/* <p className="text-xs font-extralight">{selectedAccount.address.slice(0, 8)}...</p> */}
           </div>
-        </span>
-      ) : (
-        <span className="flex gap-3 font-medium text-orange-500">
-          <Image
-            src="/polkadot-logo.svg"
-            alt="Polkadot"
-            width={24}
-            height={24}
-          />
-          <p>Connect Wallet</p>
-        </span>
-      )}
+        )}
+        {!selectedAccount &&
+          <p className="text-lg">Connect Wallet</p>
+        }
+      </span>
     </button>
   );
 }
