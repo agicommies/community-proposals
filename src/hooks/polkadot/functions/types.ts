@@ -1,3 +1,4 @@
+import { type ApiPromise } from "@polkadot/api";
 import type { Codec } from "@polkadot/types/types";
 import type { Enum, Tagged } from "rustie";
 import { assert, type Extends } from "tsafe";
@@ -14,9 +15,9 @@ export interface ProposalState extends Proposal {
 
 export type CustomProposalDataState = Result<
   CustomProposalData,
-  CustomProposalDataError
+  CustomDataError
 >;
-export type CustomProposalDataError = { message: string };
+export type CustomDataError = { message: string };
 
 // == Custom Proposal Extra Data ==
 
@@ -25,7 +26,40 @@ export interface CustomProposalData {
   body?: string; // Markdown description
 }
 
+// == Custom Dao  ==
+
+export type CustomDaoDataState = Result<CustomDaoData, CustomDataError>;
+
+export interface CustomDaoData {
+  discord_id?: string;
+  title?: string;
+  body?: string;
+}
+
+export type CallbackStatus = {
+  finalized: boolean;
+  message: string | null;
+  status: "SUCCESS" | "ERROR" | "PENDING" | "STARTING" | null;
+};
+
+export interface SendProposalData {
+  IpfsHash: string;
+  callback?: (status: CallbackStatus) => void;
+}
+
+export interface SendDaoData {
+  IpfsHash: string;
+  applicationKey: string;
+  callback?: (status: CallbackStatus) => void;
+}
+
 export const CUSTOM_PROPOSAL_METADATA_SCHEMA = z.object({
+  title: z.string().optional(),
+  body: z.string().optional(),
+});
+
+export const CUSTOM_DAO_METADATA_SCHEMA = z.object({
+  discord_id: z.string(),
   title: z.string().optional(),
   body: z.string().optional(),
 });
@@ -34,9 +68,12 @@ assert<
   Extends<z.infer<typeof CUSTOM_PROPOSAL_METADATA_SCHEMA>, CustomProposalData>
 >();
 
+assert<Extends<z.infer<typeof CUSTOM_DAO_METADATA_SCHEMA>, CustomDaoData>>();
+
 // == Proposal ==
 
 export type ProposalStatus = "Pending" | "Accepted" | "Refused" | "Expired";
+export type DaoStatus = "Pending" | "Accepted" | "Refused";
 
 export type ProposalData = Enum<{
   custom: string;
@@ -55,6 +92,20 @@ export interface Proposal {
   votesAgainst: SS58Address[];
   finalizationBlock: number | null;
   data: ProposalData;
+}
+export interface Dao {
+  id: number;
+  userId: SS58Address;
+  payingFor: SS58Address;
+  data: string;
+  body?: CustomDaoData;
+  status: DaoStatus;
+  applicationCost: number;
+}
+
+export interface GetBalance {
+  api: ApiPromise | null;
+  address: string;
 }
 
 const PARAM_FIELD_DISPLAY_NAMES: Record<string, string> = {
@@ -173,5 +224,34 @@ export function parse_proposal(value_raw: Codec): Proposal | null {
   }
 }
 
+export const DAO_SHEMA = z.object({
+  id: z.number(),
+  userId: ADDRESS_SCHEMA, // TODO: validate SS58 address
+  payingFor: ADDRESS_SCHEMA, // TODO: validate SS58 address
+  data: z.string(),
+  status: z
+    .string()
+    .refine(
+      (value) => ["Pending", "Accepted", "Refused"].includes(value),
+      "Invalid proposal status",
+    )
+    .transform((value) => value as DaoStatus),
+  applicationCost: z.number(),
+});
+
+export function parse_daos(value_raw: Codec): Dao | null {
+  const value = value_raw.toPrimitive();
+  const validated = DAO_SHEMA.safeParse(value);
+  if (!validated.success) {
+    console.warn("Invalid DAO:", validated.error.issues);
+    return null;
+  } else {
+    return validated.data;
+  }
+}
+
 // eslint-disable-next-line @typescript-eslint/no-unsafe-call
 assert<Extends<z.infer<typeof PROPOSAL_SHEMA>, Proposal>>();
+
+// eslint-disable-next-line @typescript-eslint/no-unsafe-call
+assert<Extends<z.infer<typeof DAO_SHEMA>, Dao>>();

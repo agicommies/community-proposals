@@ -1,4 +1,6 @@
+import "@polkadot/api-augment";
 import { type Enum } from "rustie";
+import { type GetBalance } from "~/hooks/polkadot/functions/types";
 
 export type Result<T, E> = Enum<{ Ok: T; Err: E }>;
 
@@ -28,4 +30,15 @@ export function from_nano(nano: number | bigint): number {
 export function format_token(nano: number | bigint): string {
   const amount = from_nano(nano);
   return amount.toFixed(2);
+}
+
+export async function get_balance({ api, address }: GetBalance) {
+  if (!api) throw new Error("API is not defined");
+  const {
+    data: { free: balance },
+  } = await api.query.system.account(address);
+
+  const balance_num = Number(balance);
+
+  return from_nano(balance_num);
 }

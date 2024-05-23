@@ -54,8 +54,13 @@ export function Header() {
           />
           <div className="hidden w-full flex-grow items-center md:w-auto lg:block">
             <div className="flex gap-3 xl:gap-6">
-              <h1 className="text-xl font-bold dark:text-white">
-                Community Proposals
+              <h1 className="text-xl font-semibold xl:text-2xl dark:text-white">
+                <span
+                  className={`${covered_by_your_grace.className} text-2xl text-blue-500 xl:text-3xl`}
+                >
+                  Community{" "}
+                </span>
+                Governance
               </h1>
             </div>
           </div>

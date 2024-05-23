@@ -83,6 +83,16 @@ export const ProposalCard = (props: ProposalCardProps) => {
 
   const { title, body, netuid, invalid } = handle_proposal(proposal);
 
+  function truncateMarkdown(markdown: string) {
+    if (markdown.length <= 1000) return markdown;
+
+    let end = markdown.lastIndexOf(" ", 1000);
+    end = end === -1 ? 500 : end;
+    return (
+      markdown.substring(0, end) + "... [Click on the view button to read more]"
+    );
+  }
+
   return (
     <Card.Root
       key={proposal.id}
@@ -108,7 +118,7 @@ export const ProposalCard = (props: ProposalCardProps) => {
             className="rounded-xl p-3 dark:bg-black/20"
             data-color-mode={theme === "dark" ? "dark" : "light"}
           >
-            {body && <MarkdownPreview source={body} />}
+            {body && <MarkdownPreview source={truncateMarkdown(body)} />}
             {/* TODO: skeleton for markdown body */}
           </div>
         </div>

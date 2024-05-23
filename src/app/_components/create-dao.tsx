@@ -11,19 +11,25 @@ import { Loading } from "./loading";
 import { z } from "zod";
 
 // Define Zod schemas
-const proposalSchema = z.object({
+const daoSchema = z.object({
+  applicationKey: z.string().min(1, "Application Key is required"),
+  discordId: z.string().min(16, "Discord ID is required"),
   title: z.string().min(1, "Title is required"),
   body: z.string().min(1, "Body is required"),
 });
 
-export function CreateProposal() {
+export function CreateDao() {
   const router = useRouter();
   const theme = getCurrentTheme();
-  const { isConnected, createNewProposal, balance, isBalanceLoading } =
+  const { isConnected, createNewDao, balance, isBalanceLoading } =
     usePolkadot();
 
+  const [applicationKey, setApplicationKey] = useState("");
+
+  const [discordId, setDiscordId] = useState("");
   const [title, setTitle] = useState("");
   const [body, setBody] = useState("");
+
   const [uploading, setUploading] = useState(false);
 
   const [modalOpen, setModalOpen] = useState(false);
@@ -61,16 +67,17 @@ export function CreateProposal() {
         return;
       }
 
-      const proposalCost = 10000;
+      const daoCost = 1000;
 
-      if (balance > proposalCost) {
-        createNewProposal({
+      if (balance > daoCost) {
+        createNewDao({
+          applicationKey,
           IpfsHash: `ipfs://${ipfs.IpfsHash}`,
           callback: handleCallback,
         });
       } else {
         toast.error(
-          `Insufficient balance to create proposal. Required: ${proposalCost} but got ${balance}`,
+          `Insufficient balance to create S0 Applicaiton. Required: ${daoCost} but got ${balance}`,
           {
             theme: theme === "dark" ? "dark" : "light",
           },
@@ -78,14 +85,14 @@ export function CreateProposal() {
         setTransactionStatus({
           status: "ERROR",
           finalized: true,
-          message: "Insufficient balance",
+          message: "Insufficient balance to create S0 Applicaiton",
         });
       }
       router.refresh();
     } catch (e) {
       console.error(e);
       setUploading(false);
-      toast.error("Error uploading proposal");
+      toast.error("Error uploading S0 Applicaiton");
     }
   };
 
@@ -94,12 +101,14 @@ export function CreateProposal() {
     setTransactionStatus({
       status: "STARTING",
       finalized: false,
-      message: "Starting proposal creation...",
+      message: "Starting S0 Applicaiton creation...",
     });
 
-    const result = proposalSchema.safeParse({
+    const result = daoSchema.safeParse({
       title,
       body,
+      applicationKey,
+      discordId,
     });
 
     if (!result.success) {
@@ -109,17 +118,18 @@ export function CreateProposal() {
       setTransactionStatus({
         status: "ERROR",
         finalized: true,
-        message: "Error on form validation",
+        message: "Error creating S0 Applicaiton",
       });
       return;
     }
 
-    const proposalData = JSON.stringify({
+    const daoData = JSON.stringify({
+      discord_id: discordId,
       title: title,
       body: body,
     });
-    const blob = new Blob([proposalData], { type: "application/json" });
-    const fileToUpload = new File([blob], "proposal.json", {
+    const blob = new Blob([daoData], { type: "application/json" });
+    const fileToUpload = new File([blob], "dao.json", {
       type: "application/json",
     });
     void uploadFile(fileToUpload);
@@ -132,7 +142,7 @@ export function CreateProposal() {
         onClick={toggleModalMenu}
         className="min-w-auto w-full rounded-xl border-2 border-blue-500 px-4 py-2 text-blue-500 shadow-custom-blue lg:w-auto dark:bg-light-dark"
       >
-        New Proposal
+        New S0 Application
       </button>
       <div
         role="dialog"
@@ -152,7 +162,7 @@ export function CreateProposal() {
                     className="pl-2 text-xl font-bold leading-6 dark:text-white"
                     id="modal-title"
                   >
-                    Build Custom Global Proposal
+                    Build New S0 Application
                   </h3>
                 </div>
 
@@ -188,13 +198,27 @@ export function CreateProposal() {
                       <div className="flex flex-col gap-3">
                         <input
                           type="text"
-                          placeholder="Your proposal title here..."
+                          placeholder="Application Key (ss58)"
+                          value={applicationKey}
+                          onChange={(e) => setApplicationKey(e.target.value)}
+                          className="w-full rounded-xl border-black bg-gray-100 p-3  dark:border-white dark:bg-dark dark:text-white"
+                        />
+                        <input
+                          type="text"
+                          placeholder="Discord ID"
+                          value={discordId}
+                          onChange={(e) => setDiscordId(e.target.value)}
+                          className="w-full rounded-xl border-black bg-gray-100 p-3  dark:border-white dark:bg-dark dark:text-white"
+                        />
+                        <input
+                          type="text"
+                          placeholder="Application title"
                           value={title}
                           onChange={(e) => setTitle(e.target.value)}
                           className="w-full rounded-xl border-black bg-gray-100 p-3  dark:border-white dark:bg-dark dark:text-white"
                         />
                         <textarea
-                          placeholder="Your proposal here... (Markdown supported)"
+                          placeholder="Application body... (Markdown supported)"
                           value={body}
                           rows={5}
                           onChange={(e) => setBody(e.target.value)}
@@ -216,7 +240,7 @@ export function CreateProposal() {
                       disabled={!isConnected}
                       type="submit"
                     >
-                      {uploading ? "Uploading..." : "Submit Proposal"}
+                      {uploading ? "Uploading..." : "Submit S0 Application"}
                     </button>
                   </div>
                   {transactionStatus.status && (
@@ -231,19 +255,20 @@ export function CreateProposal() {
                     </p>
                   )}
 
-                  <div className="flex flex-wrap items-center gap-1 pt-2 text-sm text-white">
-                    <div className="flex items-center gap-1">
-                      <InformationCircleIcon className="h-4 w-4 fill-blue-500" />
-                      <span>Want a diferent aproach?</span>
-                    </div>
-                    <span>
+                  <div className="mt-1 flex items-start gap-1 dark:text-white">
+                    <InformationCircleIcon className="mt-0.5 h-4 w-4 fill-blue-500 text-sm" />
+                    <span className="text-sm">
+                      Please make sure, that your application meets all of the
+                      criteria defined in this{" "}
                       <Link
-                        href="https://mirror.xyz/0xD80E194aBe2d8084fAecCFfd72877e63F5822Fc5/FUvj1g9rPyVm8Ii_qLNu-IbRQPiCHkfZDLAmlP00M1Q"
+                        href="https://mirror.xyz/0xD80E194aBe2d8084fAecCFfd72877e63F5822Fc5/SuhIlcUugotYhf2QmVTd3mI05RCycqSFrJfCxuEHet0"
                         className="text-blue-500 hover:underline"
                         target="_blank"
                       >
-                        Check how to create a proposal with the CLI tool
+                        article
                       </Link>
+                      , or you are at risk of getting denied by the Module
+                      Curation DAO.
                     </span>
                   </div>
                 </div>

@@ -3,19 +3,20 @@
 import { useState } from "react";
 import { Card } from "./card";
 import { type TVote } from "./vote-label";
-import { usePolkadot, type VoteStatus } from "~/hooks/polkadot";
+import { usePolkadot } from "~/hooks/polkadot";
 import Image from "next/image";
 import { ArrowPathIcon } from "@heroicons/react/20/solid";
+import { type CallbackStatus } from "~/hooks/polkadot/functions/types";
 
-export const VoteCard = (props: { proposalId: number, voted: TVote }) => {
-  const { proposalId, voted = 'UNVOTED' } = props;
+export const VoteCard = (props: { proposalId: number; voted: TVote }) => {
+  const { proposalId, voted = "UNVOTED" } = props;
   const { isConnected, send_vote, handleConnect } = usePolkadot();
 
   const [vote, setVote] = useState("UNVOTED");
-  const [votingStatus, setVotingStatus] = useState<VoteStatus>({
+  const [votingStatus, setVotingStatus] = useState<CallbackStatus>({
     status: null,
     finalized: false,
-    message: null
+    message: null,
   });
 
   const handleVotePreference = (value: TVote) => {
@@ -23,15 +24,18 @@ export const VoteCard = (props: { proposalId: number, voted: TVote }) => {
     if (vote === value) return setVote("UNVOTED");
   };
 
-  const handleCallback = (callbackReturn: VoteStatus) => {
-    setVotingStatus(callbackReturn)
-  }
+  const handleCallback = (callbackReturn: CallbackStatus) => {
+    setVotingStatus(callbackReturn);
+  };
 
   const handleVote = () => {
-    send_vote({
-      proposal_id: proposalId,
-      vote: vote === "FAVORABLE" ? true : false,
-    }, handleCallback);
+    send_vote(
+      {
+        proposal_id: proposalId,
+        vote: vote === "FAVORABLE" ? true : false,
+      },
+      handleCallback,
+    );
   };
 
   // const handleRemoveVote = () => {
@@ -51,9 +55,8 @@ export const VoteCard = (props: { proposalId: number, voted: TVote }) => {
           <span>You already voted!</span>
         </Card.Body>
       </Card.Root>
-    )
+    );
   }
-
 
   return (
     <Card.Root>
@@ -61,31 +64,29 @@ export const VoteCard = (props: { proposalId: number, voted: TVote }) => {
         <h3 className="text-base font-semibold">Cast your vote</h3>
       </Card.Header>
       <Card.Body className="flex w-full flex-col space-y-4 p-6">
-        {isConnected &&
+        {isConnected && (
           <div className="flex w-full gap-4">
             <button
               disabled={!isConnected || votingStatus.status === "PENDING"}
-              className={`w-full rounded-2xl border-2 border-green-500 py-1 ${vote === "FAVORABLE" ? "bg-green-500 text-black" : "text-green-800"} ${votingStatus.status === "PENDING" && 'cursor-not-allowed'}`}
+              className={`w-full rounded-2xl border-2 border-green-500 py-1 ${vote === "FAVORABLE" ? "bg-green-500 text-black" : "text-green-800"} ${votingStatus.status === "PENDING" && "cursor-not-allowed"}`}
               onClick={() => handleVotePreference("FAVORABLE")}
             >
               Favorable
             </button>
             <button
               disabled={!isConnected || votingStatus.status === "PENDING"}
-              className={`w-full rounded-2xl border-2 border-red-500 py-1 ${vote === "AGAINST" ? "bg-red-500 text-black" : "text-red-500 "} ${votingStatus.status === "PENDING" && 'cursor-not-allowed'}`}
+              className={`w-full rounded-2xl border-2 border-red-500 py-1 ${vote === "AGAINST" ? "bg-red-500 text-black" : "text-red-500 "} ${votingStatus.status === "PENDING" && "cursor-not-allowed"}`}
               onClick={() => handleVotePreference("AGAINST")}
             >
               Against
             </button>
           </div>
-        }
+        )}
 
-
-        {!isConnected &&
+        {!isConnected && (
           <button
             onClick={handleConnect}
-            className=" w-full rounded-2xl flex items-center border-2 p-1.5 text-black justify-center gap-3 border-orange-500 bg-white px-4 py-2 shadow-custom-orange active:top-1 active:shadow-custom-orange-clicked dark:bg-light-dark"
-
+            className=" flex w-full items-center justify-center gap-3 rounded-2xl border-2 border-orange-500 bg-white p-1.5 px-4 py-2 text-black shadow-custom-orange active:top-1 active:shadow-custom-orange-clicked dark:bg-light-dark"
           >
             <span className="flex gap-3 font-medium text-orange-500">
               <Image
@@ -97,9 +98,9 @@ export const VoteCard = (props: { proposalId: number, voted: TVote }) => {
               <p>Connect Wallet to vote</p>
             </span>
           </button>
-        }
+        )}
 
-        {isConnected &&
+        {isConnected && (
           <button
             onClick={handleVote}
             disabled={vote === "UNVOTED" || votingStatus.status === "PENDING"}
@@ -108,17 +109,18 @@ export const VoteCard = (props: { proposalId: number, voted: TVote }) => {
             {vote === "UNVOTED" && "Chose Before Voting"}
             {vote !== "UNVOTED" && "Vote"}
           </button>
-        }
+        )}
 
-        {votingStatus.status &&
-          <p className={`${votingStatus.status === "PENDING" && 'text-yellow-300'} ${votingStatus.status === "ERROR" && 'text-red-300'} ${votingStatus.status === "SUCCESS" && 'text-green-300'} flex text-base text-left`}>
+        {votingStatus.status && (
+          <p
+            className={`${votingStatus.status === "PENDING" && "text-yellow-300"} ${votingStatus.status === "ERROR" && "text-red-300"} ${votingStatus.status === "SUCCESS" && "text-green-300"} flex text-left text-base`}
+          >
             {votingStatus.message}
-            {votingStatus.status === "PENDING" &&
-              <ArrowPathIcon width={16} className="animate-spin ml-2" />
-            }
+            {votingStatus.status === "PENDING" && (
+              <ArrowPathIcon width={16} className="ml-2 animate-spin" />
+            )}
           </p>
-        }
-
+        )}
       </Card.Body>
     </Card.Root>
   );
