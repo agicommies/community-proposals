@@ -199,7 +199,7 @@ export const ExpandedView = (props: ProposalContent) => {
 
 
     <div className="flex flex-col lg:w-1/3">
-      <div className="p-6 pr-20 border-t border-b border-gray-500 lg:border-t-none">
+      <div className="p-6 pr-20 border-t border-b border-gray-500 lg:border-t-0">
         <div className="flex flex-col gap-3 ">
           <div>
             <span className="text-gray-500">ID</span>
