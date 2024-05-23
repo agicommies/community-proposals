@@ -42,7 +42,7 @@ export const BalanceSection = ({ className }: { className?: string }) => {
             {!isInitialized ? (
               <Skeleton className="w-1/5 py-3 md:mt-1 lg:w-2/5" />
             ) : (
-              <p>{daosTreasuries} <span className="text-lg text-white">COMAI</span></p>)}
+              <p>{new Intl.NumberFormat().format(daosTreasuries)} <span className="text-lg text-white">COMAI</span></p>)}
             <span className="text-base font-thin text-gray-400">DAO treasury funds</span>
           </div>
           <Image src={'/dao-icon.svg'} width={40} height={40} alt="Dao Icon" />
