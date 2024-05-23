@@ -19,8 +19,6 @@ export type DaoCardProps = {
 export const DaoCard = (props: DaoCardProps) => {
   const { dao } = props;
 
-  if (!dao.body) return null
-
   return (
     <>
       <Card.Root key={dao.id} className="animate-fade-in-down">
