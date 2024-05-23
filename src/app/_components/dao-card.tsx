@@ -15,10 +15,9 @@ export type DaoCardProps = {
 export const DaoCard = (props: DaoCardProps) => {
   const { dao } = props;
 
-  console.log(dao, 'daoCard')
   return (
     <>
-      {dao ? (
+      {dao.body ? (
         <Card.Root key={dao.id} className="animate-fade-in-down">
           <Card.Header className="z-10 flex-col">
             {dao.body?.title && <h2 className="pb-4 text-base font-semibold text-white lg:pb-0">{dao.body?.title}</h2>}
@@ -31,7 +30,7 @@ export const DaoCard = (props: DaoCardProps) => {
             <div className="p-4 py-10">
               <MarkdownView
                 className={`line-clamp-4`}
-                source={dao?.body?.body ?? ''}
+                source={dao.body?.body ?? ''}
               />
             </div>
             <div className="flex flex-col items-start justify-between p-2 border-t border-gray-500 lg:p-4 lg:flex-row lg:items-center">

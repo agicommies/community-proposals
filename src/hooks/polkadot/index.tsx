@@ -223,7 +223,7 @@ export const PolkadotProvider: React.FC<PolkadotProviderProps> = ({
           setStakeData(stake_data_result);
         })
         .catch((e) => {
-          console.error("Error fetching stake data:", e);
+          toast.success(`Error fetching stake out map", ${e}`);
         });
 
       handleGetProposals(api);
@@ -259,7 +259,6 @@ export const PolkadotProvider: React.FC<PolkadotProviderProps> = ({
       console.warn(error);
     }
   }
-
 
   async function handleWalletSelections(wallet: InjectedAccountWithMeta) {
     localStorage.setItem("favoriteWalletAddress", wallet.address);
