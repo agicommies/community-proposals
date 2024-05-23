@@ -48,55 +48,97 @@ export default function HomePage() {
     return "UNVOTED";
   };
 
-  const renderProposals = () => {
-    const proposalsContent = proposals?.map((proposal) => {
-      const voted = handleUserVotes({
-        votesAgainst: proposal.votesAgainst,
-        votesFor: proposal.votesFor,
-        selectedAccountAddress: selectedAccount?.address as SS58Address,
+  // const renderProposals = () => {
+  //   const proposalsContent = proposals?.map((proposal) => {
+  //     const voted = handleUserVotes({
+  //       votesAgainst: proposal.votesAgainst,
+  //       votesFor: proposal.votesFor,
+  //       selectedAccountAddress: selectedAccount?.address as SS58Address,
+  //     });
+
+  //     const netuid = get_proposal_netuid(proposal);
+  //     let proposal_stake_info = null;
+  //     if (stake_data != null) {
+  //       const stake_map =
+  //         netuid != null
+  //           ? stake_data.stake_out.per_addr_per_net.get(netuid) ??
+  //           new Map<string, bigint>()
+  //           : stake_data.stake_out.per_addr;
+  //       proposal_stake_info = compute_votes(
+  //         stake_map,
+  //         proposal.votesFor,
+  //         proposal.votesAgainst,
+  //       );
+  //     }
+  //     return (
+  //       <div key={proposal.id} className="animate-fade-in-down">
+  //         <ProposalCard
+  //           key={proposal.id}
+  //           proposal={proposal}
+  //           stake_info={proposal_stake_info}
+  //           voted={voted}
+  //         />
+  //       </div>
+  //     );
+  //   })
+  //   return proposalsContent
+  // }
+
+  // const renderDaos = () => {
+  //   const daosContent = daos?.map((dao) => {
+  //     return (
+  //       <div key={dao.id}>
+  //         <DaoCard key={dao.id} dao={dao} />
+  //       </div>
+  //     );
+  //   })
+
+  //   return daosContent
+  // }
+
+  // const content = viewMode === 'proposals' ? renderProposals() : renderDaos()
+
+  const content =
+    viewMode === "proposals"
+      ? proposals?.map((proposal) => {
+        const voted = handleUserVotes({
+          votesAgainst: proposal.votesAgainst,
+          votesFor: proposal.votesFor,
+          selectedAccountAddress: selectedAccount?.address as SS58Address,
+        });
+
+        const netuid = get_proposal_netuid(proposal);
+        let proposal_stake_info = null;
+        if (stake_data != null) {
+          const stake_map =
+            netuid != null
+              ? stake_data.stake_out.per_addr_per_net.get(netuid) ??
+              new Map<string, bigint>()
+              : stake_data.stake_out.per_addr;
+          proposal_stake_info = compute_votes(
+            stake_map,
+            proposal.votesFor,
+            proposal.votesAgainst,
+          );
+        }
+        return (
+          <div key={proposal.id} className="animate-fade-in-down">
+            <ProposalCard
+              key={proposal.id}
+              proposal={proposal}
+              stake_info={proposal_stake_info}
+              voted={voted}
+            />
+          </div>
+        );
+      })
+      : daos?.map((dao) => {
+        // const netuid = get_proposal_netuid(dao);
+        return (
+          <DaoCard key={dao.id} dao={dao} />
+        );
       });
 
-      const netuid = get_proposal_netuid(proposal);
-      let proposal_stake_info = null;
-      if (stake_data != null) {
-        const stake_map =
-          netuid != null
-            ? stake_data.stake_out.per_addr_per_net.get(netuid) ??
-            new Map<string, bigint>()
-            : stake_data.stake_out.per_addr;
-        proposal_stake_info = compute_votes(
-          stake_map,
-          proposal.votesFor,
-          proposal.votesAgainst,
-        );
-      }
-      return (
-        <div key={proposal.id} className="animate-fade-in-down">
-          <ProposalCard
-            key={proposal.id}
-            proposal={proposal}
-            stake_info={proposal_stake_info}
-            voted={voted}
-          />
-        </div>
-      );
-    })
-    return proposalsContent
-  }
-
-  const renderDaos = () => {
-    const daosContent = daos?.map((dao) => {
-      return (
-        <div key={dao.id}>
-          <DaoCard key={dao.id} dao={dao} />
-        </div>
-      );
-    })
-
-    return daosContent
-  }
-
-  const content = viewMode === 'proposals' ? renderProposals() : renderDaos()
 
   return (
     <main className="flex flex-col items-center justify-center w-full">
