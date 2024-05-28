@@ -2,13 +2,13 @@ import Link from "next/link";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { usePolkadot } from "~/hooks/polkadot";
-import { getCurrentTheme } from "~/styles/theming";
 import MarkdownPreview from "@uiw/react-markdown-preview";
 import { InformationCircleIcon, XMarkIcon } from "@heroicons/react/20/solid";
 import { toast } from "react-toastify";
 import { type CallbackStatus } from "~/hooks/polkadot/functions/types";
 import { Loading } from "./loading";
 import { z } from "zod";
+import { cairo } from "~/styles/fonts";
 
 // Define Zod schemas
 const proposalSchema = z.object({
@@ -18,7 +18,6 @@ const proposalSchema = z.object({
 
 export function CreateProposal() {
   const router = useRouter();
-  const theme = getCurrentTheme();
   const { isConnected, createNewProposal, balance, isBalanceLoading } =
     usePolkadot();
 
@@ -54,10 +53,8 @@ export function CreateProposal() {
       const ipfs = (await res.json()) as { IpfsHash: string };
       setUploading(false);
 
-      if (isBalanceLoading) {
-        toast.error("Balance is still loading", {
-          theme: theme === "dark" ? "dark" : "light",
-        });
+      if (isBalanceLoading || !balance) {
+        toast.error("Balance is still loading");
         return;
       }
 
@@ -70,10 +67,7 @@ export function CreateProposal() {
         });
       } else {
         toast.error(
-          `Insufficient balance to create proposal. Required: ${proposalCost} but got ${balance}`,
-          {
-            theme: theme === "dark" ? "dark" : "light",
-          },
+          `Insufficient balance to create proposal. Required: ${proposalCost} but got ${balance}`
         );
         setTransactionStatus({
           status: "ERROR",
@@ -103,9 +97,7 @@ export function CreateProposal() {
     });
 
     if (!result.success) {
-      toast.error(result.error.errors.map((e) => e.message).join(", "), {
-        theme: theme === "dark" ? "dark" : "light",
-      });
+      toast.error(result.error.errors.map((e) => e.message).join(", "));
       setTransactionStatus({
         status: "ERROR",
         finalized: true,
@@ -130,26 +122,26 @@ export function CreateProposal() {
       <button
         type="button"
         onClick={toggleModalMenu}
-        className="min-w-auto w-full rounded-xl border-2 border-blue-500 px-4 py-2 text-blue-500 shadow-custom-blue lg:w-auto dark:bg-light-dark"
+        className="w-full px-4 py-2 text-gray-400 border border-gray-500 hover:border-green-600 hover:text-green-600 hover:bg-green-600/5 min-w-auto lg:w-auto"
       >
-        New Proposal
+        Create New Proposal
       </button>
       <div
         role="dialog"
-        className={`relative z-50 ${modalOpen ? "visible" : "hidden"}`}
+        className={`relative z-50 ${modalOpen ? "visible" : "hidden"} -mr-2`}
       >
         {/* Backdrop */}
-        <div className="fixed inset-0 bg-dark bg-opacity-60 backdrop-blur-sm transition-opacity" />
+        <div className="fixed inset-0 transition-opacity bg-black bg-opacity-60 backdrop-blur-sm" />
 
         {/* Modal */}
-        <div className="fixed inset-0 z-10 w-screen animate-fade-in-down overflow-y-auto">
-          <div className="flex min-h-full items-center justify-center p-4 text-center">
-            <div className="relative w-[100%] max-w-5xl transform overflow-hidden rounded-3xl border-2 border-zinc-800 bg-white text-left shadow-custom md:w-[80%] dark:border-white dark:bg-light-dark dark:shadow-custom-dark">
+        <div className="fixed inset-0 z-10 w-screen overflow-y-auto animate-fade-in-down">
+          <div className="flex items-center justify-center min-h-full p-4 text-center">
+            <div className="relative w-[100%] max-w-5xl transform overflow-hidden border border-gray-500 bg-white text-white text-left md:w-[80%] bg-[url('/bg-pattern.svg')]">
               {/* Modal Header */}
-              <div className="flex items-center justify-between gap-3 border-b-2 border-zinc-800 bg-[url(/grids.svg)] bg-cover bg-center bg-no-repeat p-6 md:flex-row dark:border-white">
+              <div className="flex items-center justify-between gap-3 p-6 bg-center bg-no-repeat bg-cover border-b border-gray-500 md:flex-row">
                 <div className="flex flex-col items-center md:flex-row">
                   <h3
-                    className="pl-2 text-xl font-bold leading-6 dark:text-white"
+                    className="pl-2 text-xl font-bold leading-6"
                     id="modal-title"
                   >
                     Build Custom Global Proposal
@@ -159,9 +151,9 @@ export function CreateProposal() {
                 <button
                   type="button"
                   onClick={toggleModalMenu}
-                  className="rounded-2xl border-2 border-black p-2 transition duration-200 dark:border-white dark:bg-light-dark hover:dark:bg-dark"
+                  className="p-2 transition duration-200"
                 >
-                  <XMarkIcon className="h-6 w-6 dark:fill-white" />
+                  <XMarkIcon className="w-6 h-6" />
                 </button>
               </div>
               {/* Modal Body */}
@@ -171,14 +163,14 @@ export function CreateProposal() {
                     <button
                       type="button"
                       onClick={toggleEditMode}
-                      className={`rounded-xl border-2 px-4 py-1 dark:text-white ${editMode && "bg-blue-500"}`}
+                      className={`border px-4 py-1  ${editMode ? "border-green-500 bg-green-500/5 text-green-500" : 'border-gray-500 text-gray-400'} hover:border-green-600 hover:bg-green-600/5 hover:text-green-600`}
                     >
                       Edit
                     </button>
                     <button
                       type="button"
                       onClick={toggleEditMode}
-                      className={`rounded-xl border-2 px-4 py-1 dark:text-white ${!editMode && "bg-blue-500"}`}
+                      className={` border px-4 py-1 ${!editMode ? "border-green-500 bg-green-500/5 text-green-500" : 'border-gray-500 text-gray-400'} hover:border-green-600 hover:bg-green-600/5 hover:text-green-600`}
                     >
                       Preview
                     </button>
@@ -191,28 +183,27 @@ export function CreateProposal() {
                           placeholder="Your proposal title here..."
                           value={title}
                           onChange={(e) => setTitle(e.target.value)}
-                          className="w-full rounded-xl border-black bg-gray-100 p-3  dark:border-white dark:bg-dark dark:text-white"
+                          className="w-full p-3 text-white bg-black"
                         />
                         <textarea
                           placeholder="Your proposal here... (Markdown supported)"
                           value={body}
                           rows={5}
                           onChange={(e) => setBody(e.target.value)}
-                          className="w-full rounded-xl border-black bg-gray-100 p-3  dark:border-white dark:bg-dark dark:text-white"
+                          className="w-full p-3 text-white bg-black"
                         />
                       </div>
                     ) : (
-                      <div
-                        className="rounded-xl bg-gray-100 p-3 dark:bg-dark"
-                        data-color-mode={theme === "dark" ? "dark" : "light"}
-                      >
-                        <MarkdownPreview source={`# ${title}\n${body}`} />
+                      <div className="p-4 py-10">
+                        {body && <MarkdownPreview source={`# ${title}\n${body}`} style={{ backgroundColor: 'transparent', color: 'white' }} className={`line-clamp-4 ${cairo.className}`} />}
+                        {/* TODO: skeleton for markdown body */}
                       </div>
                     )}
+
                   </div>
                   <div className="flex flex-col gap-1">
                     <button
-                      className={` relative w-full rounded-xl border-2 px-4 py-2 font-semibold dark:bg-dark ${isConnected ? "border-blue-500 text-blue-500 shadow-custom-blue active:top-1 active:shadow-custom-blue-clicked" : "border-gray-500 text-gray-500 shadow-custom-gray"}`}
+                      className={` relative w-full border px-4 py-2 font-semibold ${isConnected ? "border-green-500 text-green-500 active:top-1 hover:bg-green-500/5" : "border-gray-500 text-gray-500"}`}
                       disabled={!isConnected}
                       type="submit"
                     >
@@ -233,7 +224,7 @@ export function CreateProposal() {
 
                   <div className="flex flex-wrap items-center gap-1 pt-2 text-sm text-white">
                     <div className="flex items-center gap-1">
-                      <InformationCircleIcon className="h-4 w-4 fill-blue-500" />
+                      <InformationCircleIcon className="w-4 h-4 fill-green-500" />
                       <span>Want a diferent aproach?</span>
                     </div>
                     <span>

@@ -2,13 +2,13 @@ import Link from "next/link";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { usePolkadot } from "~/hooks/polkadot";
-import { getCurrentTheme } from "~/styles/theming";
 import MarkdownPreview from "@uiw/react-markdown-preview";
 import { InformationCircleIcon, XMarkIcon } from "@heroicons/react/20/solid";
 import { toast } from "react-toastify";
 import { type CallbackStatus } from "~/hooks/polkadot/functions/types";
 import { Loading } from "./loading";
 import { z } from "zod";
+import { cairo } from "~/styles/fonts";
 
 // Define Zod schemas
 const daoSchema = z.object({
@@ -20,7 +20,6 @@ const daoSchema = z.object({
 
 export function CreateDao() {
   const router = useRouter();
-  const theme = getCurrentTheme();
   const { isConnected, createNewDao, balance, isBalanceLoading } =
     usePolkadot();
 
@@ -60,10 +59,8 @@ export function CreateDao() {
       const ipfs = (await res.json()) as { IpfsHash: string };
       setUploading(false);
 
-      if (isBalanceLoading) {
-        toast.error("Balance is still loading", {
-          theme: theme === "dark" ? "dark" : "light",
-        });
+      if (isBalanceLoading || !balance) {
+        toast.error("Balance is still loading");
         return;
       }
 
@@ -78,9 +75,6 @@ export function CreateDao() {
       } else {
         toast.error(
           `Insufficient balance to create S0 Applicaiton. Required: ${daoCost} but got ${balance}`,
-          {
-            theme: theme === "dark" ? "dark" : "light",
-          },
         );
         setTransactionStatus({
           status: "ERROR",
@@ -112,9 +106,7 @@ export function CreateDao() {
     });
 
     if (!result.success) {
-      toast.error(result.error.errors.map((e) => e.message).join(", "), {
-        theme: theme === "dark" ? "dark" : "light",
-      });
+      toast.error(result.error.errors.map((e) => e.message).join(", "));
       setTransactionStatus({
         status: "ERROR",
         finalized: true,
@@ -140,26 +132,26 @@ export function CreateDao() {
       <button
         type="button"
         onClick={toggleModalMenu}
-        className="min-w-auto w-full rounded-xl border-2 border-blue-500 px-4 py-2 text-blue-500 shadow-custom-blue lg:w-auto dark:bg-light-dark"
+        className="w-full px-4 py-2 text-gray-400 border border-gray-500 hover:border-green-600 hover:text-green-600 hover:bg-green-600/5 min-w-auto lg:w-auto"
       >
-        New S0 Application
+        Create New S0 Application
       </button>
       <div
         role="dialog"
-        className={`relative z-50 ${modalOpen ? "visible" : "hidden"}`}
+        className={`relative z-50 ${modalOpen ? "visible" : "hidden"} -mr-2`}
       >
         {/* Backdrop */}
-        <div className="fixed inset-0 bg-dark bg-opacity-60 backdrop-blur-sm transition-opacity" />
+        <div className="fixed inset-0 transition-opacity bg-black bg-opacity-60 backdrop-blur-sm" />
 
         {/* Modal */}
-        <div className="fixed inset-0 z-10 w-screen animate-fade-in-down overflow-y-auto">
-          <div className="flex min-h-full items-center justify-center p-4 text-center">
-            <div className="relative w-[100%] max-w-5xl transform overflow-hidden rounded-3xl border-2 border-zinc-800 bg-white text-left shadow-custom md:w-[80%] dark:border-white dark:bg-light-dark dark:shadow-custom-dark">
+        <div className="fixed inset-0 z-10 w-screen overflow-y-auto animate-fade-in-down">
+          <div className="flex items-center justify-center min-h-full p-4 text-center">
+            <div className="relative w-[100%] max-w-5xl transform overflow-hidden border border-gray-500 bg-[url('/bg-pattern.svg')] text-left md:w-[80%]">
               {/* Modal Header */}
-              <div className="flex items-center justify-between gap-3 border-b-2 border-zinc-800 bg-[url(/grids.svg)] bg-cover bg-center bg-no-repeat p-6 md:flex-row dark:border-white">
+              <div className="flex items-center justify-between gap-3 border-b border-gray-500 bg-center bg-no-repeat p-6 md:flex-row text-white">
                 <div className="flex flex-col items-center md:flex-row">
                   <h3
-                    className="pl-2 text-xl font-bold leading-6 dark:text-white"
+                    className="pl-2 text-xl font-bold leading-6 text-white"
                     id="modal-title"
                   >
                     Build New S0 Application
@@ -169,26 +161,26 @@ export function CreateDao() {
                 <button
                   type="button"
                   onClick={toggleModalMenu}
-                  className="rounded-2xl border-2 border-black p-2 transition duration-200 dark:border-white dark:bg-light-dark hover:dark:bg-dark"
+                  className="p-2 transition duration-200"
                 >
-                  <XMarkIcon className="h-6 w-6 dark:fill-white" />
+                  <XMarkIcon className="w-6 h-6 fill-white" />
                 </button>
               </div>
               {/* Modal Body */}
-              <form onSubmit={HandleSubmit} className="dark:bg-light-dark">
+              <form onSubmit={HandleSubmit}>
                 <div className="flex flex-col gap-4 p-6">
                   <div className="flex gap-2">
                     <button
                       type="button"
                       onClick={toggleEditMode}
-                      className={`rounded-xl border-2 px-4 py-1 dark:text-white ${editMode && "bg-blue-500"}`}
+                      className={`border px-4 py-1  ${editMode ? "border-green-500 bg-green-500/5 text-green-500" : 'border-gray-500 text-gray-400'} hover:border-green-600 hover:bg-green-600/5 hover:text-green-600`}
                     >
                       Edit
                     </button>
                     <button
                       type="button"
                       onClick={toggleEditMode}
-                      className={`rounded-xl border-2 px-4 py-1 dark:text-white ${!editMode && "bg-blue-500"}`}
+                      className={`border px-4 py-1 ${!editMode ? "border-green-500 bg-green-500/5 text-green-500" : 'border-gray-500 text-gray-400'} hover:border-green-600 hover:bg-green-600/5 hover:text-green-600`}
                     >
                       Preview
                     </button>
@@ -201,42 +193,40 @@ export function CreateDao() {
                           placeholder="Application Key (ss58)"
                           value={applicationKey}
                           onChange={(e) => setApplicationKey(e.target.value)}
-                          className="w-full rounded-xl border-black bg-gray-100 p-3  dark:border-white dark:bg-dark dark:text-white"
+                          className="w-full p-3 text-white bg-black"
                         />
                         <input
                           type="text"
                           placeholder="Discord ID"
                           value={discordId}
                           onChange={(e) => setDiscordId(e.target.value)}
-                          className="w-full rounded-xl border-black bg-gray-100 p-3  dark:border-white dark:bg-dark dark:text-white"
+                          className="w-full p-3 text-white bg-black"
                         />
                         <input
                           type="text"
                           placeholder="Application title"
                           value={title}
                           onChange={(e) => setTitle(e.target.value)}
-                          className="w-full rounded-xl border-black bg-gray-100 p-3  dark:border-white dark:bg-dark dark:text-white"
+                          className="w-full p-3 text-white bg-black"
                         />
                         <textarea
                           placeholder="Application body... (Markdown supported)"
                           value={body}
                           rows={5}
                           onChange={(e) => setBody(e.target.value)}
-                          className="w-full rounded-xl border-black bg-gray-100 p-3  dark:border-white dark:bg-dark dark:text-white"
+                          className="w-full p-3 text-white bg-black"
                         />
                       </div>
                     ) : (
-                      <div
-                        className="rounded-xl bg-gray-100 p-3 dark:bg-dark"
-                        data-color-mode={theme === "dark" ? "dark" : "light"}
-                      >
-                        <MarkdownPreview source={`# ${title}\n${body}`} />
+                      <div className="p-4 py-10">
+                        {body && <MarkdownPreview source={`# ${title}\n${body}`} style={{ backgroundColor: 'transparent', color: 'white' }} className={`line-clamp-4 ${cairo.className}`} />}
+                        {/* TODO: skeleton for markdown body */}
                       </div>
                     )}
                   </div>
                   <div className="flex flex-col gap-1">
                     <button
-                      className={` relative w-full rounded-xl border-2 px-4 py-2 font-semibold dark:bg-dark ${isConnected ? "border-blue-500 text-blue-500 shadow-custom-blue active:top-1 active:shadow-custom-blue-clicked" : "border-gray-500 text-gray-500 shadow-custom-gray"}`}
+                      className={` relative w-full border px-4 py-2 font-semibold ${isConnected ? "border-green-500 text-green-500 active:top-1 hover:bg-green-500/5" : "border-gray-500 text-gray-500"}`}
                       disabled={!isConnected}
                       type="submit"
                     >
@@ -255,8 +245,8 @@ export function CreateDao() {
                     </p>
                   )}
 
-                  <div className="mt-1 flex items-start gap-1 dark:text-white">
-                    <InformationCircleIcon className="mt-0.5 h-4 w-4 fill-blue-500 text-sm" />
+                  <div className="flex items-start gap-1 mt-1 text-white">
+                    <InformationCircleIcon className="mt-0.5 h-4 w-4 fill-green-500 text-sm" />
                     <span className="text-sm">
                       Please make sure, that your application meets all of the
                       criteria defined in this{" "}

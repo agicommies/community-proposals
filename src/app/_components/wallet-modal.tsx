@@ -6,7 +6,6 @@ import React, { useEffect, useState } from "react";
 import { CheckCircleIcon, XMarkIcon } from "@heroicons/react/20/solid";
 import { type InjectedAccountWithMeta } from "@polkadot/extension-inject/types";
 import { toast } from "react-toastify";
-import { getCurrentTheme } from "~/styles/theming";
 import { usePolkadot } from "~/hooks/polkadot";
 
 export function WalletModal({
@@ -20,7 +19,6 @@ export function WalletModal({
   wallets: InjectedAccountWithMeta[];
   handleWalletSelections: (arg: InjectedAccountWithMeta) => void;
 }) {
-  const theme = getCurrentTheme();
   const { selectedAccount } = usePolkadot()
   const [selectedWallet, setSelectedWallet] = useState<InjectedAccountWithMeta | null>(null);
 
@@ -34,18 +32,18 @@ export function WalletModal({
   return (
     <div
       role="dialog"
-      className={`fixed inset-0 z-[100] ${open ? "block" : "hidden"} animate-fade-in-down`}
+      className={`fixed inset-0 z-[100] ${open ? "block" : "hidden"} `}
     >
       {/* Backdrop */}
-      <div className="absolute inset-0 bg-dark opacity-80" />
+      <div className="absolute inset-0 backdrop-blur-sm" />
 
       {/* Modal */}
       <div className="fixed inset-0 z-10 w-screen overflow-y-auto">
-        <div className="flex min-h-full items-center justify-center p-4 text-center">
-          <div className="relative w-[100%] max-w-3xl transform overflow-hidden rounded-3xl border-2 border-zinc-800 bg-white text-left shadow-custom dark:border-white dark:bg-light-dark dark:shadow-custom-dark">
+        <div className="flex items-center justify-center min-h-full p-4 text-center">
+          <div className="relative w-[100%] max-w-3xl transform overflow-hidden border border-gray-500 bg-[url('/bg-pattern.svg')] text-left shadow-custom">
             {/* Modal Header */}
-            <div className="flex items-center justify-between gap-3 border-b-2 border-zinc-800 bg-[url(/grids.svg)] bg-cover bg-center bg-no-repeat p-4 flex-row dark:border-white">
-              <div className="flex items-center flex-row">
+            <div className="flex flex-row items-center justify-between gap-3 p-4 bg-center bg-no-repeat bg-cover border-b border-gray-500">
+              <div className="flex flex-row items-center">
                 <Image
                   src="/polkadot-logo.svg"
                   alt="Module Logo"
@@ -55,7 +53,7 @@ export function WalletModal({
                 />
 
                 <h3
-                  className="pl-2 text-transparent md:text-lg font-bold leading-6 dark:text-white"
+                  className="pl-2 font-bold leading-6 text-transparent md:text-lg"
                   id="modal-title"
                 >
                   Select Wallet
@@ -65,28 +63,28 @@ export function WalletModal({
               <button
                 type="button"
                 onClick={() => setOpen(false)}
-                className="rounded-xl md:rounded-2xl border-2 border-black p-1.5 md:p-2 transition duration-200 dark:border-white dark:bg-light-dark hover:dark:bg-dark"
+                className="border border-gray-500 p-1.5 md:p-2 transition duration-200"
               >
-                <XMarkIcon className="h-4 w-4 md:h-6 md:w-6 dark:fill-white" />
+                <XMarkIcon className="w-4 h-4 text-white md:h-6 md:w-6" />
               </button>
             </div>
 
             {/* Modal Body */}
-            <div className="flex flex-col gap-y-4 overflow-y-auto p-4 md:p-4">
+            <div className="flex flex-col p-4 overflow-y-auto gap-y-4 md:p-4">
               {wallets.map((item) => (
                 <button
                   key={item.address}
                   onClick={() => handleSelectAccount(item)}
-                  className={`text-md flex cursor-pointer items-center gap-x-2.5 overflow-auto rounded-xl border-2 p-2.5 shadow-white dark:text-white ${selectedWallet?.address === item.address ? "border-green-500 dark:border-green-300" : "border-black dark:border-white "} hover:border-green-500 hover:dark:border-green-300`}
+                  className={`text-md flex cursor-pointer items-center gap-x-2.5 overflow-auto border p-2.5 ${selectedWallet?.address === item.address ? "border-green-500" : "border-gray-500"} hover:border-green-500`}
                 >
                   <CheckCircleIcon
                     className={`min-h-6 min-w-6 max-w-6 max-h-6 ${selectedWallet?.address === item.address
-                      ? "fill-green-500 dark:fill-green-300"
-                      : "fill-black dark:fill-white"
+                      ? "fill-green-500"
+                      : "fill-white"
                       }`}
                   />
 
-                  <div className="flex flex-col items-start gap-0.5">
+                  <div className="flex flex-col items-start gap-0.5 text-white">
                     <span className="font-semibold">{item.meta.name}</span>
                     <span>{item.address}</span>
                   </div>
@@ -94,7 +92,7 @@ export function WalletModal({
               ))}
 
               {!wallets.length && (
-                <div className="flex h-full flex-col items-center justify-center gap-4 text-center text-sm text-gray-500">
+                <div className="flex flex-col items-center justify-center h-full gap-4 text-sm text-center text-gray-500">
                   <div>No wallet found.</div>
                   <div>
                     Please install Polkadot extension or check permission
@@ -113,12 +111,10 @@ export function WalletModal({
 
               <button
                 disabled={selectedWallet == null}
-                className={`w-full rounded-xl border-2 ${selectedWallet ? 'border-orange-400 text-orange-400 hover:border-orange-500 hover:text-orange-500' : 'border-gray-400 text-gray-400 cursor-not-allowed'} p-2 text-base md:text-lg font-semibold`}
+                className={`w-full border ${selectedWallet ? 'border-orange-400 text-orange-400 hover:border-orange-500 hover:text-orange-500' : 'border-gray-500 text-gray-400 cursor-not-allowed'} p-2 text-base md:text-lg font-semibold`}
                 onClick={() => {
                   if (!selectedWallet) {
-                    toast.error("No account selected", {
-                      theme: theme === "dark" ? "dark" : "light",
-                    });
+                    toast.error("No account selected");
                     return;
                   }
                   handleWalletSelections(selectedWallet);

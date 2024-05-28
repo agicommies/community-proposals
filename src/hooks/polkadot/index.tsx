@@ -32,7 +32,6 @@ import type {
 } from "~/hooks/polkadot/functions/types";
 import { get_balance, is_not_null } from "~/utils";
 import { toast } from "react-toastify";
-import { getCurrentTheme } from "~/styles/theming";
 
 interface Vote {
   proposal_id: number;
@@ -50,7 +49,7 @@ interface PolkadotContextType {
   isConnected: boolean;
   isInitialized: boolean;
 
-  balance: number;
+  balance: number | null;
   isBalanceLoading: boolean;
 
   blockNumber: number;
@@ -81,7 +80,6 @@ export const PolkadotProvider: React.FC<PolkadotProviderProps> = ({
   wsEndpoint,
 }) => {
   const [api, setApi] = useState<ApiPromise | null>(null);
-  const theme = getCurrentTheme();
 
   const [polkadotApi, setPolkadotApi] = useState<PolkadotApiState>({
     web3Enable: null,
@@ -94,7 +92,7 @@ export const PolkadotProvider: React.FC<PolkadotProviderProps> = ({
   const [accounts, setAccounts] = useState<InjectedAccountWithMeta[]>([]);
   const [blockNumber, setBlockNumber] = useState(0);
 
-  const [balance, setBalance] = useState(0);
+  const [balance, setBalance] = useState<null | number>(null);
   const [isBalanceLoading, setIsBalanceLoading] = useState(true);
 
   const [daos, setDaos] = useState<Dao[] | null>(null);
@@ -225,7 +223,7 @@ export const PolkadotProvider: React.FC<PolkadotProviderProps> = ({
           setStakeData(stake_data_result);
         })
         .catch((e) => {
-          console.error("Error fetching stake data:", e);
+          toast.success(`Error fetching stake out map", ${e}`);
         });
 
       handleGetProposals(api);
@@ -239,9 +237,7 @@ export const PolkadotProvider: React.FC<PolkadotProviderProps> = ({
     if (!polkadotApi.web3Enable || !polkadotApi.web3Accounts) return;
     const extensions = await polkadotApi.web3Enable("Community Validator");
     if (!extensions) {
-      toast.error("No account selected", {
-        theme: theme === "dark" ? "dark" : "light",
-      });
+      toast.error("No account selected");
       throw Error("NO_EXTENSION_FOUND");
     }
     try {
@@ -263,7 +259,6 @@ export const PolkadotProvider: React.FC<PolkadotProviderProps> = ({
       console.warn(error);
     }
   }
-
 
   async function handleWalletSelections(wallet: InjectedAccountWithMeta) {
     localStorage.setItem("favoriteWalletAddress", wallet.address);
@@ -322,9 +317,7 @@ export const PolkadotProvider: React.FC<PolkadotProviderProps> = ({
           if (result.status.isFinalized) {
             result.events.forEach(({ event }) => {
               if (api.events.system?.ExtrinsicSuccess?.is(event)) {
-                toast.success("Voting successful", {
-                  theme: theme === "dark" ? "dark" : "light",
-                });
+                toast.success("Voting successful");
                 callback?.({
                   finalized: true,
                   status: "SUCCESS",
@@ -350,9 +343,7 @@ export const PolkadotProvider: React.FC<PolkadotProviderProps> = ({
                 } else {
                   msg = `Voting failed: ${dispatchError.type}`;
                 }
-                toast(msg, {
-                  theme: theme === "dark" ? "dark" : "light",
-                });
+                toast(msg);
                 callback?.({
                   finalized: true,
                   status: "ERROR",
@@ -364,9 +355,7 @@ export const PolkadotProvider: React.FC<PolkadotProviderProps> = ({
         },
       )
       .catch((err) => {
-        toast.error(`${err}`, {
-          theme: theme === "dark" ? "dark" : "light",
-        });
+        toast.error(`${err}`);
         console.error(err);
       });
   }
@@ -398,9 +387,7 @@ export const PolkadotProvider: React.FC<PolkadotProviderProps> = ({
           if (result.status.isFinalized) {
             result.events.forEach(({ event }) => {
               if (api.events.system?.ExtrinsicSuccess?.is(event)) {
-                toast.success("Proposal created", {
-                  theme: theme === "dark" ? "dark" : "light",
-                });
+                toast.success("Proposal created");
                 callback?.({
                   finalized: true,
                   status: "SUCCESS",
@@ -430,9 +417,7 @@ export const PolkadotProvider: React.FC<PolkadotProviderProps> = ({
                 } else {
                   msg = `Proposal creation failed: ${dispatchError.type}`;
                 }
-                toast(msg, {
-                  theme: theme === "dark" ? "dark" : "light",
-                });
+                toast(msg);
                 callback?.({
                   finalized: true,
                   status: "ERROR",
@@ -476,9 +461,7 @@ export const PolkadotProvider: React.FC<PolkadotProviderProps> = ({
           if (result.status.isFinalized) {
             result.events.forEach(({ event }) => {
               if (api.events.system?.ExtrinsicSuccess?.is(event)) {
-                toast.success("DAO created", {
-                  theme: theme === "dark" ? "dark" : "light",
-                });
+                toast.success("DAO created");
                 callback?.({
                   finalized: true,
                   status: "SUCCESS",
@@ -508,9 +491,7 @@ export const PolkadotProvider: React.FC<PolkadotProviderProps> = ({
                 } else {
                   msg = `S0 Applicaiton creation failed: ${dispatchError.type}`;
                 }
-                toast(msg, {
-                  theme: theme === "dark" ? "dark" : "light",
-                });
+                toast(msg);
                 callback?.({
                   finalized: true,
                   status: "ERROR",

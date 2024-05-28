@@ -10,10 +10,10 @@ type TStatusLabelProps = {
 export const StatusLabel = (props: TStatusLabelProps) => {
   const { result, className = '' } = props;
   const votingStatus = {
-    "Pending": <Label className={` dark:text-black dark:bg-white text-center lg:text-left bg-light-dark text-white py-1.5 w-auto ${className}`}>Active</Label>,
-    "Accepted": <Label className={` bg-green-400 text-center lg:text-left py-1.5 w-auto ${className}`}>Accepted</Label>,
-    "Refused": <Label className={` bg-red-400 text-center lg:text-left py-1.5 w-auto  ${className}`}>Refused</Label>,
-    "Expired": <Label className={` bg-gray-400 text-center lg:text-left py-1.5 w-auto  ${className}`}>Expired</Label>,
+    "Pending": <Label className={`border text-white text-center lg:text-left py-1.5 w-auto ${className}`}>Active</Label>,
+    "Accepted": <Label className={`border-green-500 border text-center text-green-500 lg:text-left py-1.5 w-auto ${className}`}>Accepted</Label>,
+    "Refused": <Label className={`border-red-500 border text-center text-red-500 lg:text-left py-1.5 w-auto ${className}`}>Refused</Label>,
+    "Expired": <Label className={`border-gray-500 border text-center text-gray-500 lg:text-left py-1.5 w-auto ${className}`}>Expired</Label>,
   }
   return votingStatus[result ?? "Pending"]
 };
