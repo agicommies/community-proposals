@@ -76,6 +76,44 @@ export async function __get_all_stake(
   return stake_map;
 }
 
+// export async function delegated_voting_power(
+//   api: ApiPromise,
+// ): Promise<Map<[string, number], bigint>> {
+//   const { api_at_block } = await use_last_block(api);
+//   const delegatedItems =
+//     await api_at_block.query.subspaceModule?.delegatedVotingPower?.entries();
+
+//   if (!delegatedItems)
+//     throw new Error("Query to delegatedVotingPower returned nullish");
+
+//   const delegatedMap = new Map<[string, number], bigint>();
+
+//   for (const [keyRaw, valueRaw] of delegatedItems) {
+//     const [delegated, subnetId, delegatorsRaw] = keyRaw.args;
+//     const delegators = delegatorsRaw.toHuman() as string[];
+
+//     for (const delegator of delegators) {
+//       const stakesResult =
+//         await api_at_block.query.subspaceModule?.stakeTo?.tryGet(
+//           subnetId.toPrimitive(),
+//           delegator,
+//         );
+//       if (!stakesResult) continue;
+
+//       const stakes = stakesResult.toPrimitive() as Record<string, bigint>;
+//       const stake = stakes[delegated.toPrimitive()];
+
+//       if (stake !== undefined) {
+//         const key = [delegator, subnetId.toPrimitive()] as [string, number];
+//         const currentStake = delegatedMap.get(key) || 0n;
+//         delegatedMap.set(key, currentStake + stake);
+//       }
+//     }
+//   }
+
+//   return delegatedMap;
+// }
+
 export async function get_all_stake_out(api: ApiPromise) {
   const { api_at_block, block_number, block_hash_hex } =
     await use_last_block(api);

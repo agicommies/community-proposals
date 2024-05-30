@@ -13,6 +13,7 @@ import {
 
 import { WalletModal } from "~/app/_components/wallet-modal";
 import {
+  // delegated_voting_power,
   get_all_stake_out,
   get_dao_treasury,
   get_daos,
@@ -103,8 +104,8 @@ export const PolkadotProvider: React.FC<PolkadotProviderProps> = ({
 
   const [openModal, setOpenModal] = useState(false);
 
-  const [selectedAccount, setSelectedAccount] = useState<InjectedAccountWithMeta | null>(null);
-
+  const [selectedAccount, setSelectedAccount] =
+    useState<InjectedAccountWithMeta | null>(null);
 
   async function loadPolkadotApi() {
     const { web3Accounts, web3Enable, web3FromAddress } = await import(
@@ -217,6 +218,9 @@ export const PolkadotProvider: React.FC<PolkadotProviderProps> = ({
       void api.rpc.chain.subscribeNewHeads((header) => {
         setBlockNumber(header.number.toNumber());
       });
+      // void delegated_voting_power(api).then((delegated_voting_power_result) => {
+      //   console.log(delegated_voting_power_result);
+      // });
 
       get_all_stake_out(api)
         .then((stake_data_result) => {
