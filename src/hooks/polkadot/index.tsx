@@ -15,6 +15,7 @@ import { WalletModal } from "~/app/_components/wallet-modal";
 import {
   // delegated_voting_power,
   get_all_stake_out,
+  get_all_stake_out_v2,
   get_dao_treasury,
   get_daos,
   get_proposals,
@@ -218,13 +219,12 @@ export const PolkadotProvider: React.FC<PolkadotProviderProps> = ({
       void api.rpc.chain.subscribeNewHeads((header) => {
         setBlockNumber(header.number.toNumber());
       });
-      // void delegated_voting_power(api).then((delegated_voting_power_result) => {
-      //   console.log(delegated_voting_power_result);
-      // });
 
-      get_all_stake_out(api)
+      get_all_stake_out_v2(api)
         .then((stake_data_result) => {
-          setStakeData(stake_data_result);
+          console.log("here");
+          console.log(stake_data_result);
+          // setStakeData(stake_data_result);
         })
         .catch((e) => {
           toast.success(`Error fetching stake out map", ${e}`);
@@ -369,12 +369,12 @@ export const PolkadotProvider: React.FC<PolkadotProviderProps> = ({
       !api ||
       !selectedAccount ||
       !polkadotApi.web3FromAddress ||
-      !api.tx.subspaceModule?.addCustomProposal
+      !api.tx.governanceModule?.addCustomProposal
     )
       return;
 
     const injector = await polkadotApi.web3FromAddress(selectedAccount.address);
-    void api.tx.subspaceModule
+    void api.tx.governanceModule
       .addCustomProposal(IpfsHash)
       .signAndSend(
         selectedAccount.address,

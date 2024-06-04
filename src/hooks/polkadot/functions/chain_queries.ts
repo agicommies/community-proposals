@@ -1,8 +1,8 @@
 import "@polkadot/api-augment";
-import { type ApiPromise } from "@polkadot/api";
 
 import { type Dao, parse_proposal, type Proposal, parse_daos } from "./types";
 import { from_nano } from "~/utils";
+import { type ApiPromise } from "@polkadot/api";
 
 export type DoubleMap<K1, K2, V> = Map<K1, Map<K2, V>>;
 
@@ -76,52 +76,280 @@ export async function __get_all_stake(
   return stake_map;
 }
 
-// export async function delegated_voting_power(
-//   api: ApiPromise,
-// ): Promise<Map<[string, number], bigint>> {
-//   const { api_at_block } = await use_last_block(api);
-//   const delegatedItems =
-//     await api_at_block.query.subspaceModule?.delegatedVotingPower?.entries();
+export async function get_user_total_stake(
+  api: ApiPromise,
+  address: string,
+): Promise<{ address: string; stake: string; netuid: number }[]> {
+  const { api_at_block } = await use_last_block(api);
+  const N_query = await api_at_block.query.subspaceModule?.n?.entries();
 
-//   if (!delegatedItems)
-//     throw new Error("Query to delegatedVotingPower returned nullish");
+  if (!N_query) throw new Error("Query to n returned nullish");
 
-//   const delegatedMap = new Map<[string, number], bigint>();
+  const stakePromises = N_query.map(async ([netuid_raw, _]) => {
+    const netuid = parseInt(netuid_raw.toHuman() as string, 10);
 
-//   for (const [keyRaw, valueRaw] of delegatedItems) {
-//     const [delegated, subnetId, delegatorsRaw] = keyRaw.args;
-//     const delegators = delegatorsRaw.toHuman() as string[];
+    if (!api_at_block.query.subspaceModule?.stakeTo) return null;
 
-//     for (const delegator of delegators) {
-//       const stakesResult =
-//         await api_at_block.query.subspaceModule?.stakeTo?.tryGet(
-//           subnetId.toPrimitive(),
-//           delegator,
+    const stake = await api_at_block.query.subspaceModule.stakeTo(
+      netuid,
+      address,
+    );
+
+    const stakeHuman = stake.toHuman();
+
+    if (!stakeHuman) return null;
+
+    return {
+      address,
+      stake: stakeHuman,
+      netuid,
+    };
+  });
+
+  const stakes = await Promise.all(stakePromises);
+
+  // Filter out any null results
+  return stakes.filter((stake) => stake !== null) as {
+    address: string;
+    stake: string;
+    netuid: number;
+  }[];
+}
+
+// export async function get_all_stake_out_v2(api: ApiPromise) {
+//   const { api_at_block, block_number, block_hash_hex } =
+//     await use_last_block(api);
+//   console.debug(`Querying StakeTo at block ${block_number}`);
+
+//   const stake_to_query =
+//     await api_at_block.query.subspaceModule?.stakeTo?.entries();
+
+//   if (stake_to_query == null)
+//     throw new Error("Query to stakeTo returned nullish");
+
+//   // Total stake per netuid
+//   const per_net = new Map<number, bigint>();
+//   // Total stake per address per netuid
+//   const per_addr_per_net = new Map<number, Map<string, bigint>>();
+
+//   for (const stake_to_item of stake_to_query) {
+//     if (!Array.isArray(stake_to_item) || stake_to_item.length != 2)
+//       throw new Error(`Invalid stakeTo item '${stake_to_item.toString()}'`);
+//     const [key_raw, value_raw] = stake_to_item;
+
+//     const [netuid_raw, from_addr_raw] = key_raw.args;
+//     if (netuid_raw == null || from_addr_raw == null)
+//       throw new Error("stakeTo storage key is nullish");
+
+//     const netuid = netuid_raw.toPrimitive();
+//     const from_addr = from_addr_raw.toHuman();
+//     const stake_to_map_for_key = value_raw.toPrimitive();
+
+//     if (typeof netuid !== "number")
+//       throw new Error("Invalid stakeTo storage key (netuid)");
+//     if (typeof from_addr !== "string")
+//       throw new Error("Invalid stakeTo storage key (from_addr)");
+//     if (typeof stake_to_map_for_key !== "object")
+//       throw new Error("Invalid stakeTo storage value");
+//     if (Array.isArray(stake_to_map_for_key))
+//       throw new Error("Invalid stakeTo storage value, it's an array");
+
+//     let total_stake_for_addr = 0n;
+//     for (const module_key in stake_to_map_for_key) {
+//       const staked_ = stake_to_map_for_key[module_key];
+
+//       if (typeof staked_ !== "number" && typeof staked_ !== "string")
+//         throw new Error(
+//           "Invalid stakeTo storage value item, it's not a number or string",
 //         );
-//       if (!stakesResult) continue;
+//       const staked = BigInt(staked_);
 
-//       const stakes = stakesResult.toPrimitive() as Record<string, bigint>;
-//       const stake = stakes[delegated.toPrimitive()];
-
-//       if (stake !== undefined) {
-//         const key = [delegator, subnetId.toPrimitive()] as [string, number];
-//         const currentStake = delegatedMap.get(key) || 0n;
-//         delegatedMap.set(key, currentStake + stake);
-//       }
+//       // Add stake to total for the address
+//       total_stake_for_addr += staked;
 //     }
+
+//     // Add stake to (netuid => stake) map
+//     const old_total_for_net = per_net.get(netuid) ?? 0n;
+//     per_net.set(netuid, old_total_for_net + total_stake_for_addr);
+
+//     // Add stake to (netuid => addr => stake) map
+//     const map_net = per_addr_per_net.get(netuid) ?? new Map<string, bigint>();
+//     map_net.set(from_addr, total_stake_for_addr);
 //   }
 
-//   return delegatedMap;
+//   if (!api_at_block.query.governanceModule?.delegatingVotingPower) {
+//     throw new Error("API does not support query for delegatingVotingPower");
+//   }
+
+//   const delegatingVotingPower =
+//     await api_at_block.query.governanceModule.delegatingVotingPower();
+
+//   // list of delegating voting power addresses ['5C4i5Xi8gWVrJjp5sUAKZtNZHwBMU4dWxb9DfJ9GptXUgDNw', '5C4j8cMyyNKGruuqhaks6wH19kaqEJ3vdhpKGxi3KehhBvAm', '5C4jQvqzmuXzexk8hmXvY5bVe3dTD8DWLMSoDgt8q6u1vQr7', '5C4kWDoaGcJ74q1yFstzDiCVwY1cGNsxTKFHe5wnZkqT35EV', '5C4mBkeaeTB3n5kDcCW5NJQBxNBmcB...
+//   const delegatingVotingPowerMap = delegatingVotingPower.toHuman();
+
+//   console.log(delegatingVotingPowerMap);
 // }
 
+async function calc_stake(
+  api_at_block: ApiPromise,
+  delegating: Set<string>,
+  voter: string,
+  subnet_id: number | null,
+): Promise<bigint> {
+  if (!api_at_block.query.palletSubspace?.getAccountStake) {
+    throw new Error("API does not support query for getAccountStake");
+  }
+
+  const own_stake = delegating.has(voter)
+    ? 0n
+    : await api_at_block.query.palletSubspace.getAccountStake(
+        api_at_block,
+        voter,
+        subnet_id,
+      );
+
+  const calculate_delegated = async (subnet_id: number) => {
+    if (!api_at_block.query.palletSubspace?.getStakeFromVector) {
+      throw new Error("API does not support query for getStakeFromVector");
+    }
+    const stake_from_vector =
+      await api_at_block.query.palletSubspace.getStakeFromVector(
+        api_at_block,
+        subnet_id,
+        voter,
+      );
+
+    const human_stake_from_vector = stake_from_vector.toHuman() as [
+      string,
+      string,
+    ][];
+
+    return human_stake_from_vector
+      .filter(([staker, _]) => delegating.has(staker))
+      .reduce((sum, [_, stake]) => sum + BigInt(stake), 0n);
+  };
+
+  const delegated_stake =
+    subnet_id == null ? 0n : await calculate_delegated(subnet_id);
+
+  return own_stake + delegated_stake;
+}
+
+export async function get_all_stake_out_v2(api: ApiPromise) {
+  const { api_at_block, block_number, block_hash_hex } =
+    await use_last_block(api);
+  console.debug(`Querying StakeTo at block ${block_number}`);
+
+  const stake_to_query =
+    await api_at_block.query.subspaceModule?.stakeTo?.entries();
+
+  if (stake_to_query == null)
+    throw new Error("Query to stakeTo returned nullish");
+
+  // Total stake per netuid
+  const per_net = new Map<number, bigint>();
+  // Total stake per address per netuid
+  const per_addr_per_net = new Map<number, Map<string, bigint>>();
+
+  for (const stake_to_item of stake_to_query) {
+    if (!Array.isArray(stake_to_item) || stake_to_item.length != 2)
+      throw new Error(`Invalid stakeTo item '${stake_to_item.toString()}'`);
+    const [key_raw, value_raw] = stake_to_item;
+
+    const [netuid_raw, from_addr_raw] = key_raw.args;
+    if (netuid_raw == null || from_addr_raw == null)
+      throw new Error("stakeTo storage key is nullish");
+
+    const netuid = netuid_raw.toPrimitive();
+    const from_addr = from_addr_raw.toHuman();
+    const stake_to_map_for_key = value_raw.toPrimitive();
+
+    if (typeof netuid !== "number")
+      throw new Error("Invalid stakeTo storage key (netuid)");
+    if (typeof from_addr !== "string")
+      throw new Error("Invalid stakeTo storage key (from_addr)");
+    if (typeof stake_to_map_for_key !== "object")
+      throw new Error("Invalid stakeTo storage value");
+    if (Array.isArray(stake_to_map_for_key))
+      throw new Error("Invalid stakeTo storage value, it's an array");
+
+    let total_stake_for_addr = 0n;
+    for (const module_key in stake_to_map_for_key) {
+      const staked_ = stake_to_map_for_key[module_key];
+
+      if (typeof staked_ !== "number" && typeof staked_ !== "string")
+        throw new Error(
+          "Invalid stakeTo storage value item, it's not a number or string",
+        );
+      const staked = BigInt(staked_);
+
+      // Add stake to total for the address
+      total_stake_for_addr += staked;
+    }
+
+    // Add stake to (netuid => stake) map
+    const old_total_for_net = per_net.get(netuid) ?? 0n;
+    per_net.set(netuid, old_total_for_net + total_stake_for_addr);
+
+    // Add stake to (netuid => addr => stake) map
+    const map_net = per_addr_per_net.get(netuid) ?? new Map<string, bigint>();
+    map_net.set(from_addr, total_stake_for_addr);
+  }
+
+  if (!api_at_block.query.governanceModule?.delegatingVotingPower) {
+    throw new Error("API does not support query for delegatingVotingPower");
+  }
+
+  const delegatingVotingPower =
+    await api_at_block.query.governanceModule.delegatingVotingPower();
+
+  const delegatingVotingPowerMap: string[] =
+    delegatingVotingPower.toHuman() as string[];
+  const delegating = new Set(delegatingVotingPowerMap);
+
+  if (!api_at_block.query.palletSubspace?.getSubnetId) {
+    throw new Error("API does not support query for getSubnetId");
+  }
+
+  const subnet_id = await api_at_block.query.palletSubspace.getSubnetId();
+
+  const stakePromises = Array.from(per_addr_per_net.entries()).map(
+    async ([netuid, addr_map]) => {
+      const stakePromises = Array.from(addr_map.entries()).map(
+        async ([voter, _]) => {
+          const stake = await calc_stake(
+            api_at_block,
+            delegating,
+            voter,
+            netuid,
+          );
+          return { voter, stake, netuid };
+        },
+      );
+      return Promise.all(stakePromises);
+    },
+  );
+
+  const stakes = await Promise.all(stakePromises);
+
+  // Filter out any null results
+  return stakes.filter((stake) => stake !== null) as {
+    voter: string;
+    stake: bigint;
+    netuid: number;
+  }[];
+}
+
+// old for reference
 export async function get_all_stake_out(api: ApiPromise) {
   const { api_at_block, block_number, block_hash_hex } =
     await use_last_block(api);
   console.debug(`Querying StakeTo at block ${block_number}`);
   // TODO: cache query for specific block
-
+  console.debug(api.runtimeChain);
   const stake_to_query =
     await api_at_block.query.subspaceModule?.stakeTo?.entries();
+
   if (stake_to_query == null)
     throw new Error("Query to stakeTo returned nullish");
 
@@ -159,7 +387,6 @@ export async function get_all_stake_out(api: ApiPromise) {
     for (const module_key in stake_to_map_for_key) {
       const staked_ = stake_to_map_for_key[module_key];
 
-      // TODO: It's possible that this ill turn into a string if the number is too big and we need to convert to a bigint
       if (typeof staked_ !== "number" && typeof staked_ !== "string")
         throw new Error(
           "Invalid stakeTo storage value item, it's not a number or string",
@@ -182,8 +409,6 @@ export async function get_all_stake_out(api: ApiPromise) {
       const old_total_addr_net = map_net.get(from_addr) ?? 0n;
       map_net.set(from_addr, old_total_addr_net + staked);
     }
-
-    // await do_repl({ api, netuid, from_addr, value_raw }); break
   }
 
   return {
@@ -194,7 +419,7 @@ export async function get_all_stake_out(api: ApiPromise) {
 }
 
 export async function get_proposals(api: ApiPromise): Promise<Proposal[]> {
-  const proposals_raw = await api.query.subspaceModule?.proposals?.entries();
+  const proposals_raw = await api.query.governanceMoudule?.proposals?.entries();
   if (!proposals_raw) throw new Error("No proposals found");
 
   const proposals = [];
