@@ -13,7 +13,6 @@ import {
 
 import { WalletModal } from "~/app/_components/wallet-modal";
 import {
-  // delegated_voting_power,
   get_all_stake_out,
   get_all_stake_out_v2,
   get_dao_treasury,
