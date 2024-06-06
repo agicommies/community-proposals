@@ -12,7 +12,8 @@ import { cairo } from "~/styles/fonts";
 
 // Define Zod schemas
 const daoSchema = z.object({
-  applicationKey: z.string().min(1, "Application Key is required"),
+  // applicationKey: z.string().min(1, "Application Key is required"),
+  netUid: z.number().int().min(0, "Net UID is required"),
   discordId: z.string().min(16, "Discord ID is required"),
   title: z.string().min(1, "Title is required"),
   body: z.string().min(1, "Body is required"),
@@ -20,10 +21,9 @@ const daoSchema = z.object({
 
 export function CreateDao() {
   const router = useRouter();
-  const { isConnected, createNewDao, balance, isBalanceLoading } =
-    usePolkadot();
+  const { isConnected, createNewDao, balance } = usePolkadot();
 
-  const [applicationKey, setApplicationKey] = useState("");
+  const [netUid, setNetUid] = useState(0);
 
   const [discordId, setDiscordId] = useState("");
   const [title, setTitle] = useState("");
@@ -59,16 +59,16 @@ export function CreateDao() {
       const ipfs = (await res.json()) as { IpfsHash: string };
       setUploading(false);
 
-      if (isBalanceLoading || !balance) {
+      if (!balance) {
         toast.error("Balance is still loading");
         return;
       }
 
       const daoCost = 1000;
 
-      if (balance > daoCost) {
+      if (Number(balance) > daoCost) {
         createNewDao({
-          applicationKey,
+          netUid,
           IpfsHash: `ipfs://${ipfs.IpfsHash}`,
           callback: handleCallback,
         });
@@ -101,7 +101,7 @@ export function CreateDao() {
     const result = daoSchema.safeParse({
       title,
       body,
-      applicationKey,
+      netUid,
       discordId,
     });
 
@@ -132,7 +132,7 @@ export function CreateDao() {
       <button
         type="button"
         onClick={toggleModalMenu}
-        className="w-full px-4 py-2 text-gray-400 border border-gray-500 hover:border-green-600 hover:text-green-600 hover:bg-green-600/5 min-w-auto lg:w-auto"
+        className="min-w-auto w-full border border-gray-500 px-4 py-2 text-gray-400 hover:border-green-600 hover:bg-green-600/5 hover:text-green-600 lg:w-auto"
       >
         Create New S0 Application
       </button>
@@ -141,14 +141,14 @@ export function CreateDao() {
         className={`relative z-50 ${modalOpen ? "visible" : "hidden"} -mr-2`}
       >
         {/* Backdrop */}
-        <div className="fixed inset-0 transition-opacity bg-black bg-opacity-60 backdrop-blur-sm" />
+        <div className="fixed inset-0 bg-black bg-opacity-60 backdrop-blur-sm transition-opacity" />
 
         {/* Modal */}
-        <div className="fixed inset-0 z-10 w-screen overflow-y-auto animate-fade-in-down">
-          <div className="flex items-center justify-center min-h-full p-4 text-center">
+        <div className="fixed inset-0 z-10 w-screen animate-fade-in-down overflow-y-auto">
+          <div className="flex min-h-full items-center justify-center p-4 text-center">
             <div className="relative w-[100%] max-w-5xl transform overflow-hidden border border-gray-500 bg-[url('/bg-pattern.svg')] text-left md:w-[80%]">
               {/* Modal Header */}
-              <div className="flex items-center justify-between gap-3 border-b border-gray-500 bg-center bg-no-repeat p-6 md:flex-row text-white">
+              <div className="flex items-center justify-between gap-3 border-b border-gray-500 bg-center bg-no-repeat p-6 text-white md:flex-row">
                 <div className="flex flex-col items-center md:flex-row">
                   <h3
                     className="pl-2 text-xl font-bold leading-6 text-white"
@@ -163,7 +163,7 @@ export function CreateDao() {
                   onClick={toggleModalMenu}
                   className="p-2 transition duration-200"
                 >
-                  <XMarkIcon className="w-6 h-6 fill-white" />
+                  <XMarkIcon className="h-6 w-6 fill-white" />
                 </button>
               </div>
               {/* Modal Body */}
@@ -173,14 +173,14 @@ export function CreateDao() {
                     <button
                       type="button"
                       onClick={toggleEditMode}
-                      className={`border px-4 py-1  ${editMode ? "border-green-500 bg-green-500/5 text-green-500" : 'border-gray-500 text-gray-400'} hover:border-green-600 hover:bg-green-600/5 hover:text-green-600`}
+                      className={`border px-4 py-1  ${editMode ? "border-green-500 bg-green-500/5 text-green-500" : "border-gray-500 text-gray-400"} hover:border-green-600 hover:bg-green-600/5 hover:text-green-600`}
                     >
                       Edit
                     </button>
                     <button
                       type="button"
                       onClick={toggleEditMode}
-                      className={`border px-4 py-1 ${!editMode ? "border-green-500 bg-green-500/5 text-green-500" : 'border-gray-500 text-gray-400'} hover:border-green-600 hover:bg-green-600/5 hover:text-green-600`}
+                      className={`border px-4 py-1 ${!editMode ? "border-green-500 bg-green-500/5 text-green-500" : "border-gray-500 text-gray-400"} hover:border-green-600 hover:bg-green-600/5 hover:text-green-600`}
                     >
                       Preview
                     </button>
@@ -190,43 +190,52 @@ export function CreateDao() {
                       <div className="flex flex-col gap-3">
                         <input
                           type="text"
-                          placeholder="Application Key (ss58)"
-                          value={applicationKey}
-                          onChange={(e) => setApplicationKey(e.target.value)}
-                          className="w-full p-3 text-white bg-black"
+                          placeholder="Net UID"
+                          value={netUid}
+                          onChange={(e) => setNetUid(Number(e.target.value))}
+                          className="w-full bg-black p-3 text-white"
                         />
                         <input
                           type="text"
                           placeholder="Discord ID"
                           value={discordId}
                           onChange={(e) => setDiscordId(e.target.value)}
-                          className="w-full p-3 text-white bg-black"
+                          className="w-full bg-black p-3 text-white"
                         />
                         <input
                           type="text"
                           placeholder="Application title"
                           value={title}
                           onChange={(e) => setTitle(e.target.value)}
-                          className="w-full p-3 text-white bg-black"
+                          className="w-full bg-black p-3 text-white"
                         />
                         <textarea
                           placeholder="Application body... (Markdown supported)"
                           value={body}
                           rows={5}
                           onChange={(e) => setBody(e.target.value)}
-                          className="w-full p-3 text-white bg-black"
+                          className="w-full bg-black p-3 text-white"
                         />
                       </div>
                     ) : (
                       <div className="p-4 py-10">
-                        {body && <MarkdownPreview source={`# ${title}\n${body}`} style={{ backgroundColor: 'transparent', color: 'white' }} className={`line-clamp-4 ${cairo.className}`} />}
+                        {body && (
+                          <MarkdownPreview
+                            source={`# ${title}\n${body}`}
+                            style={{
+                              backgroundColor: "transparent",
+                              color: "white",
+                            }}
+                            className={`line-clamp-4 ${cairo.className}`}
+                          />
+                        )}
                         {/* TODO: skeleton for markdown body */}
                       </div>
                     )}
                   </div>
                   <div className="flex flex-col gap-1">
                     <button
-                      className={` relative w-full border px-4 py-2 font-semibold ${isConnected ? "border-green-500 text-green-500 active:top-1 hover:bg-green-500/5" : "border-gray-500 text-gray-500"}`}
+                      className={` relative w-full border px-4 py-2 font-semibold ${isConnected ? "border-green-500 text-green-500 hover:bg-green-500/5 active:top-1" : "border-gray-500 text-gray-500"}`}
                       disabled={!isConnected}
                       type="submit"
                     >
@@ -245,7 +254,7 @@ export function CreateDao() {
                     </p>
                   )}
 
-                  <div className="flex items-start gap-1 mt-1 text-white">
+                  <div className="mt-1 flex items-start gap-1 text-white">
                     <InformationCircleIcon className="mt-0.5 h-4 w-4 fill-green-500 text-sm" />
                     <span className="text-sm">
                       Please make sure, that your application meets all of the

@@ -9,6 +9,7 @@ import {
   type ProposalState,
   CUSTOM_DAO_METADATA_SCHEMA,
   type CustomDaoDataState,
+  type SS58Address,
 } from "./types";
 
 const DEBUG = process.env.NODE_ENV === "development";
@@ -25,11 +26,10 @@ export interface ProposalStakeInfo {
 
 export async function handle_custom_proposal_data(
   proposal: Proposal,
-  data: string,
 ): Promise<CustomProposalDataState> {
-  const cid = parse_ipfs_uri(data);
+  const cid = parse_ipfs_uri(proposal.metadata);
   if (cid == null) {
-    const message = `Invalid IPFS URI '${data}' for proposal ${proposal.id}`;
+    const message = `Invalid IPFS URI '${proposal.metadata}' for proposal ${proposal.id}`;
     console.error(message);
     return { Err: { message } };
   }
@@ -90,11 +90,11 @@ export function handle_custom_proposals(
   const promises = [];
   for (const proposal of proposals) {
     const prom = match(proposal.data)({
-      custom: async function (data: string) {
-        const metadata = await handle_custom_proposal_data(proposal, data);
+      GlobalCustom: async function () {
+        const metadata = await handle_custom_proposal_data(proposal);
         if (metadata == null) {
           console.warn(
-            `Invalid custom proposal data for proposal ${proposal.id}: ${data}`,
+            `Invalid custom proposal data for proposal ${proposal.id}: ${proposal.metadata}`,
           );
           return null;
         }
@@ -107,11 +107,11 @@ export function handle_custom_proposals(
         }
         return { id: proposal.id, custom_data: metadata };
       },
-      subnetCustom: async function ({ data }) {
-        const metadata = await handle_custom_proposal_data(proposal, data);
+      SubnetCustom: async function () {
+        const metadata = await handle_custom_proposal_data(proposal);
         if (metadata == null) {
           console.warn(
-            `Invalid custom proposal data for proposal ${proposal.id}: ${data}`,
+            `Invalid custom proposal data for proposal ${proposal.id}: ${proposal.metadata}`,
           );
           return null;
         }
@@ -124,13 +124,13 @@ export function handle_custom_proposals(
         }
         return { id: proposal.id, custom_data: metadata };
       },
-      globalParams: async function () {
+      GlobalParams: async function () {
         return null;
       },
-      subnetParams: async function () {
+      SubnetParams: async function () {
         return null;
       },
-      expired: async function () {
+      TransferDaoTreasury: async function () {
         return null;
       },
     });
@@ -141,19 +141,19 @@ export function handle_custom_proposals(
 
 export function get_proposal_netuid(proposal: Proposal): number | null {
   return match(proposal.data)({
-    custom: function (/*v: string*/): null {
+    GlobalCustom: function (/*v: string*/): null {
       return null;
     },
-    globalParams: function (/*v: unknown*/): null {
+    GlobalParams: function (/*v: unknown*/): null {
       return null;
     },
-    subnetParams: function ({ netuid }): number {
-      return netuid;
+    SubnetCustom: function ({ subnetId }): number {
+      return subnetId;
     },
-    subnetCustom: function ({ netuid }): number {
-      return netuid;
+    SubnetParams: function ({ subnetId }): number {
+      return subnetId;
     },
-    expired: function (): null {
+    TransferDaoTreasury: function (/*{ account, amount }*/): null {
       return null;
     },
   });
@@ -161,19 +161,19 @@ export function get_proposal_netuid(proposal: Proposal): number | null {
 
 export function is_proposal_custom(proposal: Proposal): boolean {
   return match(proposal.data)({
-    custom: function (/*v: string*/): boolean {
+    GlobalCustom: function (/*v: string*/): boolean {
       return true;
     },
-    globalParams: function (/*v: unknown*/): boolean {
+    GlobalParams: function (/*v: unknown*/): boolean {
       return false;
     },
-    subnetParams: function (/*{ netuid }*/): boolean {
+    SubnetParams: function (/*{ netuid }*/): boolean {
       return false;
     },
-    subnetCustom: function (/*{ netuid }*/): boolean {
+    SubnetCustom: function (/*{ netuid }*/): boolean {
       return true;
     },
-    expired: function (): boolean {
+    TransferDaoTreasury: function (/*{ account, amount }*/): boolean {
       return false;
     },
   });
@@ -199,7 +199,6 @@ export function compute_votes(
   for (const vote_addr of votes_for) {
     const stake = stake_map.get(vote_addr);
     if (stake == null) {
-      // console.warn(`Key ${vote_addr} not found in stake map`);
       continue;
     }
     stake_for += stake;
@@ -217,4 +216,89 @@ export function compute_votes(
   }
 
   return { stake_for, stake_against, stake_voted, stake_total };
+}
+
+/// If you are reading this, please not that Ed is mad.
+
+type AccountId = SS58Address;
+type SubnetId = number;
+
+interface PalletSubspace {
+  getAccountStake: (
+    voter: AccountId,
+    subnetId: SubnetId | null,
+  ) => Promise<number>;
+  getStakeFromVector: (
+    subnetId: SubnetId,
+    voter: AccountId,
+  ) => Promise<Array<[AccountId, number]>>;
+  iterKeys: () => Promise<SubnetId[]>;
+}
+
+async function calcStake(
+  delegating: Set<AccountId>,
+  voter: AccountId,
+  subnetId: SubnetId | null,
+  palletSubspace: PalletSubspace,
+): Promise<number> {
+  const ownStake = delegating.has(voter)
+    ? 0
+    : await palletSubspace.getAccountStake(voter, subnetId);
+
+  const calculateDelegated = async (subnetId: SubnetId): Promise<number> => {
+    const stakes = await palletSubspace.getStakeFromVector(subnetId, voter);
+    return stakes
+      .filter(([staker, _]) => delegating.has(staker))
+      .reduce((sum, [_, stake]) => sum + stake, 0);
+  };
+
+  let delegatedStake = 0;
+  if (subnetId !== null) {
+    delegatedStake = await calculateDelegated(subnetId);
+  } else {
+    const subnetIds = await palletSubspace.iterKeys();
+    for (const id of subnetIds) {
+      delegatedStake += await calculateDelegated(id);
+    }
+  }
+
+  return ownStake + delegatedStake;
+}
+
+export async function calculateVotes(
+  votesFor: AccountId[],
+  votesAgainst: AccountId[],
+  delegating: Set<AccountId>,
+  subnetId: SubnetId | null,
+  palletSubspace: PalletSubspace,
+) {
+  const votesForWithStake: Array<[AccountId, number]> = await Promise.all(
+    votesFor.map(async (id) => {
+      const stake = await calcStake(delegating, id, subnetId, palletSubspace);
+      return [id, stake];
+    }),
+  );
+
+  const votesAgainstWithStake: Array<[AccountId, number]> = await Promise.all(
+    votesAgainst.map(async (id) => {
+      const stake = await calcStake(delegating, id, subnetId, palletSubspace);
+      return [id, stake];
+    }),
+  );
+
+  const stakeForSum = votesForWithStake.reduce(
+    (sum, [_, stake]) => sum + stake,
+    0,
+  );
+  const stakeAgainstSum = votesAgainstWithStake.reduce(
+    (sum, [_, stake]) => sum + stake,
+    0,
+  );
+
+  return {
+    votesForWithStake,
+    votesAgainstWithStake,
+    stakeForSum,
+    stakeAgainstSum,
+  };
 }

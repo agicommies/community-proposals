@@ -4,6 +4,7 @@ import { ProposalListHeader } from "./_components/proposal-list-header";
 import { ProposalCard } from "./_components/proposal-card";
 import { usePolkadot } from "~/hooks/polkadot";
 import {
+  calculateVotes,
   compute_votes,
   get_proposal_netuid,
 } from "~/hooks/polkadot/functions/proposals";
@@ -17,9 +18,9 @@ import { CardSkeleton } from "./_components/skeletons/card-skeleton";
 export default function HomePage() {
   const { proposals, daos, stake_data, selectedAccount } = usePolkadot();
 
-  const [viewMode, setViewMode] = useState<'proposals' | 'daos'>("proposals");
+  const [viewMode, setViewMode] = useState<"proposals" | "daos">("proposals");
 
-  const handleIsLoading = (type: 'proposals' | 'daos') => {
+  const handleIsLoading = (type: "proposals" | "daos") => {
     switch (type) {
       case "daos":
         return daos == null;
@@ -32,7 +33,7 @@ export default function HomePage() {
     }
   };
 
-  const isLoading = handleIsLoading(viewMode)
+  const isLoading = handleIsLoading(viewMode);
 
   const handleUserVotes = ({
     votesAgainst,
@@ -62,7 +63,7 @@ export default function HomePage() {
         const stake_map =
           netuid != null
             ? stake_data.stake_out.per_addr_per_net.get(netuid) ??
-            new Map<string, bigint>()
+              new Map<string, bigint>()
             : stake_data.stake_out.per_addr;
         proposal_stake_info = compute_votes(
           stake_map,
@@ -70,6 +71,7 @@ export default function HomePage() {
           proposal.votesAgainst,
         );
       }
+
       return (
         <div key={proposal.id} className="animate-fade-in-down">
           <ProposalCard
@@ -80,42 +82,35 @@ export default function HomePage() {
           />
         </div>
       );
-    })
-    return proposalsContent
-  }
+    });
+    return proposalsContent;
+  };
 
   const renderDaos = () => {
-    console.log(daos)
-
     const daosContent = daos?.map((dao) => {
       return (
         <div key={dao.id}>
           <DaoCard key={dao.id} dao={dao} />
         </div>
       );
-    })
+    });
 
-    return daosContent
-  }
+    return daosContent;
+  };
 
-  const content = viewMode === 'proposals' ? renderProposals() : renderDaos()
+  const content = viewMode === "proposals" ? renderProposals() : renderDaos();
 
   return (
-    <main className="flex flex-col items-center justify-center w-full">
-      <div className="w-full h-full bg-repeat">
+    <main className="flex w-full flex-col items-center justify-center">
+      <div className="h-full w-full bg-repeat">
         <Container>
           <BalanceSection className="hidden lg:flex" />
 
-          <ProposalListHeader
-            viewMode={viewMode}
-            setViewMode={setViewMode}
-          />
+          <ProposalListHeader viewMode={viewMode} setViewMode={setViewMode} />
 
-          <div className="max-w-6xl px-4 py-8 mx-auto space-y-10">
+          <div className="mx-auto max-w-6xl space-y-10 px-4 py-8">
             {!isLoading && content}
-            {isLoading && (
-              <CardSkeleton />
-            )}
+            {isLoading && <CardSkeleton />}
           </div>
         </Container>
       </div>

@@ -48,8 +48,8 @@ export interface SendProposalData {
 }
 
 export interface SendDaoData {
+  netUid: number;
   IpfsHash: string;
-  applicationKey: string;
   callback?: (status: CallbackStatus) => void;
 }
 
@@ -72,27 +72,34 @@ assert<Extends<z.infer<typeof CUSTOM_DAO_METADATA_SCHEMA>, CustomDaoData>>();
 
 // == Proposal ==
 
-export type ProposalStatus = "Pending" | "Accepted" | "Refused" | "Expired";
+export type ProposalStatus = Enum<{
+  open: { votesFor: SS58Address[]; votesAgainst: SS58Address[] };
+  accepted: { block: number; stakeFor: number; stakeAgainst: number };
+  refused: { block: number; stakeFor: number; stakeAgainst: number };
+  expired: null;
+}>;
+
 export type DaoStatus = "Pending" | "Accepted" | "Refused";
 
 export type ProposalData = Enum<{
-  custom: string;
-  globalParams: Record<string, unknown>;
-  subnetParams: { netuid: number; params: Record<string, unknown> };
-  subnetCustom: { netuid: number; data: string };
-  expired: null;
+  GlobalCustom: undefined;
+  GlobalParams: { params: Record<string, string> };
+  SubnetCustom: { subnetId: number };
+  SubnetParams: { subnetId: number; params: Record<string, string> };
+  TransferDaoTreasury: { account: SS58Address; amount: number };
 }>;
 
 export interface Proposal {
   id: number;
-  proposer: SS58Address; // TODO: SS58 address validation
-  status: ProposalStatus;
+  proposer: SS58Address;
   expirationBlock: number;
-  votesFor: SS58Address[];
-  votesAgainst: SS58Address[];
-  finalizationBlock: number | null;
   data: ProposalData;
+  status: ProposalStatus;
+  metadata: string;
+  proposalCost: number;
+  creationBlock: number;
 }
+
 export interface Dao {
   id: number;
   userId: SS58Address;
@@ -107,6 +114,113 @@ export interface GetBalance {
   api: ApiPromise | null;
   address: string;
 }
+
+export const ADDRESS_SCHEMA = z
+  .string()
+  .transform((value) => value as SS58Address); // TODO: validate SS58 address
+
+export const PROPOSAL_DATA_SCHEMA = z.union([
+  z.object({ GlobalCustom: z.undefined() }),
+  z.object({ GlobalParams: z.object({ params: z.record(z.string()) }) }),
+  z.object({ SubnetCustom: z.object({ subnetId: z.number() }) }),
+  z.object({
+    SubnetParams: z.object({
+      subnetId: z.number(),
+      params: z.record(z.string()),
+    }),
+  }),
+  z.object({
+    TransferDaoTreasury: z.object({
+      account: ADDRESS_SCHEMA,
+      amount: z.number(),
+    }),
+  }),
+]);
+
+const PROPOSAL_STATUS_SCHEMA = z.union([
+  z
+    .object({
+      open: z.object({
+        votesFor: z.array(ADDRESS_SCHEMA),
+        votesAgainst: z.array(ADDRESS_SCHEMA),
+      }),
+    })
+    .optional(),
+  z.object({
+    accepted: z.object({
+      block: z.number(),
+      votesFor: z.number(),
+      votesAgainst: z.number(),
+    }),
+  }),
+  z.object({
+    refused: z.object({
+      block: z.number(),
+      votesFor: z.number(),
+      votesAgainst: z.number(),
+    }),
+  }),
+  z.object({
+    expired: z.null(),
+  }),
+]);
+
+export const PROPOSAL_SCHEMA = z.object({
+  id: z.number(),
+  proposer: ADDRESS_SCHEMA,
+  expirationBlock: z.number(),
+  data: PROPOSAL_DATA_SCHEMA,
+  status: PROPOSAL_STATUS_SCHEMA,
+  metadata: z.string(),
+  proposalCost: z.number(),
+  creationBlock: z.number(),
+});
+
+export function parse_proposal(value_raw: Codec): Proposal | null {
+  const value = value_raw.toPrimitive();
+  const validated = PROPOSAL_SCHEMA.safeParse(value);
+  console.log(validated);
+  if (!validated.success) {
+    console.warn("Invalid proposal:", validated.error.issues);
+    return null;
+  } else {
+    return validated.data;
+  }
+}
+
+export const DAO_SHEMA = z.object({
+  id: z.number(),
+  userId: ADDRESS_SCHEMA, // TODO: validate SS58 address
+  payingFor: ADDRESS_SCHEMA, // TODO: validate SS58 address
+  data: z.string(),
+  status: z
+    .string()
+    .refine(
+      (value) => ["Pending", "Accepted", "Refused"].includes(value),
+      "Invalid proposal status",
+    )
+    .transform((value) => value as DaoStatus),
+  applicationCost: z.number(),
+});
+
+export function parse_daos(value_raw: Codec): Dao | null {
+  const value = value_raw.toPrimitive();
+  const validated = DAO_SHEMA.safeParse(value);
+  if (!validated.success) {
+    console.warn("Invalid DAO:", validated.error.issues);
+    return null;
+  } else {
+    return validated.data;
+  }
+}
+
+assert<Extends<z.infer<typeof PROPOSAL_DATA_SCHEMA>, ProposalData>>();
+
+// eslint-disable-next-line @typescript-eslint/no-unsafe-call
+assert<Extends<z.infer<typeof PROPOSAL_SCHEMA>, Proposal>>();
+
+// eslint-disable-next-line @typescript-eslint/no-unsafe-call
+assert<Extends<z.infer<typeof DAO_SHEMA>, Dao>>();
 
 const PARAM_FIELD_DISPLAY_NAMES: Record<string, string> = {
   // # Global
@@ -149,109 +263,3 @@ export const param_name_to_display_name = (param_name: string): string => {
   return PARAM_FIELD_DISPLAY_NAMES[param_name] ?? param_name;
   // return paramName.replace(/_/g, " ").replace(/\b\w/g, (l) => l.toUpperCase()); // Do not try to do AI with regex
 };
-
-export const ADDRESS_SCHEMA = z
-  .string()
-  .transform((value) => value as SS58Address); // TODO: validate SS58 address
-
-export const PROPOSAL_DATA_SCHEMA = z.union([
-  z.object({
-    custom: z.string(),
-  }),
-  z.object({
-    globalParams: z
-      .object({})
-      .passthrough()
-      .transform((value) => value as Record<string, unknown>), // TODO: globalParams validation
-  }),
-  z.object({
-    subnetParams: z.object({
-      netuid: z.number(),
-      params: z
-        .object({})
-        .passthrough()
-        .transform((value) => value as Record<string, unknown>), // TODO: subnetParams validation
-    }),
-  }),
-  z.object({
-    subnetCustom: z.object({
-      netuid: z.number(),
-      data: z.string(),
-    }),
-  }),
-  z.object({ expired: z.null() }),
-]);
-
-assert<Extends<z.infer<typeof PROPOSAL_DATA_SCHEMA>, ProposalData>>();
-
-export const PROPOSAL_SHEMA = z
-  .object({
-    id: z.number(),
-    proposer: ADDRESS_SCHEMA, // TODO: validate SS58 address
-    expirationBlock: z.number(),
-    data: PROPOSAL_DATA_SCHEMA,
-    status: z
-      .string()
-      .refine(
-        (value) =>
-          ["Pending", "Accepted", "Refused", "Expired"].includes(value),
-        "Invalid proposal status",
-      )
-      .transform((value) => value as ProposalStatus),
-    votesFor: z.array(ADDRESS_SCHEMA),
-    votesAgainst: z.array(ADDRESS_SCHEMA),
-    proposalCost: z.number(),
-    finalizationBlock: z.number().nullable(),
-  })
-  .superRefine((value, ctx) => {
-    if (value.status === "Accepted" && value.finalizationBlock == null) {
-      ctx.addIssue({
-        code: "custom",
-        message:
-          "Proposal status is 'Accepted', but no finalization block was found",
-      });
-    }
-  });
-
-export function parse_proposal(value_raw: Codec): Proposal | null {
-  const value = value_raw.toPrimitive();
-  const validated = PROPOSAL_SHEMA.safeParse(value);
-  if (!validated.success) {
-    console.warn("Invalid proposal:", validated.error.issues);
-    return null;
-  } else {
-    return validated.data;
-  }
-}
-
-export const DAO_SHEMA = z.object({
-  id: z.number(),
-  userId: ADDRESS_SCHEMA, // TODO: validate SS58 address
-  payingFor: ADDRESS_SCHEMA, // TODO: validate SS58 address
-  data: z.string(),
-  status: z
-    .string()
-    .refine(
-      (value) => ["Pending", "Accepted", "Refused"].includes(value),
-      "Invalid proposal status",
-    )
-    .transform((value) => value as DaoStatus),
-  applicationCost: z.number(),
-});
-
-export function parse_daos(value_raw: Codec): Dao | null {
-  const value = value_raw.toPrimitive();
-  const validated = DAO_SHEMA.safeParse(value);
-  if (!validated.success) {
-    console.warn("Invalid DAO:", validated.error.issues);
-    return null;
-  } else {
-    return validated.data;
-  }
-}
-
-// eslint-disable-next-line @typescript-eslint/no-unsafe-call
-assert<Extends<z.infer<typeof PROPOSAL_SHEMA>, Proposal>>();
-
-// eslint-disable-next-line @typescript-eslint/no-unsafe-call
-assert<Extends<z.infer<typeof DAO_SHEMA>, Dao>>();

@@ -14,7 +14,6 @@ import {
 import { WalletModal } from "~/app/_components/wallet-modal";
 import {
   get_all_stake_out,
-  get_all_stake_out_v2,
   get_dao_treasury,
   get_daos,
   get_proposals,
@@ -50,15 +49,14 @@ interface PolkadotContextType {
   isConnected: boolean;
   isInitialized: boolean;
 
-  balance: number | null;
-  isBalanceLoading: boolean;
+  balance: string | null;
 
   blockNumber: number;
   accounts: InjectedAccountWithMeta[];
   selectedAccount: InjectedAccountWithMeta | null;
 
   daos: Dao[] | null;
-  daosTreasuries: number;
+  daosTreasuries: string | null;
   proposals: ProposalState[] | null;
   stake_data: StakeData | null;
 
@@ -93,11 +91,10 @@ export const PolkadotProvider: React.FC<PolkadotProviderProps> = ({
   const [accounts, setAccounts] = useState<InjectedAccountWithMeta[]>([]);
   const [blockNumber, setBlockNumber] = useState(0);
 
-  const [balance, setBalance] = useState<null | number>(null);
-  const [isBalanceLoading, setIsBalanceLoading] = useState(true);
+  const [balance, setBalance] = useState<null | string>(null);
 
   const [daos, setDaos] = useState<Dao[] | null>(null);
-  const [daosTreasuries, setDaosTreasuries] = useState(0);
+  const [daosTreasuries, setDaosTreasuries] = useState<null | string>(null);
 
   const [proposals, setProposals] = useState<ProposalState[] | null>(null);
   const [stakeData, setStakeData] = useState<StakeData | null>(null);
@@ -219,11 +216,9 @@ export const PolkadotProvider: React.FC<PolkadotProviderProps> = ({
         setBlockNumber(header.number.toNumber());
       });
 
-      get_all_stake_out_v2(api)
+      get_all_stake_out(api)
         .then((stake_data_result) => {
-          console.log("here");
-          console.log(stake_data_result);
-          // setStakeData(stake_data_result);
+          setStakeData(stake_data_result);
         })
         .catch((e) => {
           toast.success(`Error fetching stake out map", ${e}`);
@@ -274,7 +269,6 @@ export const PolkadotProvider: React.FC<PolkadotProviderProps> = ({
     const fetchBalance = async () => {
       if (!api || !selectedAccount?.address) {
         console.error("API or user address is not defined");
-        setIsBalanceLoading(false);
         return;
       }
 
@@ -283,7 +277,6 @@ export const PolkadotProvider: React.FC<PolkadotProviderProps> = ({
         address: selectedAccount.address,
       });
       setBalance(fetchedBalance);
-      setIsBalanceLoading(false);
     };
 
     void fetchBalance();
@@ -297,13 +290,13 @@ export const PolkadotProvider: React.FC<PolkadotProviderProps> = ({
       !api ||
       !selectedAccount ||
       !polkadotApi.web3FromAddress ||
-      !api.tx.subspaceModule?.voteProposal
+      !api.tx.governanceModule?.voteProposal
     )
       return;
 
     const injector = await polkadotApi.web3FromAddress(selectedAccount.address);
 
-    api.tx.subspaceModule
+    api.tx.governanceModule
       .voteProposal(proposalId, vote)
       .signAndSend(
         selectedAccount.address,
@@ -368,13 +361,13 @@ export const PolkadotProvider: React.FC<PolkadotProviderProps> = ({
       !api ||
       !selectedAccount ||
       !polkadotApi.web3FromAddress ||
-      !api.tx.governanceModule?.addCustomProposal
+      !api.tx.governanceModule?.addGlobalCustomProposal
     )
       return;
 
     const injector = await polkadotApi.web3FromAddress(selectedAccount.address);
     void api.tx.governanceModule
-      .addCustomProposal(IpfsHash)
+      .addGlobalCustomProposal(IpfsHash)
       .signAndSend(
         selectedAccount.address,
         { signer: injector.signer },
@@ -433,22 +426,18 @@ export const PolkadotProvider: React.FC<PolkadotProviderProps> = ({
       );
   }
 
-  async function createNewDao({
-    IpfsHash,
-    applicationKey,
-    callback,
-  }: SendDaoData) {
+  async function createNewDao({ IpfsHash, netUid, callback }: SendDaoData) {
     if (
       !api ||
       !selectedAccount ||
       !polkadotApi.web3FromAddress ||
-      !api.tx.subspaceModule?.addDaoApplication
+      !api.tx.governanceModule?.addSubnetCustomProposal
     )
       return;
 
     const injector = await polkadotApi.web3FromAddress(selectedAccount.address);
-    void api.tx.subspaceModule
-      .addDaoApplication(applicationKey, IpfsHash)
+    void api.tx.governanceModule
+      .addSubnetCustomProposal(netUid, IpfsHash)
       .signAndSend(
         selectedAccount.address,
         { signer: injector.signer },
@@ -515,7 +504,6 @@ export const PolkadotProvider: React.FC<PolkadotProviderProps> = ({
         isInitialized,
 
         balance,
-        isBalanceLoading,
 
         accounts,
         blockNumber,

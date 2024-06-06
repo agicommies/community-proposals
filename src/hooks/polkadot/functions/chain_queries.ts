@@ -1,7 +1,7 @@
 import "@polkadot/api-augment";
 
 import { type Dao, parse_proposal, type Proposal, parse_daos } from "./types";
-import { from_nano } from "~/utils";
+import { get_balance } from "~/utils";
 import { type ApiPromise } from "@polkadot/api";
 
 export type DoubleMap<K1, K2, V> = Map<K1, Map<K2, V>>;
@@ -116,126 +116,6 @@ export async function get_user_total_stake(
   }[];
 }
 
-export async function get_all_stake_out_v2(api: ApiPromise) {
-  const { api_at_block, block_number, block_hash_hex } =
-    await use_last_block(api);
-  console.debug(`Querying StakeTo at block ${block_number}`);
-
-  const stake_to_query =
-    await api_at_block.query.subspaceModule?.stakeTo?.entries();
-
-  if (!api_at_block.query.governanceModule?.delegatingVotingPower) {
-    throw new Error("API does not support query for delegatingVotingPower");
-  }
-
-  const delegatingVotingPower =
-    await api_at_block.query.governanceModule.delegatingVotingPower();
-
-  // ["5CfVUAE7S2KvyvcSfsnfHof4oA8Jfo8TP7ZdBWS8De7YNKLn", "5Dw5xxnpgVAbBgXtxT1DEWKv3YJJxHGELZKHNCEWzRNKbXdL"...
-  const delegatedVotingPowerData = delegatingVotingPower.toHuman() as string[];
-
-  if (stake_to_query == null || delegatingVotingPower == null) {
-    throw new Error(
-      "Query to stakeTo or delegatingVotingPower returned nullish",
-    );
-  }
-
-  let total = 0n;
-  const per_addr = new Map<string, bigint>();
-  const per_net = new Map<number, bigint>();
-  const per_addr_per_net = new Map<number, Map<string, bigint>>();
-
-  const calculate_delegated = (netuid: number, voter: string) => {
-    let delegated = 0n;
-    for (const delegatedVotingPower of delegatedVotingPowerData) {
-      const [delegatedVoter, delegatedNetuid, delegatedPower] =
-        delegatedVotingPower.split(",");
-      if (delegatedNetuid === netuid.toString() && delegatedVoter === voter) {
-        delegated += BigInt(!delegatedPower);
-      }
-    }
-  };
-
-  for (const stake_to_item of stake_to_query) {
-    if (!Array.isArray(stake_to_item) || stake_to_item.length != 2) {
-      throw new Error(`Invalid stakeTo item '${stake_to_item.toString()}'`);
-    }
-    const [key_raw, value_raw] = stake_to_item;
-
-    const [netuid_raw, from_addr_raw] = key_raw.args;
-    if (netuid_raw == null || from_addr_raw == null) {
-      throw new Error("stakeTo storage key is nullish");
-    }
-
-    const netuid = netuid_raw.toPrimitive();
-    const from_addr = from_addr_raw.toHuman();
-    const stake_to_map_for_key = value_raw.toPrimitive();
-
-    if (typeof netuid !== "number") {
-      throw new Error("Invalid stakeTo storage key (netuid)");
-    }
-    if (typeof from_addr !== "string") {
-      throw new Error("Invalid stakeTo storage key (from_addr)");
-    }
-    if (typeof stake_to_map_for_key !== "object") {
-      throw new Error("Invalid stakeTo storage value");
-    }
-    if (Array.isArray(stake_to_map_for_key)) {
-      throw new Error("Invalid stakeTo storage value, it's an array");
-    }
-    if (stake_to_map_for_key == null) {
-      throw new Error("Invalid stakeTo storage value, it's missing ownStake");
-    }
-
-    let own_stake = BigInt(stake_to_map_for_key.ownStake as string);
-    const delegated_stake = calculate_delegated(netuid, from_addr);
-
-    for (const module_key in stake_to_map_for_key) {
-      if (module_key === "ownStake") continue;
-      const staked_ = stake_to_map_for_key[module_key];
-
-      if (typeof staked_ !== "number" && typeof staked_ !== "string") {
-        throw new Error(
-          "Invalid stakeTo storage value item, it's not a number or string",
-        );
-      }
-      const staked = BigInt(staked_);
-
-      total += staked;
-
-      const old_total = per_addr.get(from_addr) ?? 0n;
-      per_addr.set(from_addr, old_total + staked);
-
-      const old_total_for_net = per_net.get(netuid) ?? 0n;
-      per_net.set(netuid, old_total_for_net + staked);
-
-      const map_net = per_addr_per_net.get(netuid) ?? new Map<string, bigint>();
-      const old_total_addr_net = map_net.get(from_addr) ?? 0n;
-      map_net.set(from_addr, old_total_addr_net + staked);
-    }
-
-    own_stake += delegated_stake;
-
-    total += own_stake;
-
-    const old_total = per_addr.get(from_addr) ?? 0n;
-    per_addr.set(from_addr, old_total + own_stake);
-
-    const old_total_for_net = per_net.get(netuid) ?? 0n;
-    per_net.set(netuid, old_total_for_net + own_stake);
-
-    const map_net = per_addr_per_net.get(netuid) ?? new Map<string, bigint>();
-    const old_total_addr_net = map_net.get(from_addr) ?? 0n;
-    map_net.set(from_addr, old_total_addr_net + own_stake);
-  }
-
-  return {
-    block_number,
-    block_hash_hex,
-    stake_out: { total, per_addr, per_net, per_addr_per_net },
-  };
-}
-
 export async function get_all_stake_out(api: ApiPromise) {
   const { api_at_block, block_number, block_hash_hex } =
     await use_last_block(api);
@@ -314,28 +194,26 @@ export async function get_all_stake_out(api: ApiPromise) {
 }
 
 export async function get_proposals(api: ApiPromise): Promise<Proposal[]> {
-  const proposals_raw = await api.query.governanceMoudule?.proposals?.entries();
+  const proposals_raw = await api.query.governanceModule?.proposals?.entries();
   if (!proposals_raw) throw new Error("No proposals found");
 
   const proposals = [];
+
   for (const proposal_item of proposals_raw) {
-    if (!Array.isArray(proposal_item) || proposal_item.length != 2) {
-      console.error("Invalid proposal item:", proposal_item);
-      continue;
-    }
     const [, value_raw] = proposal_item;
+
     const proposal = parse_proposal(value_raw);
     if (proposal == null) throw new Error("Invalid proposal");
     proposals.push(proposal);
   }
-
   proposals.reverse();
+
   return proposals;
 }
 
 export async function get_daos(api: ApiPromise): Promise<Dao[]> {
   const daos_raw =
-    await api.query.subspaceModule?.curatorApplications?.entries();
+    await api.query.governanceModule?.curatorApplications?.entries();
 
   if (!daos_raw) throw new Error("No DAOs found");
 
@@ -356,10 +234,10 @@ export async function get_daos(api: ApiPromise): Promise<Dao[]> {
 }
 
 export async function get_dao_treasury(api: ApiPromise) {
-  if (!api.query?.subspaceModule?.globalDaoTreasury) {
-    throw new Error("API does not support query for globalDaoTreasury");
+  if (!api.query.governanceModule?.daoTreasuryAddress) {
+    throw new Error("API does not support query for daoTreasuryAddress");
   }
-  const result = await api.query.subspaceModule.globalDaoTreasury();
-  const parsed_result = JSON.stringify(result);
-  return Math.round(from_nano(BigInt(parsed_result)));
+  const result = await api.query.governanceModule.daoTreasuryAddress();
+
+  return get_balance({ api, address: result.toHuman() as string });
 }

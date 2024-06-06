@@ -9,7 +9,6 @@ export const BalanceSection = ({ className }: { className?: string }) => {
     isInitialized,
     daosTreasuries,
     balance,
-    isBalanceLoading,
     selectedAccount,
     stake_data,
   } = usePolkadot();
@@ -29,12 +28,12 @@ export const BalanceSection = ({ className }: { className?: string }) => {
       <div className="mx-auto flex w-full flex-col divide-gray-500 lg:max-w-6xl lg:flex-row lg:divide-x lg:px-6">
         <div className="flex flex-row items-center justify-between border-b border-gray-500 p-6 pr-6 lg:w-1/3 lg:border-b-0 lg:pr-10">
           <div>
-            {!isInitialized ? (
+            {!daosTreasuries && !isInitialized ? (
               <Skeleton className="w-1/5 py-3 md:mt-1 lg:w-2/5" />
             ) : (
               <p>
-                {new Intl.NumberFormat().format(daosTreasuries)}{" "}
-                <span className="text-lg text-white">COMAI</span>
+                {daosTreasuries}
+                <span className="text-lg text-white"> COMAI</span>
               </p>
             )}
             <span className="text-base font-thin text-gray-400">
@@ -46,12 +45,12 @@ export const BalanceSection = ({ className }: { className?: string }) => {
 
         <div className="flex flex-row items-center justify-between border-b border-gray-500 p-6 pr-6 lg:w-1/3 lg:border-b-0 lg:pr-10">
           <div>
-            {isBalanceLoading && !isInitialized ? (
+            {!balance && !isInitialized ? (
               <Skeleton className="w-1/5 py-3 md:mt-1 lg:w-2/5" />
             ) : (
               <p>
-                {Math.round(Number(balance)).toFixed(2)}{" "}
-                <span className="text-lg text-white">COMAI</span>
+                {balance}
+                <span className="text-lg text-white"> COMAI</span>
               </p>
             )}
             <span className="text-base font-thin text-gray-400">
@@ -73,7 +72,7 @@ export const BalanceSection = ({ className }: { className?: string }) => {
             ) : (
               <p>
                 {format_token(user_stake_weight)}{" "}
-                <span className="text-lg text-white">COMAI</span>
+                <span className="text-lg text-white"> COMAI</span>
               </p>
             )}
             <span className="text-base font-thin text-gray-400">
