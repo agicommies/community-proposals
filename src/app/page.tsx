@@ -4,6 +4,7 @@ import { ProposalListHeader } from "./_components/proposal-list-header";
 import { ProposalCard } from "./_components/proposal-card";
 import { usePolkadot } from "~/hooks/polkadot";
 import {
+  PalletSubspace,
   calculateVotes,
   compute_votes,
   get_proposal_netuid,
@@ -16,7 +17,7 @@ import { BalanceSection } from "./_components/balance-section";
 import { CardSkeleton } from "./_components/skeletons/card-skeleton";
 
 export default function HomePage() {
-  const { proposals, daos, stake_data, selectedAccount } = usePolkadot();
+  const { proposals, daos, votingPower, selectedAccount, api } = usePolkadot();
 
   const [viewMode, setViewMode] = useState<"proposals" | "daos">("proposals");
 
@@ -71,7 +72,6 @@ export default function HomePage() {
           proposal.votesAgainst,
         );
       }
-
       return (
         <div key={proposal.id} className="animate-fade-in-down">
           <ProposalCard

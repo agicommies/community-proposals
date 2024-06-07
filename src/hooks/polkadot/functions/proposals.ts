@@ -223,7 +223,7 @@ export function compute_votes(
 type AccountId = SS58Address;
 type SubnetId = number;
 
-interface PalletSubspace {
+export interface PalletSubspace {
   getAccountStake: (
     voter: AccountId,
     subnetId: SubnetId | null,

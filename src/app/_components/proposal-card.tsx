@@ -11,7 +11,7 @@ import { bigint_division, format_token, small_address } from "~/utils";
 import { Card } from "./card";
 import { Label } from "./label";
 import { Skeleton } from "./skeleton";
-import { StatusLabel, type TProposalStatus } from "./status-label";
+import { StatusLabel } from "./status-label";
 import { handle_proposal } from "./util.ts/proposal_fields";
 import { VoteLabel, type TVote } from "./vote-label";
 import { cairo } from "~/styles/fonts";
@@ -102,7 +102,7 @@ export const ProposalCard = (props: ProposalCardProps) => {
               {netuid !== "GLOBAL" ? `Subnet ${netuid}` : "Global"}
             </span>
           </div>
-          <StatusLabel result={proposal.status as TProposalStatus} />
+          <StatusLabel result={proposal.status} />
         </div>
       </Card.Header>
 

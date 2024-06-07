@@ -82,7 +82,7 @@ export type ProposalStatus = Enum<{
 export type DaoStatus = "Pending" | "Accepted" | "Refused";
 
 export type ProposalData = Enum<{
-  GlobalCustom: undefined;
+  GlobalCustom: null;
   GlobalParams: { params: Record<string, string> };
   SubnetCustom: { subnetId: number };
   SubnetParams: { subnetId: number; params: Record<string, string> };
@@ -119,8 +119,16 @@ export const ADDRESS_SCHEMA = z
   .string()
   .transform((value) => value as SS58Address); // TODO: validate SS58 address
 
+// TODO Kelvin - Investigate this
+export const EMPTY_VARIANT = z
+  .any()
+  .refine((value) => value == null, {
+    message: "Variant body must be empty",
+  })
+  .transform(() => null);
+
 export const PROPOSAL_DATA_SCHEMA = z.union([
-  z.object({ GlobalCustom: z.undefined() }),
+  z.object({ GlobalCustom: EMPTY_VARIANT }),
   z.object({ GlobalParams: z.object({ params: z.record(z.string()) }) }),
   z.object({ SubnetCustom: z.object({ subnetId: z.number() }) }),
   z.object({
@@ -138,30 +146,28 @@ export const PROPOSAL_DATA_SCHEMA = z.union([
 ]);
 
 const PROPOSAL_STATUS_SCHEMA = z.union([
-  z
-    .object({
-      open: z.object({
-        votesFor: z.array(ADDRESS_SCHEMA),
-        votesAgainst: z.array(ADDRESS_SCHEMA),
-      }),
-    })
-    .optional(),
+  z.object({
+    open: z.object({
+      votesFor: z.array(ADDRESS_SCHEMA),
+      votesAgainst: z.array(ADDRESS_SCHEMA),
+    }),
+  }),
   z.object({
     accepted: z.object({
       block: z.number(),
-      votesFor: z.number(),
-      votesAgainst: z.number(),
+      stakeFor: z.number(),
+      stakeAgainst: z.number(),
     }),
   }),
   z.object({
     refused: z.object({
       block: z.number(),
-      votesFor: z.number(),
-      votesAgainst: z.number(),
+      stakeFor: z.number(),
+      stakeAgainst: z.number(),
     }),
   }),
   z.object({
-    expired: z.null(),
+    expired: EMPTY_VARIANT,
   }),
 ]);
 
@@ -179,7 +185,6 @@ export const PROPOSAL_SCHEMA = z.object({
 export function parse_proposal(value_raw: Codec): Proposal | null {
   const value = value_raw.toPrimitive();
   const validated = PROPOSAL_SCHEMA.safeParse(value);
-  console.log(validated);
   if (!validated.success) {
     console.warn("Invalid proposal:", validated.error.issues);
     return null;
@@ -215,11 +220,7 @@ export function parse_daos(value_raw: Codec): Dao | null {
 }
 
 assert<Extends<z.infer<typeof PROPOSAL_DATA_SCHEMA>, ProposalData>>();
-
-// eslint-disable-next-line @typescript-eslint/no-unsafe-call
 assert<Extends<z.infer<typeof PROPOSAL_SCHEMA>, Proposal>>();
-
-// eslint-disable-next-line @typescript-eslint/no-unsafe-call
 assert<Extends<z.infer<typeof DAO_SHEMA>, Dao>>();
 
 const PARAM_FIELD_DISPLAY_NAMES: Record<string, string> = {

@@ -16,6 +16,7 @@ import {
   get_all_stake_out,
   get_dao_treasury,
   get_daos,
+  get_delegating_voting_power,
   get_proposals,
   type StakeData,
 } from "~/hooks/polkadot/functions/chain_queries";
@@ -27,6 +28,7 @@ import type {
   CallbackStatus,
   Dao,
   ProposalState,
+  SS58Address,
   SendDaoData,
   SendProposalData,
 } from "~/hooks/polkadot/functions/types";
@@ -54,6 +56,8 @@ interface PolkadotContextType {
   blockNumber: number;
   accounts: InjectedAccountWithMeta[];
   selectedAccount: InjectedAccountWithMeta | null;
+
+  votingPower: Set<SS58Address>;
 
   daos: Dao[] | null;
   daosTreasuries: string | null;
@@ -95,6 +99,8 @@ export const PolkadotProvider: React.FC<PolkadotProviderProps> = ({
 
   const [daos, setDaos] = useState<Dao[] | null>(null);
   const [daosTreasuries, setDaosTreasuries] = useState<null | string>(null);
+
+  const [votingPower, setVotingPower] = useState<Set<SS58Address>>(new Set());
 
   const [proposals, setProposals] = useState<ProposalState[] | null>(null);
   const [stakeData, setStakeData] = useState<StakeData | null>(null);
@@ -281,6 +287,18 @@ export const PolkadotProvider: React.FC<PolkadotProviderProps> = ({
 
     void fetchBalance();
   }, [api, selectedAccount?.address]);
+
+  useEffect(() => {
+    if (api) {
+      void get_delegating_voting_power(api)
+        .then((votingPower) => {
+          setVotingPower(new Set(votingPower));
+        })
+        .catch((e) => {
+          console.error(`Error fetching voting power: ${e}`);
+        });
+    }
+  }, [api]);
 
   async function send_vote(
     { vote, proposal_id: proposalId }: Vote,
@@ -511,6 +529,8 @@ export const PolkadotProvider: React.FC<PolkadotProviderProps> = ({
 
         daos,
         daosTreasuries,
+
+        votingPower,
 
         proposals,
         stake_data: stakeData,

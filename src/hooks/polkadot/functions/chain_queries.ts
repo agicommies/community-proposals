@@ -1,6 +1,12 @@
 import "@polkadot/api-augment";
 
-import { type Dao, parse_proposal, type Proposal, parse_daos } from "./types";
+import {
+  type Dao,
+  parse_proposal,
+  type Proposal,
+  parse_daos,
+  type SS58Address,
+} from "./types";
 import { get_balance } from "~/utils";
 import { type ApiPromise } from "@polkadot/api";
 
@@ -240,4 +246,21 @@ export async function get_dao_treasury(api: ApiPromise) {
   const result = await api.query.governanceModule.daoTreasuryAddress();
 
   return get_balance({ api, address: result.toHuman() as string });
+}
+
+export async function get_delegating_voting_power(
+  api: ApiPromise,
+): Promise<Set<SS58Address>> {
+  const { api_at_block } = await use_last_block(api);
+
+  if (!api_at_block.query.governanceModule?.delegatingVotingPower) {
+    throw new Error("API does not support query for delegatingVotingPower");
+  }
+
+  const result =
+    await api_at_block.query.governanceModule.delegatingVotingPower();
+
+  const resultArray: string[] = result.toHuman() as string[];
+
+  return new Set(resultArray) as Set<SS58Address>;
 }
