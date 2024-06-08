@@ -181,6 +181,8 @@ export const ExpandedView = (props: ProposalContent) => {
 
   const content = handleContent();
 
+  console.log("uwu", contentType);
+
   if (isLoading)
     return (
       <div className="flex w-full items-center justify-center lg:h-[calc(100svh-203px)]">
@@ -250,7 +252,7 @@ export const ExpandedView = (props: ProposalContent) => {
           </div>
         </div>
 
-        {content && contentType == "proposal" && (
+        {contentType == "proposal" && (
           <>
             <VoteCard proposalId={content.id} voted="UNVOTED" />
             <div className="w-full border-gray-500 p-6 lg:border-b ">
