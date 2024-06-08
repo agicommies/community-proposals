@@ -30,28 +30,31 @@ export const ADDRESS_SCHEMA = z
   .string()
   .refine(is_ss58_address, "Invalid SS58 address");
 
-// -> Proposal State
+// -> Proposal  & Dao State
 
-export type CustomDataError = { message: string };
-
-export interface ProposalState extends Proposal {
-  custom_data?: Result<CustomProposalData, CustomDataError>;
-}
-
-export interface CustomProposalData {
-  title?: string;
-  body?: string; // Markdown description
-}
-
-// -> Custom Dao
-
-export type CustomDaoDataState = Result<CustomDaoData, CustomDataError>;
-
-export interface CustomDaoData {
-  discord_id?: string;
+/**
+ * What we get from metadata IPFS files
+ */
+export interface CustomMetadata {
   title?: string;
   body?: string;
 }
+
+/** Just and error while fetching metadata */
+export type CustomDataError = { message: string };
+
+/**
+ * The state of the metadata for a proposal or dao.
+ */
+export type CustomMetadataState = Result<CustomMetadata, CustomDataError>;
+
+export type WithMetadataState<T> = T & { custom_data?: CustomMetadataState };
+
+export type ProposalState = WithMetadataState<Proposal>;
+
+export type DaoState = WithMetadataState<Dao>;
+
+// -> idk
 
 export type CallbackStatus = {
   finalized: boolean;
@@ -63,6 +66,8 @@ export interface SendProposalData {
   IpfsHash: string;
   callback?: (status: CallbackStatus) => void;
 }
+
+export type CustomProposalDataState = Result<CustomMetadata, CustomDataError>;
 
 export interface SendDaoData {
   applicationKey: string;
@@ -76,16 +81,15 @@ export const CUSTOM_PROPOSAL_METADATA_SCHEMA = z.object({
 });
 
 export const CUSTOM_DAO_METADATA_SCHEMA = z.object({
-  discord_id: z.string(),
   title: z.string().optional(),
   body: z.string().optional(),
 });
 
 assert<
-  Extends<z.infer<typeof CUSTOM_PROPOSAL_METADATA_SCHEMA>, CustomProposalData>
+  Extends<z.infer<typeof CUSTOM_PROPOSAL_METADATA_SCHEMA>, CustomMetadata>
 >();
 
-assert<Extends<z.infer<typeof CUSTOM_DAO_METADATA_SCHEMA>, CustomDaoData>>();
+assert<Extends<z.infer<typeof CUSTOM_DAO_METADATA_SCHEMA>, CustomMetadata>>();
 
 // == Proposal ==
 
@@ -136,7 +140,7 @@ export interface Dao {
   userId: SS58Address;
   payingFor: SS58Address;
   data: string;
-  body?: CustomDaoData;
+  body?: CustomMetadata;
   status: DaoStatus;
   applicationCost: bigint;
 }

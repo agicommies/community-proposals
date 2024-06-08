@@ -14,8 +14,12 @@ import { ProposalCard } from "./_components/proposal-card";
 
 export default function HomePage() {
   const { api, selectedAccount } = usePolkadot();
-  const { proposals_with_meta, is_proposals_loading, daos, is_dao_loading } =
-    useSubspaceQueries(api);
+  const {
+    proposals_with_meta,
+    is_proposals_loading,
+    daos_with_meta,
+    is_dao_loading,
+  } = useSubspaceQueries(api);
 
   const [viewMode, setViewMode] = useState<"proposals" | "daos">("proposals");
 
@@ -67,7 +71,11 @@ export default function HomePage() {
 
       return (
         <div key={proposal.id} className="animate-fade-in-down">
-          <ProposalCard key={proposal.id} proposal={proposal} voted={voted} />
+          <ProposalCard
+            key={proposal.id}
+            proposal_state={proposal}
+            voted={voted}
+          />
         </div>
       );
     });
@@ -75,10 +83,10 @@ export default function HomePage() {
   };
 
   const renderDaos = () => {
-    const daosContent = daos?.map((dao) => {
+    const daosContent = daos_with_meta?.map((dao) => {
       return (
         <div key={dao.id}>
-          <DaoCard key={dao.id} dao={dao} />
+          <DaoCard key={dao.id} dao_state={dao} />
         </div>
       );
     });

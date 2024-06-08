@@ -65,7 +65,7 @@ export const BalanceSection = ({ className }: { className?: string }) => {
               </p>
             )}
             <span className="text-base font-thin text-gray-400">
-              Your on balance
+              Your total free balance
             </span>
           </div>
           <Image

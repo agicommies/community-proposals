@@ -2,7 +2,10 @@
 
 import { usePolkadot } from "~/hooks/polkadot";
 import { MarkdownView } from "../../_components/markdown-view";
-import { handle_proposal } from "../../_components/util.ts/proposal_fields";
+import {
+  handle_custom_dao,
+  handle_proposal,
+} from "../../_components/util.ts/proposal_fields";
 import { notFound } from "next/navigation";
 import { ArrowPathIcon } from "@heroicons/react/20/solid";
 import type { DaoStatus, ProposalStatus, SS58Address } from "~/subspace/types";
@@ -90,12 +93,20 @@ const handleUserVotes = ({
 
 export const ExpandedView = (props: ProposalContent) => {
   const { paramId, contentType } = props;
+  console.log("expanded view:", props);
 
   const { api, selectedAccount } = usePolkadot();
-  const { daos, proposals } = useSubspaceQueries(api);
+  const {
+    daos_with_meta,
+    proposals_with_meta,
+    is_dao_loading,
+    is_proposals_loading,
+  } = useSubspaceQueries(api);
 
   const handleProposalsContent = () => {
-    const proposal = proposals?.find((proposal) => proposal.id === paramId);
+    const proposal = proposals_with_meta?.find(
+      (proposal) => proposal.id === paramId,
+    );
     if (!proposal) return null;
 
     const { body, netuid, title, invalid } = handle_proposal(proposal);
@@ -120,12 +131,15 @@ export const ExpandedView = (props: ProposalContent) => {
   };
 
   const handleDaosContent = () => {
-    const dao = daos?.find((dao) => dao.id === paramId);
+    const dao = daos_with_meta?.find((dao) => dao.id === paramId);
     if (!dao) return null;
 
+    dao.custom_data;
+    const { body, title } = handle_custom_dao(dao.id, dao.custom_data ?? null);
+
     const daoContent = {
-      body: dao?.body?.body,
-      title: dao?.body?.title,
+      body,
+      title,
       status: dao?.status,
       author: dao?.userId,
       id: dao?.id,
@@ -151,10 +165,10 @@ export const ExpandedView = (props: ProposalContent) => {
   const handleIsLoading = (type: string | undefined) => {
     switch (type) {
       case "dao":
-        return daos == null;
+        return !is_dao_loading;
 
       case "proposal":
-        return proposals == null;
+        return !is_proposals_loading;
 
       default:
         return false;

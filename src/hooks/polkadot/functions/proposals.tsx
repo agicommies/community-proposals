@@ -1,18 +1,16 @@
-import { if_let, match } from "rustie";
+import { match } from "rustie";
 
 import { build_ipfs_gateway_url, parse_ipfs_uri } from "../../../utils/ipfs";
 import {
   type Dao,
   type Proposal,
   CUSTOM_DAO_METADATA_SCHEMA,
-  type CustomDaoDataState,
+  type CustomMetadataState,
   type ProposalStatus,
 } from "~/subspace/types";
 import { bigint_division, format_token } from "~/utils";
 
-const DEBUG = process.env.NODE_ENV === "development";
-
-const sum = (arr: Iterable<bigint>) =>
+export const sum = (arr: Iterable<bigint>) =>
   Array.from(arr).reduce((a, b) => a + b, 0n);
 
 export interface ProposalStakeInfo {
@@ -25,7 +23,7 @@ export interface ProposalStakeInfo {
 export async function handle_custom_dao_data(
   dao: Dao,
   data: string,
-): Promise<CustomDaoDataState> {
+): Promise<CustomMetadataState> {
   const cid = parse_ipfs_uri(data);
   if (cid == null) {
     const message = `Invalid IPFS URI '${data}' for dao ${dao.id}`;
@@ -132,10 +130,15 @@ export function handle_proposal_status_data(proposalStatus: ProposalStatus) {
   });
 }
 
-export function handle_proposal_quorum_percent(proposalStatus: ProposalStatus) {
+// Gets the circulating supply from the netwo
+
+export function handle_proposal_quorum_percent(
+  proposalStatus: ProposalStatus,
+  totalStake: bigint,
+) {
   function quorum_percent(stakeFor: bigint, stakeAgainst: bigint) {
-    const totalStake = stakeFor + stakeAgainst;
-    const percentage = bigint_division(stakeFor, totalStake) * 100;
+    const percentage =
+      bigint_division(stakeFor + stakeAgainst, totalStake) * 100;
     const percent_display = `${Number.isNaN(percentage) ? "—" : percentage.toFixed(1)}%`;
     return <span className="text-yellow-600">{` (${percent_display})`}</span>;
   }
@@ -152,14 +155,17 @@ export function handle_proposal_quorum_percent(proposalStatus: ProposalStatus) {
   });
 }
 
-export function handle_proposal_stake_for(proposalStatus: ProposalStatus) {
+export function handle_proposal_stake_voted(proposalStatus: ProposalStatus) {
   // TODO: extend rustie `if_let` to provid other variants on else arm
   // const txt = if_let(proposalStatus)("expired")(() => "—")(({ stakeFor }) => format_token(Number(stakeFor)));
 
   return match(proposalStatus)({
-    open: ({ stakeFor }) => format_token(Number(stakeFor)),
-    accepted: ({ stakeFor }) => format_token(Number(stakeFor)),
-    refused: ({ stakeFor }) => format_token(Number(stakeFor)),
+    open: ({ stakeFor, stakeAgainst }) =>
+      format_token(Number(stakeFor + stakeAgainst)),
+    accepted: ({ stakeFor, stakeAgainst }) =>
+      format_token(Number(stakeFor + stakeAgainst)),
+    refused: ({ stakeFor, stakeAgainst }) =>
+      format_token(Number(stakeFor + stakeAgainst)),
     expired: () => "—",
   });
 }

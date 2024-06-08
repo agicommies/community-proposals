@@ -12,7 +12,7 @@ import {
   type Dao,
   type Entry,
   CUSTOM_PROPOSAL_METADATA_SCHEMA,
-  type CustomProposalData,
+  type CustomMetadata,
   type CustomDataError,
 } from "./types";
 import { toast } from "react-toastify";
@@ -130,25 +130,26 @@ interface BaseProposal {
   metadata: string;
 }
 
-export function useCustomProposalMetadata(
-  kind: "proposal",
+interface BaseDao {
+  id: number;
+  data: string;
+}
+
+export function useCustomMetadata<T extends BaseProposal | BaseDao>(
+  kind: "proposal" | "dao",
   at_block: AtBlock | nullish,
-  proposals: BaseProposal[],
+  items: T[],
 ) {
   type Output = Awaited<ReturnType<typeof fetch_custom_metadata>>;
   const block_number = at_block?.block_number;
   return useQueries({
-    queries: proposals.map((proposal) => {
-      const id = proposal.id;
-      const metadata_field = proposal.metadata;
+    queries: items.map((item) => {
+      const id = item.id;
+      const metadata_field = "metadata" in item ? item.metadata : item.data;
       return {
         queryKey: [{ block_number }, "metadata", { kind, id }],
         queryFn: async (): Promise<[number, Output]> => {
-          const data = await fetch_custom_metadata(
-            "proposal",
-            id,
-            metadata_field,
-          );
+          const data = await fetch_custom_metadata(kind, id, metadata_field);
           return [id, data];
         },
         staleTime: Infinity,
@@ -163,10 +164,7 @@ export function useCustomProposalMetadata(
           const [id] = data;
           outputs.set(id, result);
         } else {
-          console.info(
-            `Missing result for proposal metadata query for ${kind} ${data}`,
-          );
-          // alert("Kek");
+          console.info(`Missing result for ${kind} metadata query}`);
         }
       });
       return outputs;
@@ -202,7 +200,7 @@ export function useSubnetUid(at_block: AtBlock | nullish) {
   const api = at_block?.api;
   const block_number = at_block?.block_number;
   return useQuery({
-    queryKey: [{ block_number }, "dao_treasury"],
+    queryKey: [{ block_number }, "subnet_uid"],
     enabled: api != null,
     queryFn: () => api!.query.subspaceModule?.n?.entries(),
     staleTime: PROPOSALS_STALE_TIME,
@@ -213,7 +211,7 @@ export function useStakeTo({ at_block }: { at_block: AtBlock | nullish }) {
   const api = at_block?.api;
   const block_number = at_block?.block_number;
   return useQuery({
-    queryKey: [{ block_number }, "dao_treasury"],
+    queryKey: [{ block_number }, "stake_to"],
     enabled: api != null,
     queryFn: () => api!.query.subspaceModule?.stakeTo?.entries(),
     staleTime: PROPOSALS_STALE_TIME,
@@ -262,13 +260,21 @@ export function useSubspaceQueries(api: ApiPromise | null) {
     toast.error(err.message);
   }
 
-  // Custom Metadata
-  const custom_metadata_query_map = useCustomProposalMetadata(
+  // Custom Metadata for Proposals
+  const custom_proposal_metadata_query_map = useCustomMetadata<Proposal>(
     "proposal",
     at_block,
     proposals,
   );
-  for (const entry of custom_metadata_query_map.entries()) {
+
+  // Custom Metadata for Daos
+  const custom_dao_metadata_query_map = useCustomMetadata<Dao>(
+    "dao",
+    at_block,
+    daos,
+  );
+
+  for (const entry of custom_proposal_metadata_query_map.entries()) {
     const [id, query] = entry;
     const { data } = query;
     if (data == null) {
@@ -276,19 +282,42 @@ export function useSubspaceQueries(api: ApiPromise | null) {
     }
   }
 
+  for (const entry of custom_dao_metadata_query_map.entries()) {
+    const [id, query] = entry;
+    const { data } = query;
+    if (data == null) {
+      console.info(`Missing custom dao metadata for dao ${id}`);
+    }
+  }
+
   interface ProposalWithMeta extends Proposal {
-    custom_data?: Result<CustomProposalData, CustomDataError>;
+    custom_data?: Result<CustomMetadata, CustomDataError>;
   }
 
   const proposals_with_meta = proposals.map((proposal): ProposalWithMeta => {
     const id = proposal.id;
-    const metadata_query = custom_metadata_query_map.get(id);
+    const metadata_query = custom_proposal_metadata_query_map.get(id);
     const data = metadata_query?.data;
     if (data == null) {
       return proposal;
     }
     const [, custom_data] = data;
     return { ...proposal, custom_data };
+  });
+
+  interface DaoWithMeta extends Dao {
+    custom_data?: Result<CustomMetadata, CustomDataError>;
+  }
+
+  const daos_with_meta = daos.map((dao): DaoWithMeta => {
+    const id = dao.id;
+    const metadata_query = custom_dao_metadata_query_map.get(id);
+    const data = metadata_query?.data;
+    if (data == null) {
+      return dao;
+    }
+    const [, custom_data] = data;
+    return { ...dao, custom_data };
   });
 
   return {
@@ -316,18 +345,21 @@ export function useSubspaceQueries(api: ApiPromise | null) {
     dao_treasury_query,
     dao_treasury,
 
-    custom_metadata_query_map,
+    custom_proposal_metadata_query_map,
     proposals_with_meta,
+
+    custom_dao_metadata_query_map,
+    daos_with_meta,
   };
 }
 
 // -> Data processing functions
 
 export async function fetch_custom_metadata(
-  kind: "proposal",
+  kind: "proposal" | "dao",
   entry_id: number,
   metadata_field: string,
-): Promise<Result<CustomProposalData, CustomDataError>> {
+): Promise<Result<CustomMetadata, CustomDataError>> {
   const cid = parse_ipfs_uri(metadata_field);
   if (cid == null) {
     const message = `Invalid IPFS URI '${metadata_field}' for ${kind} ${entry_id}`;

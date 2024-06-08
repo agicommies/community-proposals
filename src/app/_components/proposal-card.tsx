@@ -6,7 +6,7 @@ import Image from "next/image";
 import {
   calc_proposal_favorable_percent,
   handle_proposal_quorum_percent,
-  handle_proposal_stake_for,
+  handle_proposal_stake_voted,
 } from "~/hooks/polkadot/functions/proposals";
 import { type ProposalState } from "~/subspace/types";
 import { small_address } from "~/utils";
@@ -20,9 +20,10 @@ import { VoteLabel, type TVote } from "./vote-label";
 import { cairo } from "~/styles/fonts";
 import Link from "next/link";
 import { ArrowRightIcon } from "@heroicons/react/20/solid";
+import { usePolkadot } from "~/hooks/polkadot";
 
 export type ProposalCardProps = {
-  proposal: ProposalState;
+  proposal_state: ProposalState;
   voted: TVote;
 };
 
@@ -59,13 +60,13 @@ function handle_percentages(favorable_percent: number | null) {
 }
 
 export const ProposalCard = (props: ProposalCardProps) => {
-  const { proposal, voted } = props;
-
-  const { title, body, netuid, invalid } = handle_proposal(proposal);
+  const { proposal_state, voted } = props;
+  const { stake_data } = usePolkadot();
+  const { title, body, netuid, invalid } = handle_proposal(proposal_state);
 
   return (
     <Card.Root
-      key={proposal.id}
+      key={proposal_state.id}
       className={`${invalid ? "opacity-50" : ""} ${invalid ? "hidden" : ""}`}
     >
       <Card.Header className="z-10 flex-col">
@@ -83,7 +84,7 @@ export const ProposalCard = (props: ProposalCardProps) => {
               {netuid !== "GLOBAL" ? `Subnet ${netuid}` : "Global"}
             </span>
           </div>
-          <StatusLabel result={proposal.status} />
+          <StatusLabel result={proposal_state.status} />
         </div>
       </Card.Header>
 
@@ -102,7 +103,7 @@ export const ProposalCard = (props: ProposalCardProps) => {
           <div className="flex w-full flex-col-reverse lg:flex-row lg:items-center">
             <div className="mr-3 w-full py-2 lg:w-auto lg:min-w-fit lg:py-0">
               <Link
-                href={`proposal/${proposal.id}`}
+                href={`proposal/${proposal_state.id}`}
                 className="min-w-auto flex w-full items-center border border-green-500 px-2 py-2 text-sm text-green-500 hover:border-green-600 hover:bg-green-600/5 hover:text-green-600 lg:w-auto lg:px-4"
               >
                 View full proposal
@@ -112,39 +113,40 @@ export const ProposalCard = (props: ProposalCardProps) => {
             <span className="line-clamp-1 block w-full truncate text-base text-green-500">
               Posted by{" "}
               <span className="text-white">
-                {small_address(proposal.proposer)}
+                {small_address(proposal_state.proposer)}
               </span>
             </span>
           </div>
 
           <div className="mx-auto flex w-full flex-col-reverse items-center gap-2 lg:flex-row lg:justify-end">
-            {!proposal.status && (
+            {!proposal_state.status && (
               <div className="flex w-full items-center space-x-2 lg:justify-end">
                 <span className="flex w-full animate-pulse bg-gray-700 py-3.5 lg:w-3/12" />
               </div>
             )}
-            {proposal.status && (
+            {proposal_state.status && (
               <div className="flex w-full lg:w-auto">
                 {handle_percentages(
-                  calc_proposal_favorable_percent(proposal.status),
+                  calc_proposal_favorable_percent(proposal_state.status),
                 )}
               </div>
             )}
 
-            {!proposal.status && (
-              <div className="w-full text-center lg:w-4/5">
-                <span className="flex w-full animate-pulse bg-gray-700 py-3.5" />
-              </div>
-            )}
-
-            {proposal.status && (
+            {stake_data?.stake_out.total && proposal_state.status ? (
               <Label className="flex w-full justify-center border border-gray-500 px-2 py-2.5 text-center font-medium text-gray-300 lg:w-auto lg:px-4">
-                Total staked:
+                Stake Voted:
                 <span className="font-bold text-green-500">
-                  {handle_proposal_stake_for(proposal.status)}
+                  {handle_proposal_stake_voted(proposal_state.status)}
                 </span>
-                {handle_proposal_quorum_percent(proposal.status)}
+                {handle_proposal_quorum_percent(
+                  proposal_state.status,
+                  stake_data?.stake_out.total,
+                )}
               </Label>
+            ) : (
+              <div className="h-fit w-full text-center lg:w-4/5">
+                <span className="flex h-fit w-full animate-pulse bg-gray-700 py-3.5" />
+              </div>
             )}
           </div>
         </div>
