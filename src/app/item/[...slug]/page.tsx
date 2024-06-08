@@ -14,16 +14,12 @@ import Link from "next/link";
 import { ExpandedView } from "./_components/expanded-view";
 
 export default function CardView({ params }: { params: { slug: string[] } }) {
-  console.log("==========> SLUG:", params.slug);
-
   if (!params.slug[0] || !params.slug[1]) {
     return <div>Not Found</div>;
   }
 
   const contentType = params.slug[0];
   const id = Number(params.slug[1]);
-
-  console.log(`contentType: ${contentType}, id: ${id}`);
 
   return (
     <div className="mx-auto flex max-w-6xl flex-col px-4 ">

@@ -96,7 +96,6 @@ const handleUserVotes = ({
 
 export const ExpandedView = (props: ProposalContent) => {
   const { paramId, contentType } = props;
-  console.log(`ExpandedView: ${contentType} ${paramId}`);
 
   const { api, selectedAccount } = usePolkadot();
   const {
