@@ -1,4 +1,4 @@
-import { type ProposalStatus } from "~/hooks/polkadot/functions/types";
+import { type ProposalStatus } from "~/subspace/types";
 import { Label } from "./label";
 import { match } from "rustie";
 
@@ -11,16 +11,16 @@ export const StatusLabel = (props: TStatusLabelProps) => {
   const { result, className = "" } = props;
 
   return match(result)({
-    open: function () {
+    open() {
       return (
         <Label
           className={`w-auto border py-1.5 text-center text-white lg:text-left ${className}`}
         >
-          Actuve
+          Active
         </Label>
       );
     },
-    accepted: function () {
+    accepted() {
       return (
         <Label
           className={`w-auto border border-green-500 py-1.5 text-center text-green-500 lg:text-left ${className}`}
@@ -29,7 +29,7 @@ export const StatusLabel = (props: TStatusLabelProps) => {
         </Label>
       );
     },
-    expired: function () {
+    expired() {
       return (
         <Label
           className={`w-auto border border-gray-500 py-1.5 text-center text-gray-500 lg:text-left ${className}`}
@@ -38,7 +38,7 @@ export const StatusLabel = (props: TStatusLabelProps) => {
         </Label>
       );
     },
-    refused: function () {
+    refused() {
       return (
         <Label
           className={`w-auto border border-red-500 py-1.5 text-center text-red-500 lg:text-left ${className}`}

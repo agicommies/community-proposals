@@ -5,7 +5,7 @@ import { usePolkadot } from "~/hooks/polkadot";
 import MarkdownPreview from "@uiw/react-markdown-preview";
 import { InformationCircleIcon, XMarkIcon } from "@heroicons/react/20/solid";
 import { toast } from "react-toastify";
-import { type CallbackStatus } from "~/hooks/polkadot/functions/types";
+import { type CallbackStatus } from "~/subspace/types";
 import { Loading } from "./loading";
 import { z } from "zod";
 import { cairo } from "~/styles/fonts";

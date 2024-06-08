@@ -14,26 +14,18 @@ import {
 import { WalletModal } from "~/app/_components/wallet-modal";
 import {
   get_all_stake_out,
-  get_dao_treasury,
-  get_daos,
   get_delegating_voting_power,
-  get_proposals,
   type StakeData,
 } from "~/hooks/polkadot/functions/chain_queries";
-import {
-  handle_custom_proposals,
-  handle_custom_daos,
-} from "~/hooks/polkadot/functions/proposals";
+
+import { get_balance } from "~/utils";
+import { toast } from "react-toastify";
 import type {
+  SendProposalData,
   CallbackStatus,
-  Dao,
-  ProposalState,
   SS58Address,
   SendDaoData,
-  SendProposalData,
-} from "~/hooks/polkadot/functions/types";
-import { get_balance, is_not_null } from "~/utils";
-import { toast } from "react-toastify";
+} from "~/subspace/types";
 
 interface Vote {
   proposal_id: number;
@@ -53,15 +45,11 @@ interface PolkadotContextType {
 
   balance: string | null;
 
-  blockNumber: number;
   accounts: InjectedAccountWithMeta[];
   selectedAccount: InjectedAccountWithMeta | null;
 
   votingPower: Set<SS58Address>;
 
-  daos: Dao[] | null;
-  daosTreasuries: string | null;
-  proposals: ProposalState[] | null;
   stake_data: StakeData | null;
 
   handleConnect: () => void;
@@ -93,16 +81,11 @@ export const PolkadotProvider: React.FC<PolkadotProviderProps> = ({
   const [isInitialized, setIsInitialized] = useState<boolean>(false);
   const [isConnected, setIsConnected] = useState(false);
   const [accounts, setAccounts] = useState<InjectedAccountWithMeta[]>([]);
-  const [blockNumber, setBlockNumber] = useState(0);
 
   const [balance, setBalance] = useState<null | string>(null);
 
-  const [daos, setDaos] = useState<Dao[] | null>(null);
-  const [daosTreasuries, setDaosTreasuries] = useState<null | string>(null);
-
   const [votingPower, setVotingPower] = useState<Set<SS58Address>>(new Set());
 
-  const [proposals, setProposals] = useState<ProposalState[] | null>(null);
   const [stakeData, setStakeData] = useState<StakeData | null>(null);
 
   const [openModal, setOpenModal] = useState(false);
@@ -152,76 +135,8 @@ export const PolkadotProvider: React.FC<PolkadotProviderProps> = ({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isInitialized]);
 
-  const handleGetProposals = (api: ApiPromise) => {
-    get_proposals(api)
-      .then((proposals_result) => {
-        setProposals(proposals_result);
-
-        handle_custom_proposals(proposals_result)
-          .then((results) => {
-            // Handle data from custom proposals
-            const new_proposal_list: ProposalState[] = [...proposals_result];
-            // For each custom data result, find the proposal with the same id
-            // and update its `custom_data` field
-            results.filter(is_not_null).forEach((result) => {
-              const { id, custom_data } = result;
-              const proposal = new_proposal_list.find((p) => p.id === id);
-              if (proposal == null) {
-                console.error(`Proposal ${id} not found`);
-                return;
-              }
-              proposal.custom_data = custom_data;
-            });
-            // Update the state with the new proposal list
-            setProposals(new_proposal_list);
-          })
-          .catch((e) => {
-            console.error("Error fetching custom proposals data:", e);
-          });
-      })
-      .catch((e) => {
-        console.error("Error fetching proposals:", e);
-      });
-  };
-
-  const handleGetDaos = async (api: ApiPromise) => {
-    try {
-      const daos_result = await get_daos(api);
-      setDaos(daos_result);
-
-      const customDaoResults = await handle_custom_daos(daos_result);
-
-      customDaoResults.forEach((result, index) => {
-        const dao = daos_result[index];
-
-        if (dao == null) {
-          console.error(`Dao ${index} not found`);
-          return;
-        }
-        if ("Ok" in result && result.Ok) {
-          dao.body = result.Ok;
-        }
-      });
-    } catch (error) {
-      console.error("Error fetching custom proposals data:", error);
-    }
-  };
-
-  const handleGetDaosTreasuries = async (api: ApiPromise) => {
-    try {
-      const dao_treasury = await get_dao_treasury(api);
-      setDaosTreasuries(dao_treasury);
-    } catch (error) {
-      console.error("Error fetching DAO treasuries:", error);
-    }
-  };
-
   useEffect(() => {
     if (api) {
-      void api.rpc.chain.subscribeNewHeads((header) => {
-        setBlockNumber(header.number.toNumber());
-      });
-
       get_all_stake_out(api)
         .then((stake_data_result) => {
           setStakeData(stake_data_result);
@@ -229,10 +144,6 @@ export const PolkadotProvider: React.FC<PolkadotProviderProps> = ({
         .catch((e) => {
           toast.success(`Error fetching stake out map", ${e}`);
         });
-
-      handleGetProposals(api);
-      void handleGetDaos(api);
-      void handleGetDaosTreasuries(api);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [api]);
@@ -337,7 +248,6 @@ export const PolkadotProvider: React.FC<PolkadotProviderProps> = ({
                   status: "SUCCESS",
                   message: "Vote sucessful",
                 });
-                handleGetProposals(api);
               } else if (api.events.system?.ExtrinsicFailed?.is(event)) {
                 const [dispatchError] = event.data as unknown as [
                   DispatchError,
@@ -407,7 +317,6 @@ export const PolkadotProvider: React.FC<PolkadotProviderProps> = ({
                   status: "SUCCESS",
                   message: "Proposal created",
                 });
-                handleGetProposals(api);
 
                 setTimeout(() => {
                   window.location.reload();
@@ -444,18 +353,22 @@ export const PolkadotProvider: React.FC<PolkadotProviderProps> = ({
       );
   }
 
-  async function createNewDao({ IpfsHash, netUid, callback }: SendDaoData) {
+  async function createNewDao({
+    IpfsHash,
+    applicationKey,
+    callback,
+  }: SendDaoData) {
     if (
       !api ||
       !selectedAccount ||
       !polkadotApi.web3FromAddress ||
-      !api.tx.governanceModule?.addSubnetCustomProposal
+      !api.tx.governanceModule?.addDaoApplication
     )
       return;
 
     const injector = await polkadotApi.web3FromAddress(selectedAccount.address);
     void api.tx.governanceModule
-      .addSubnetCustomProposal(netUid, IpfsHash)
+      .addDaoApplication(applicationKey, IpfsHash)
       .signAndSend(
         selectedAccount.address,
         { signer: injector.signer },
@@ -477,7 +390,6 @@ export const PolkadotProvider: React.FC<PolkadotProviderProps> = ({
                   status: "SUCCESS",
                   message: "S0 Applicaiton created",
                 });
-                handleGetProposals(api);
 
                 setTimeout(() => {
                   window.location.reload();
@@ -524,15 +436,10 @@ export const PolkadotProvider: React.FC<PolkadotProviderProps> = ({
         balance,
 
         accounts,
-        blockNumber,
         selectedAccount,
-
-        daos,
-        daosTreasuries,
 
         votingPower,
 
-        proposals,
         stake_data: stakeData,
 
         send_vote,

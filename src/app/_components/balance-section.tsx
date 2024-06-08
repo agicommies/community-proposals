@@ -1,17 +1,28 @@
 "use client";
-import { format_token } from "~/utils";
+import { format_token, get_balance } from "~/utils";
 import { Skeleton } from "./skeleton";
 import { usePolkadot } from "~/hooks/polkadot";
 import Image from "next/image";
+import { useSubspaceQueries } from "~/subspace/queries";
+import { useEffect, useState } from "react";
 
 export const BalanceSection = ({ className }: { className?: string }) => {
-  const {
-    isInitialized,
-    daosTreasuries,
-    balance,
-    selectedAccount,
-    stake_data,
-  } = usePolkadot();
+  const { api, isInitialized, balance, selectedAccount, stake_data } =
+    usePolkadot();
+
+  const { dao_treasury } = useSubspaceQueries(api);
+
+  const [daosTreasuries, setDaosTreasuries] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (isInitialized && api && dao_treasury) {
+      void get_balance({ api, address: dao_treasury.toHuman() as string }).then(
+        (balance) => {
+          setDaosTreasuries(balance);
+        },
+      );
+    }
+  }, [isInitialized, api, dao_treasury]);
 
   let user_stake_weight: bigint | null = null;
   if (stake_data != null && selectedAccount != null) {

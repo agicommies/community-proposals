@@ -1,12 +1,12 @@
-import { type Dao } from "~/hooks/polkadot/functions/types";
 import { small_address } from "~/utils";
 
 import { Card } from "./card";
-import { StatusLabel } from "./status-label";
 import { Skeleton } from "./skeleton";
 import Link from "next/link";
 import { ArrowRightIcon } from "@heroicons/react/20/solid";
 import { MarkdownView } from "./markdown-view";
+import { DaoStatusLabel } from "./dao-status-label";
+import { type Dao } from "~/subspace/types";
 
 export type DaoCardProps = {
   dao: Dao;
@@ -27,7 +27,7 @@ export const DaoCard = (props: DaoCardProps) => {
             )}
             {!dao.body?.title && <Skeleton className="w-8/12 py-3 pb-4" />}
             <div className="mb-2 flex w-full flex-row justify-center gap-2 lg:mb-0 lg:ml-auto lg:w-auto lg:flex-row lg:justify-end lg:pl-4">
-              <StatusLabel result={dao.status} />
+              <DaoStatusLabel result={dao.status} />
             </div>
           </Card.Header>
           <Card.Body className="px-0 py-0">

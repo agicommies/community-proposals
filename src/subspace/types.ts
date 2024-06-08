@@ -5,28 +5,24 @@ import { assert, type Extends } from "tsafe";
 import { z } from "zod";
 import type { Result } from "~/utils";
 
+export type Entry<T> = [unknown, T];
+
 export type SS58Address = Tagged<string, "SS58Address">;
 
-// == Proposal State on Interface ==
+// -> Proposal State
 
-export interface ProposalState extends Proposal {
-  custom_data?: CustomProposalDataState;
-}
-
-export type CustomProposalDataState = Result<
-  CustomProposalData,
-  CustomDataError
->;
 export type CustomDataError = { message: string };
 
-// == Custom Proposal Extra Data ==
+export interface ProposalState extends Proposal {
+  custom_data?: Result<CustomProposalData, CustomDataError>;
+}
 
 export interface CustomProposalData {
   title?: string;
   body?: string; // Markdown description
 }
 
-// == Custom Dao  ==
+// -> Custom Dao
 
 export type CustomDaoDataState = Result<CustomDaoData, CustomDataError>;
 
@@ -48,7 +44,7 @@ export interface SendProposalData {
 }
 
 export interface SendDaoData {
-  netUid: number;
+  applicationKey: string;
   IpfsHash: string;
   callback?: (status: CallbackStatus) => void;
 }
@@ -72,8 +68,22 @@ assert<Extends<z.infer<typeof CUSTOM_DAO_METADATA_SCHEMA>, CustomDaoData>>();
 
 // == Proposal ==
 
+export interface ProposalStatusDataProps {
+  status: "open" | "accepted" | "refused" | "expired";
+  votesFor?: SS58Address[];
+  votesAgainst?: SS58Address[];
+  stakeFor?: number;
+  stakeAgainst?: number;
+  block?: number;
+}
+
 export type ProposalStatus = Enum<{
-  open: { votesFor: SS58Address[]; votesAgainst: SS58Address[] };
+  open: {
+    votesFor: SS58Address[];
+    votesAgainst: SS58Address[];
+    stakeFor: number;
+    stakeAgainst: number;
+  };
   accepted: { block: number; stakeFor: number; stakeAgainst: number };
   refused: { block: number; stakeFor: number; stakeAgainst: number };
   expired: null;
@@ -82,11 +92,11 @@ export type ProposalStatus = Enum<{
 export type DaoStatus = "Pending" | "Accepted" | "Refused";
 
 export type ProposalData = Enum<{
-  GlobalCustom: null;
-  GlobalParams: { params: Record<string, string> };
-  SubnetCustom: { subnetId: number };
-  SubnetParams: { subnetId: number; params: Record<string, string> };
-  TransferDaoTreasury: { account: SS58Address; amount: number };
+  globalCustom: null;
+  globalParams: Record<string, unknown>;
+  subnetCustom: { subnetId: number };
+  subnetParams: { subnetId: number; params: Record<string, unknown> };
+  transferDaoTreasury: { account: SS58Address; amount: number };
 }>;
 
 export interface Proposal {
@@ -115,30 +125,25 @@ export interface GetBalance {
   address: string;
 }
 
+// TODO: put each Zod schema togheter with interface type
+// TODO: helper function to define zod Rust-like enum
+
 export const ADDRESS_SCHEMA = z
   .string()
   .transform((value) => value as SS58Address); // TODO: validate SS58 address
 
-// TODO Kelvin - Investigate this
-export const EMPTY_VARIANT = z
-  .any()
-  .refine((value) => value == null, {
-    message: "Variant body must be empty",
-  })
-  .transform(() => null);
-
 export const PROPOSAL_DATA_SCHEMA = z.union([
-  z.object({ GlobalCustom: EMPTY_VARIANT }),
-  z.object({ GlobalParams: z.object({ params: z.record(z.string()) }) }),
-  z.object({ SubnetCustom: z.object({ subnetId: z.number() }) }),
+  z.object({ globalCustom: z.null() }),
+  z.object({ globalParams: z.record(z.unknown()) }),
+  z.object({ subnetCustom: z.object({ subnetId: z.number() }) }),
   z.object({
-    SubnetParams: z.object({
+    subnetParams: z.object({
       subnetId: z.number(),
-      params: z.record(z.string()),
+      params: z.record(z.unknown()),
     }),
   }),
   z.object({
-    TransferDaoTreasury: z.object({
+    transferDaoTreasury: z.object({
       account: ADDRESS_SCHEMA,
       amount: z.number(),
     }),
@@ -150,6 +155,8 @@ const PROPOSAL_STATUS_SCHEMA = z.union([
     open: z.object({
       votesFor: z.array(ADDRESS_SCHEMA),
       votesAgainst: z.array(ADDRESS_SCHEMA),
+      stakeFor: z.number(),
+      stakeAgainst: z.number(),
     }),
   }),
   z.object({
@@ -167,7 +174,7 @@ const PROPOSAL_STATUS_SCHEMA = z.union([
     }),
   }),
   z.object({
-    expired: EMPTY_VARIANT,
+    expired: z.null(),
   }),
 ]);
 
@@ -185,12 +192,12 @@ export const PROPOSAL_SCHEMA = z.object({
 export function parse_proposal(value_raw: Codec): Proposal | null {
   const value = value_raw.toPrimitive();
   const validated = PROPOSAL_SCHEMA.safeParse(value);
+  console.log(validated);
   if (!validated.success) {
     console.warn("Invalid proposal:", validated.error.issues);
     return null;
-  } else {
-    return validated.data;
   }
+  return validated.data;
 }
 
 export const DAO_SHEMA = z.object({
@@ -223,6 +230,7 @@ assert<Extends<z.infer<typeof PROPOSAL_DATA_SCHEMA>, ProposalData>>();
 assert<Extends<z.infer<typeof PROPOSAL_SCHEMA>, Proposal>>();
 assert<Extends<z.infer<typeof DAO_SHEMA>, Dao>>();
 
+// TODO: move to display.ts
 const PARAM_FIELD_DISPLAY_NAMES: Record<string, string> = {
   // # Global
   maxNameLength: "Max Name Length",
@@ -262,5 +270,4 @@ const PARAM_FIELD_DISPLAY_NAMES: Record<string, string> = {
 
 export const param_name_to_display_name = (param_name: string): string => {
   return PARAM_FIELD_DISPLAY_NAMES[param_name] ?? param_name;
-  // return paramName.replace(/_/g, " ").replace(/\b\w/g, (l) => l.toUpperCase()); // Do not try to do AI with regex
 };

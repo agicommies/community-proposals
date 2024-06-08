@@ -4,9 +4,16 @@ import MarkdownPreview from "@uiw/react-markdown-preview";
 import Image from "next/image";
 import { assert } from "tsafe";
 
-import { type ProposalStakeInfo } from "~/hooks/polkadot/functions/proposals";
-import { type ProposalState } from "~/hooks/polkadot/functions/types";
-import { bigint_division, format_token, small_address } from "~/utils";
+import {
+  handle_proposal_status_data,
+  type ProposalStakeInfo,
+} from "~/hooks/polkadot/functions/proposals";
+import {
+  ProposalStatus,
+  ProposalStatusDataProps,
+  type ProposalState,
+} from "~/subspace/types";
+import { format_token, small_address } from "~/utils";
 
 import { Card } from "./card";
 import { Label } from "./label";
@@ -20,7 +27,6 @@ import { ArrowRightIcon } from "@heroicons/react/20/solid";
 
 export type ProposalCardProps = {
   proposal: ProposalState;
-  stake_info: ProposalStakeInfo | null;
   voted: TVote;
 };
 
@@ -62,13 +68,18 @@ function render_favorable_percent(stake_info: ProposalStakeInfo) {
     stake_for + stake_against == stake_voted,
     "stake_for + stake_against != stake_voted",
   );
-  const favorable_percent = bigint_division(stake_for, stake_voted) * 100;
+  const favorable_percent = 1;
   return handle_favorable_percent(favorable_percent);
 }
 
-function render_quorum_percent(stake_info: ProposalStakeInfo) {
-  const { stake_voted, stake_total } = stake_info;
-  const quorum_percent = bigint_division(stake_voted, stake_total) * 100;
+function render_quorum_percent(ProposalStatusData: ProposalStatusDataProps) {
+  if (ProposalStatusData.status === "expired") return null;
+  if (!ProposalStatusData.stakeFor || !ProposalStatusData.stakeAgainst)
+    return null;
+  const quorum_percent =
+    (100 * ProposalStatusData.stakeFor) / ProposalStatusData.stakeAgainst +
+    ProposalStatusData.stakeFor;
+
   return (
     <span className="text-yellow-600">
       {" ("}
@@ -78,9 +89,11 @@ function render_quorum_percent(stake_info: ProposalStakeInfo) {
 }
 
 export const ProposalCard = (props: ProposalCardProps) => {
-  const { proposal, stake_info, voted } = props;
+  const { proposal, voted } = props;
 
   const { title, body, netuid, invalid } = handle_proposal(proposal);
+
+  const ProposalStatusData = handle_proposal_status_data(proposal.status);
 
   return (
     <Card.Root
@@ -138,7 +151,7 @@ export const ProposalCard = (props: ProposalCardProps) => {
           </div>
 
           <div className="mx-auto flex w-full flex-col-reverse items-center gap-2 lg:flex-row lg:justify-end">
-            {!stake_info && (
+            {/* {!stake_info && (
               <div className="flex w-full items-center space-x-2 lg:justify-end">
                 <span className="flex w-full animate-pulse bg-gray-700 py-3.5 lg:w-3/12" />
               </div>
@@ -153,18 +166,24 @@ export const ProposalCard = (props: ProposalCardProps) => {
               <div className="w-full text-center lg:w-4/5">
                 <span className="flex w-full animate-pulse bg-gray-700 py-3.5" />
               </div>
-            )}
+            )} */}
 
-            {stake_info && (
+            {ProposalStatusData && (
               <Label className="flex w-full justify-center border border-gray-500 px-2 py-2.5 text-center font-medium text-gray-300 lg:w-auto lg:px-4">
                 Total staked:
                 <span className="font-bold text-green-500">
-                  {format_token(stake_info.stake_voted)}
+                  {format_token(
+                    Number(
+                      ProposalStatusData.stakeFor as ProposalStatusDataProps,
+                    ),
+                  )}
                 </span>
                 <span className="text-xs font-extralight text-gray-300">
                   COMAI
                 </span>
-                {render_quorum_percent(stake_info)}
+                {render_quorum_percent(
+                  ProposalStatusData as ProposalStatusDataProps,
+                )}
               </Label>
             )}
           </div>

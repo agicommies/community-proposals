@@ -1,7 +1,6 @@
-import { ApiPromise } from "@polkadot/api";
+import { type ApiPromise } from "@polkadot/api";
 import "@polkadot/api-augment";
 import { type Enum } from "rustie";
-import { type GetBalance } from "~/hooks/polkadot/functions/types";
 
 export type Result<T, E> = Enum<{ Ok: T; Err: E }>;
 

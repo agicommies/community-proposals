@@ -1,13 +1,6 @@
 import "@polkadot/api-augment";
 
-import {
-  type Dao,
-  parse_proposal,
-  type Proposal,
-  parse_daos,
-  type SS58Address,
-} from "./types";
-import { get_balance } from "~/utils";
+import { type SS58Address } from "~/subspace/types";
 import { type ApiPromise } from "@polkadot/api";
 
 export type DoubleMap<K1, K2, V> = Map<K1, Map<K2, V>>;
@@ -199,68 +192,15 @@ export async function get_all_stake_out(api: ApiPromise) {
   };
 }
 
-export async function get_proposals(api: ApiPromise): Promise<Proposal[]> {
-  const proposals_raw = await api.query.governanceModule?.proposals?.entries();
-  if (!proposals_raw) throw new Error("No proposals found");
-
-  const proposals = [];
-
-  for (const proposal_item of proposals_raw) {
-    const [, value_raw] = proposal_item;
-
-    const proposal = parse_proposal(value_raw);
-    if (proposal == null) throw new Error("Invalid proposal");
-    proposals.push(proposal);
-  }
-  proposals.reverse();
-
-  return proposals;
-}
-
-export async function get_daos(api: ApiPromise): Promise<Dao[]> {
-  const daos_raw =
-    await api.query.governanceModule?.curatorApplications?.entries();
-
-  if (!daos_raw) throw new Error("No DAOs found");
-
-  const daos = [];
-  for (const dao_item of daos_raw) {
-    if (!Array.isArray(dao_item) || dao_item.length != 2) {
-      console.error("Invalid DAO item:", dao_item);
-      continue;
-    }
-    const [, value_raw] = dao_item;
-    const dao = parse_daos(value_raw);
-    if (dao == null) throw new Error("Invalid DAO");
-    daos.push(dao);
-  }
-
-  daos.reverse();
-  return daos;
-}
-
-export async function get_dao_treasury(api: ApiPromise) {
-  if (!api.query.governanceModule?.daoTreasuryAddress) {
-    throw new Error("API does not support query for daoTreasuryAddress");
-  }
-  const result = await api.query.governanceModule.daoTreasuryAddress();
-
-  return get_balance({ api, address: result.toHuman() as string });
-}
-
 export async function get_delegating_voting_power(
   api: ApiPromise,
 ): Promise<Set<SS58Address>> {
   const { api_at_block } = await use_last_block(api);
-
-  if (!api_at_block.query.governanceModule?.delegatingVotingPower) {
+  if (!api_at_block.query.governanceModule?.notDelegatingVotingPower) {
     throw new Error("API does not support query for delegatingVotingPower");
   }
-
   const result =
-    await api_at_block.query.governanceModule.delegatingVotingPower();
-
+    await api_at_block.query.governanceModule.notDelegatingVotingPower();
   const resultArray: string[] = result.toHuman() as string[];
-
   return new Set(resultArray) as Set<SS58Address>;
 }

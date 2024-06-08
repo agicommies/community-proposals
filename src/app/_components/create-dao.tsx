@@ -5,15 +5,15 @@ import { usePolkadot } from "~/hooks/polkadot";
 import MarkdownPreview from "@uiw/react-markdown-preview";
 import { InformationCircleIcon, XMarkIcon } from "@heroicons/react/20/solid";
 import { toast } from "react-toastify";
-import { type CallbackStatus } from "~/hooks/polkadot/functions/types";
+
 import { Loading } from "./loading";
 import { z } from "zod";
 import { cairo } from "~/styles/fonts";
+import { type CallbackStatus } from "~/subspace/types";
 
 // Define Zod schemas
 const daoSchema = z.object({
-  // applicationKey: z.string().min(1, "Application Key is required"),
-  netUid: z.number().int().min(0, "Net UID is required"),
+  applicationKey: z.string().min(1, "Application Key is required"),
   discordId: z.string().min(16, "Discord ID is required"),
   title: z.string().min(1, "Title is required"),
   body: z.string().min(1, "Body is required"),
@@ -23,7 +23,7 @@ export function CreateDao() {
   const router = useRouter();
   const { isConnected, createNewDao, balance } = usePolkadot();
 
-  const [netUid, setNetUid] = useState(0);
+  const [applicationKey, setApplicationKey] = useState("");
 
   const [discordId, setDiscordId] = useState("");
   const [title, setTitle] = useState("");
@@ -64,17 +64,15 @@ export function CreateDao() {
         return;
       }
 
-      const daoCost = 1000;
-
-      if (Number(balance) > daoCost) {
+      if (Number(balance) > 1000) {
         createNewDao({
-          netUid,
+          applicationKey,
           IpfsHash: `ipfs://${ipfs.IpfsHash}`,
           callback: handleCallback,
         });
       } else {
         toast.error(
-          `Insufficient balance to create S0 Applicaiton. Required: ${daoCost} but got ${balance}`,
+          `Insufficient balance to create S0 Applicaiton. Required: ${1000} but got ${balance}`,
         );
         setTransactionStatus({
           status: "ERROR",
@@ -101,7 +99,7 @@ export function CreateDao() {
     const result = daoSchema.safeParse({
       title,
       body,
-      netUid,
+      applicationKey,
       discordId,
     });
 
@@ -190,9 +188,9 @@ export function CreateDao() {
                       <div className="flex flex-col gap-3">
                         <input
                           type="text"
-                          placeholder="Net UID"
-                          value={netUid}
-                          onChange={(e) => setNetUid(Number(e.target.value))}
+                          placeholder="Application Key (ss58)"
+                          value={applicationKey}
+                          onChange={(e) => setApplicationKey(e.target.value)}
                           className="w-full bg-black p-3 text-white"
                         />
                         <input
