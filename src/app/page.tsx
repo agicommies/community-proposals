@@ -1,33 +1,32 @@
 "use client";
+import { useState } from "react";
+
 import { Container } from "./_components/container";
 import { ProposalListHeader } from "./_components/proposal-list-header";
 import { usePolkadot } from "~/hooks/polkadot";
-import { useState } from "react";
 import { DaoCard } from "./_components/dao-card";
 import { BalanceSection } from "./_components/balance-section";
 import { CardSkeleton } from "./_components/skeletons/card-skeleton";
 import { useSubspaceQueries } from "~/subspace/queries";
 import { type ProposalStatus, type SS58Address } from "~/subspace/types";
 import { type TVote } from "./_components/vote-label";
-import { get_proposal_netuid } from "~/hooks/polkadot/functions/proposals";
 import { ProposalCard } from "./_components/proposal-card";
 
 export default function HomePage() {
   const { api, selectedAccount } = usePolkadot();
-  const { proposals, is_proposal_loading, daos, is_dao_loading } =
+  const { proposals_with_meta, is_proposals_loading, daos, is_dao_loading } =
     useSubspaceQueries(api);
 
   const [viewMode, setViewMode] = useState<"proposals" | "daos">("proposals");
 
-  const handleIsLoading = (type: "proposals" | "daos") => {
-    switch (type) {
+  const handleIsLoading = (kind: "proposals" | "daos") => {
+    switch (kind) {
       case "daos":
         return is_dao_loading;
-
       case "proposals":
-        return is_proposal_loading;
-
+        return is_proposals_loading;
       default:
+        console.error(`Invalid kind`);
         return false;
     }
   };
@@ -41,7 +40,7 @@ export default function HomePage() {
     proposalStatus: ProposalStatus;
     selectedAccountAddress: SS58Address;
   }): TVote => {
-    if (!proposalStatus.hasOwnProperty("open")) return "FINISHED";
+    if (!proposalStatus.hasOwnProperty("open")) return "UNVOTED";
 
     if (
       "open" in proposalStatus &&
@@ -60,13 +59,11 @@ export default function HomePage() {
   };
 
   const renderProposals = () => {
-    const proposalsContent = proposals?.map((proposal) => {
+    const proposalsContent = proposals_with_meta?.map((proposal) => {
       const voted = handleUserVotes({
         proposalStatus: proposal.status,
         selectedAccountAddress: selectedAccount?.address as SS58Address,
       });
-
-      const netuid = get_proposal_netuid(proposal);
 
       return (
         <div key={proposal.id} className="animate-fade-in-down">

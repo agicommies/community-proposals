@@ -5,9 +5,30 @@ import { assert, type Extends } from "tsafe";
 import { z } from "zod";
 import type { Result } from "~/utils";
 
+import { decodeAddress } from "@polkadot/util-crypto";
+
 export type Entry<T> = [unknown, T];
 
+// -> Adresses
+
 export type SS58Address = Tagged<string, "SS58Address">;
+
+function is_ss58_address(value: string): value is SS58Address {
+  // const test_addr = "5DSFNnK94z8VLVhmvrtunHHrAkcgtCPAx6LLEgVNSXQbEvB7";
+  const test_addr = "5Dw5xxnpgVAbBgXtxT1DEWKv3YJJxHGELZKHNCEWzRNKbXdL";
+  try {
+    // eslint-disable-next-line no-var
+    var decoded = decodeAddress(test_addr || value);
+  } catch (e) {
+    console.error(e);
+    return false;
+  }
+  return decoded != null;
+}
+
+export const ADDRESS_SCHEMA = z
+  .string()
+  .refine(is_ss58_address, "Invalid SS58 address");
 
 // -> Proposal State
 
@@ -72,8 +93,8 @@ export interface ProposalStatusDataProps {
   status: "open" | "accepted" | "refused" | "expired";
   votesFor?: SS58Address[];
   votesAgainst?: SS58Address[];
-  stakeFor?: number;
-  stakeAgainst?: number;
+  stakeFor?: bigint;
+  stakeAgainst?: bigint;
   block?: number;
 }
 
@@ -81,11 +102,11 @@ export type ProposalStatus = Enum<{
   open: {
     votesFor: SS58Address[];
     votesAgainst: SS58Address[];
-    stakeFor: number;
-    stakeAgainst: number;
+    stakeFor: bigint;
+    stakeAgainst: bigint;
   };
-  accepted: { block: number; stakeFor: number; stakeAgainst: number };
-  refused: { block: number; stakeFor: number; stakeAgainst: number };
+  accepted: { block: number; stakeFor: bigint; stakeAgainst: bigint };
+  refused: { block: number; stakeFor: bigint; stakeAgainst: bigint };
   expired: null;
 }>;
 
@@ -96,7 +117,7 @@ export type ProposalData = Enum<{
   globalParams: Record<string, unknown>;
   subnetCustom: { subnetId: number };
   subnetParams: { subnetId: number; params: Record<string, unknown> };
-  transferDaoTreasury: { account: SS58Address; amount: number };
+  transferDaoTreasury: { account: SS58Address; amount: bigint };
 }>;
 
 export interface Proposal {
@@ -106,7 +127,7 @@ export interface Proposal {
   data: ProposalData;
   status: ProposalStatus;
   metadata: string;
-  proposalCost: number;
+  proposalCost: bigint;
   creationBlock: number;
 }
 
@@ -117,7 +138,7 @@ export interface Dao {
   data: string;
   body?: CustomDaoData;
   status: DaoStatus;
-  applicationCost: number;
+  applicationCost: bigint;
 }
 
 export interface GetBalance {
@@ -128,9 +149,10 @@ export interface GetBalance {
 // TODO: put each Zod schema togheter with interface type
 // TODO: helper function to define zod Rust-like enum
 
-export const ADDRESS_SCHEMA = z
+export const TOKEN_AMOUNT_SCHEMA = z
   .string()
-  .transform((value) => value as SS58Address); // TODO: validate SS58 address
+  .or(z.number())
+  .transform((value) => BigInt(value));
 
 export const PROPOSAL_DATA_SCHEMA = z.union([
   z.object({ globalCustom: z.null() }),
@@ -145,7 +167,7 @@ export const PROPOSAL_DATA_SCHEMA = z.union([
   z.object({
     transferDaoTreasury: z.object({
       account: ADDRESS_SCHEMA,
-      amount: z.number(),
+      amount: TOKEN_AMOUNT_SCHEMA,
     }),
   }),
 ]);
@@ -155,22 +177,22 @@ const PROPOSAL_STATUS_SCHEMA = z.union([
     open: z.object({
       votesFor: z.array(ADDRESS_SCHEMA),
       votesAgainst: z.array(ADDRESS_SCHEMA),
-      stakeFor: z.number(),
-      stakeAgainst: z.number(),
+      stakeFor: TOKEN_AMOUNT_SCHEMA,
+      stakeAgainst: TOKEN_AMOUNT_SCHEMA,
     }),
   }),
   z.object({
     accepted: z.object({
       block: z.number(),
-      stakeFor: z.number(),
-      stakeAgainst: z.number(),
+      stakeFor: TOKEN_AMOUNT_SCHEMA,
+      stakeAgainst: TOKEN_AMOUNT_SCHEMA,
     }),
   }),
   z.object({
     refused: z.object({
       block: z.number(),
-      stakeFor: z.number(),
-      stakeAgainst: z.number(),
+      stakeFor: TOKEN_AMOUNT_SCHEMA,
+      stakeAgainst: TOKEN_AMOUNT_SCHEMA,
     }),
   }),
   z.object({
@@ -185,14 +207,13 @@ export const PROPOSAL_SCHEMA = z.object({
   data: PROPOSAL_DATA_SCHEMA,
   status: PROPOSAL_STATUS_SCHEMA,
   metadata: z.string(),
-  proposalCost: z.number(),
+  proposalCost: TOKEN_AMOUNT_SCHEMA,
   creationBlock: z.number(),
 });
 
 export function parse_proposal(value_raw: Codec): Proposal | null {
   const value = value_raw.toPrimitive();
   const validated = PROPOSAL_SCHEMA.safeParse(value);
-  console.log(validated);
   if (!validated.success) {
     console.warn("Invalid proposal:", validated.error.issues);
     return null;
@@ -212,7 +233,7 @@ export const DAO_SHEMA = z.object({
       "Invalid proposal status",
     )
     .transform((value) => value as DaoStatus),
-  applicationCost: z.number(),
+  applicationCost: TOKEN_AMOUNT_SCHEMA,
 });
 
 export function parse_daos(value_raw: Codec): Dao | null {

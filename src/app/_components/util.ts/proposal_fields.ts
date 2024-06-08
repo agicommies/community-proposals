@@ -1,6 +1,5 @@
 import { match } from "rustie";
 import {
-  type CustomProposalDataResult,
   type ProposalState,
   param_name_to_display_name,
 } from "~/subspace/types";

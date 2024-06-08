@@ -1,7 +1,13 @@
 /* eslint-disable @typescript-eslint/no-misused-promises */
 "use client";
 
-import React, { createContext, useContext, useEffect, useState } from "react";
+import React, {
+  createContext,
+  use,
+  useContext,
+  useEffect,
+  useState,
+} from "react";
 
 import { ApiPromise, WsProvider, type SubmittableResult } from "@polkadot/api";
 import { type DispatchError } from "@polkadot/types/interfaces";
@@ -12,11 +18,7 @@ import {
 } from "@polkadot/extension-inject/types";
 
 import { WalletModal } from "~/app/_components/wallet-modal";
-import {
-  get_all_stake_out,
-  get_delegating_voting_power,
-  type StakeData,
-} from "~/hooks/polkadot/functions/chain_queries";
+import { get_delegating_voting_power } from "~/hooks/polkadot/functions/chain_queries";
 
 import { get_balance } from "~/utils";
 import { toast } from "react-toastify";
@@ -48,9 +50,11 @@ interface PolkadotContextType {
   accounts: InjectedAccountWithMeta[];
   selectedAccount: InjectedAccountWithMeta | null;
 
+  userTotalStaked: string | null;
+
   votingPower: Set<SS58Address>;
 
-  stake_data: StakeData | null;
+  // stake_data: StakeData | null;
 
   handleConnect: () => void;
   send_vote: (args: Vote, callback?: (arg: CallbackStatus) => void) => void;
@@ -86,7 +90,9 @@ export const PolkadotProvider: React.FC<PolkadotProviderProps> = ({
 
   const [votingPower, setVotingPower] = useState<Set<SS58Address>>(new Set());
 
-  const [stakeData, setStakeData] = useState<StakeData | null>(null);
+  // const [stakeData, setStakeData] = useState<StakeData | null>(null);
+
+  const [userTotalStaked, setUserTotalStaked] = useState<string | null>(null);
 
   const [openModal, setOpenModal] = useState(false);
 
@@ -135,18 +141,37 @@ export const PolkadotProvider: React.FC<PolkadotProviderProps> = ({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isInitialized]);
 
+  // useEffect(() => {
+  //   if (api) {
+  //     get_all_stake_out(api)
+  //       .then((stake_data_result) => {
+  //         setStakeData(stake_data_result);
+  //       })
+  //       .catch((e) => {
+  //         toast.success(`Error fetching stake out map", ${e}`);
+  //       });
+  //   }
+  //   // eslint-disable-next-line react-hooks/exhaustive-deps
+  // }, [api]);
+
   useEffect(() => {
     if (api) {
-      get_all_stake_out(api)
-        .then((stake_data_result) => {
-          setStakeData(stake_data_result);
-        })
-        .catch((e) => {
-          toast.success(`Error fetching stake out map", ${e}`);
+      const fetchBalance = async () => {
+        if (!selectedAccount?.address) {
+          console.error("No account selected");
+          return;
+        }
+
+        const fetchedBalance = await get_balance({
+          api,
+          address: selectedAccount.address,
         });
+        setBalance(fetchedBalance);
+      };
+
+      void fetchBalance();
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [api]);
+  }, [api, selectedAccount?.address]);
 
   async function getWallets() {
     if (!polkadotApi.web3Enable || !polkadotApi.web3Accounts) return;
@@ -433,6 +458,8 @@ export const PolkadotProvider: React.FC<PolkadotProviderProps> = ({
         isConnected,
         isInitialized,
 
+        userTotalStaked,
+
         balance,
 
         accounts,
@@ -440,7 +467,7 @@ export const PolkadotProvider: React.FC<PolkadotProviderProps> = ({
 
         votingPower,
 
-        stake_data: stakeData,
+        // stake_data: stakeData,
 
         send_vote,
         handleConnect,

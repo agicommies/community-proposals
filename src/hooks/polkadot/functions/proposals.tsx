@@ -1,15 +1,14 @@
-import { match } from "rustie";
-import { assert } from "tsafe";
+import { if_let, match } from "rustie";
+
 import { build_ipfs_gateway_url, parse_ipfs_uri } from "../../../utils/ipfs";
 import {
-  CUSTOM_PROPOSAL_METADATA_SCHEMA,
   type Dao,
-  type CustomProposalData,
   type Proposal,
   CUSTOM_DAO_METADATA_SCHEMA,
   type CustomDaoDataState,
   type ProposalStatus,
 } from "~/subspace/types";
+import { bigint_division, format_token } from "~/utils";
 
 const DEBUG = process.env.NODE_ENV === "development";
 
@@ -21,30 +20,6 @@ export interface ProposalStakeInfo {
   stake_against: number;
   stake_voted: number;
   stake_total: number;
-}
-
-export async function handle_custom_proposal_data(
-  proposal: Proposal,
-): Promise<CustomProposalData> {
-  const cid = parse_ipfs_uri(proposal.metadata);
-  if (cid == null) {
-    const message = `Invalid IPFS URI '${proposal.metadata}' for proposal ${proposal.id}`;
-    console.error(message);
-    return { Err: { message } };
-  }
-
-  const url = build_ipfs_gateway_url(cid);
-  const response = await fetch(url);
-  const obj: unknown = await response.json();
-
-  const validated = CUSTOM_PROPOSAL_METADATA_SCHEMA.safeParse(obj);
-  if (!validated.success) {
-    const message = `Invalid proposal data for proposal ${proposal.id} at ${url}`;
-    console.error(message, validated.error.issues);
-    return { Err: { message } };
-  }
-
-  return { Ok: validated.data };
 }
 
 export async function handle_custom_dao_data(
@@ -154,5 +129,63 @@ export function handle_proposal_status_data(proposalStatus: ProposalStatus) {
         status: "expired",
       };
     },
+  });
+}
+
+export function handle_proposal_quorum_percent(proposalStatus: ProposalStatus) {
+  function quorum_percent(stakeFor: bigint, stakeAgainst: bigint) {
+    const totalStake = stakeFor + stakeAgainst;
+    const percentage = bigint_division(stakeFor, totalStake) * 100;
+    const percent_display = `${Number.isNaN(percentage) ? "—" : percentage.toFixed(1)}%`;
+    return <span className="text-yellow-600">{` (${percent_display})`}</span>;
+  }
+  return match(proposalStatus)({
+    open: ({ stakeFor, stakeAgainst }) =>
+      quorum_percent(stakeFor, stakeAgainst),
+    accepted: ({ stakeFor, stakeAgainst }) =>
+      quorum_percent(stakeFor, stakeAgainst),
+    refused: ({ stakeFor, stakeAgainst }) =>
+      quorum_percent(stakeFor, stakeAgainst),
+    expired: () => {
+      return <span className="text-yellow-600">{` (Expired)`}</span>;
+    },
+  });
+}
+
+export function handle_proposal_stake_for(proposalStatus: ProposalStatus) {
+  // TODO: extend rustie `if_let` to provid other variants on else arm
+  // const txt = if_let(proposalStatus)("expired")(() => "—")(({ stakeFor }) => format_token(Number(stakeFor)));
+
+  return match(proposalStatus)({
+    open: ({ stakeFor }) => format_token(Number(stakeFor)),
+    accepted: ({ stakeFor }) => format_token(Number(stakeFor)),
+    refused: ({ stakeFor }) => format_token(Number(stakeFor)),
+    expired: () => "—",
+  });
+}
+
+export function calc_proposal_favorable_percent(
+  proposalStatus: ProposalStatus,
+) {
+  function calc_stake_percent(
+    stakeFor: bigint,
+    stakeAgainst: bigint,
+  ): number | null {
+    const totalStake = stakeFor + stakeAgainst;
+    if (totalStake === 0n) {
+      return null;
+    }
+    const ratio = bigint_division(stakeFor, totalStake);
+    const percentage = ratio * 100;
+    return percentage;
+  }
+  return match(proposalStatus)({
+    open: ({ stakeFor, stakeAgainst }) =>
+      calc_stake_percent(stakeFor, stakeAgainst),
+    accepted: ({ stakeFor, stakeAgainst }) =>
+      calc_stake_percent(stakeFor, stakeAgainst),
+    refused: ({ stakeFor, stakeAgainst }) =>
+      calc_stake_percent(stakeFor, stakeAgainst),
+    expired: () => null,
   });
 }

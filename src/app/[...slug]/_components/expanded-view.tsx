@@ -6,33 +6,29 @@ import { handle_proposal } from "../../_components/util.ts/proposal_fields";
 import { notFound } from "next/navigation";
 import { ArrowPathIcon } from "@heroicons/react/20/solid";
 import type { DaoStatus, ProposalStatus, SS58Address } from "~/subspace/types";
-import {
-  compute_votes,
-  type ProposalStakeInfo,
-} from "~/hooks/polkadot/functions/proposals";
-import { bigint_division, format_token, small_address } from "~/utils";
+import { calc_proposal_favorable_percent } from "~/hooks/polkadot/functions/proposals";
+import { format_token, small_address } from "~/utils";
 import { VoteLabel, type TVote } from "~/app/_components/vote-label";
 import { StatusLabel } from "~/app/_components/status-label";
 import { VoteCard } from "~/app/_components/vote-card";
 import { DaoStatusLabel } from "~/app/_components/dao-status-label";
+import { useSubspaceQueries } from "~/subspace/queries";
 
 type ProposalContent = {
   paramId: number;
   contentType: string;
 };
 
-function render_vote_data(stake_info: ProposalStakeInfo) {
-  const { stake_for, stake_against, stake_voted } = stake_info;
+function render_vote_data(favorable_percent: number | null) {
+  if (favorable_percent === null) return null;
 
-  const favorable_percent = bigint_division(stake_for, stake_voted) * 100;
-  const against_percent = bigint_division(stake_against, stake_voted) * 100;
-
+  const against_percent = 100 - favorable_percent;
   return (
     <>
       <div className="flex justify-between">
         <span className="text-sm font-semibold">Favorable</span>
         <div className="flex items-center gap-2 divide-x">
-          <span className="text-xs">{format_token(stake_for)} COMAI</span>
+          <span className="text-xs">{favorable_percent} COMAI</span>
           <span className="pl-2 text-sm font-semibold text-green-500">
             {favorable_percent.toFixed(2)}%
           </span>
@@ -49,7 +45,7 @@ function render_vote_data(stake_info: ProposalStakeInfo) {
       <div className="mt-8 flex justify-between">
         <span className="font-semibold">Against</span>
         <div className="flex items-center gap-2 divide-x">
-          <span className="text-xs">{format_token(stake_against)} COMAI</span>
+          <span className="text-xs">{format_token(against_percent)} COMAI</span>
           <span className="pl-2 text-sm font-semibold text-red-500">
             {against_percent.toFixed(2)}%
           </span>
@@ -68,23 +64,35 @@ function render_vote_data(stake_info: ProposalStakeInfo) {
 }
 
 const handleUserVotes = ({
-  votesAgainst,
-  votesFor,
+  proposalStatus,
   selectedAccountAddress,
 }: {
-  votesAgainst: Array<string>;
-  votesFor: Array<string>;
+  proposalStatus: ProposalStatus;
   selectedAccountAddress: SS58Address;
 }): TVote => {
-  if (votesAgainst.includes(selectedAccountAddress)) return "AGAINST";
-  if (votesFor.includes(selectedAccountAddress)) return "FAVORABLE";
+  if (!proposalStatus.hasOwnProperty("open")) return "UNVOTED";
+
+  if (
+    "open" in proposalStatus &&
+    proposalStatus.open.votesFor.includes(selectedAccountAddress)
+  ) {
+    return "FAVORABLE";
+  }
+  if (
+    "open" in proposalStatus &&
+    proposalStatus.open.votesAgainst.includes(selectedAccountAddress)
+  ) {
+    return "AGAINST";
+  }
+
   return "UNVOTED";
 };
 
 export const ExpandedView = (props: ProposalContent) => {
   const { paramId, contentType } = props;
 
-  const { daos, selectedAccount, stake_data } = usePolkadot();
+  const { api, selectedAccount } = usePolkadot();
+  const { daos, proposals } = useSubspaceQueries(api);
 
   const handleProposalsContent = () => {
     const proposal = proposals?.find((proposal) => proposal.id === paramId);
@@ -93,25 +101,9 @@ export const ExpandedView = (props: ProposalContent) => {
     const { body, netuid, title, invalid } = handle_proposal(proposal);
 
     const voted = handleUserVotes({
-      votesAgainst: proposal.votesAgainst,
-      votesFor: proposal.votesFor,
+      proposalStatus: proposal.status,
       selectedAccountAddress: selectedAccount?.address as SS58Address,
     });
-
-    let proposal_stake_info = null;
-    if (stake_data != null) {
-      const parsedNetuid = netuid === "GLOBAL" ? null : netuid;
-      const stake_map =
-        parsedNetuid != null
-          ? stake_data.stake_out.per_addr_per_net.get(parsedNetuid) ??
-            new Map<string, bigint>()
-          : stake_data.stake_out.per_addr;
-      proposal_stake_info = compute_votes(
-        stake_map,
-        proposal.votesFor,
-        proposal.votesAgainst,
-      );
-    }
 
     const proposalContent = {
       body,
@@ -123,7 +115,6 @@ export const ExpandedView = (props: ProposalContent) => {
       author: proposal.proposer,
       expirationBlock: proposal.expirationBlock,
       voted: voted,
-      stakeInfo: proposal_stake_info,
     };
     return proposalContent;
   };
@@ -247,13 +238,18 @@ export const ExpandedView = (props: ProposalContent) => {
           <>
             <VoteCard proposalId={content.id} voted="UNVOTED" />
             <div className="w-full border-gray-500 p-6 lg:border-b ">
-              {!content.stakeInfo && (
+              {!content.status && (
                 <span className="flex text-gray-400">
                   Loading results...
                   <ArrowPathIcon width={16} className="ml-2 animate-spin" />
                 </span>
               )}
-              {content.stakeInfo && render_vote_data(content.stakeInfo)}
+              {content.status &&
+                render_vote_data(
+                  calc_proposal_favorable_percent(
+                    content.status as ProposalStatus,
+                  ),
+                )}
             </div>
           </>
         )}

@@ -11,7 +11,6 @@ import {
   parse_daos,
   type Dao,
   type Entry,
-  type SS58Address,
   CUSTOM_PROPOSAL_METADATA_SCHEMA,
   type CustomProposalData,
   type CustomDataError,
@@ -164,7 +163,9 @@ export function useCustomProposalMetadata(
           const [id] = data;
           outputs.set(id, result);
         } else {
-          console.error(`Weird missing result for proposal metadata query?`);
+          console.info(
+            `Missing result for proposal metadata query for ${kind} ${data}`,
+          );
           // alert("Kek");
         }
       });
@@ -172,6 +173,155 @@ export function useCustomProposalMetadata(
     },
   });
 }
+
+// -> Voting
+
+export function useNotDelegatingVotingSet(at_block: AtBlock | nullish) {
+  const api = at_block?.api;
+  const block_number = at_block?.block_number;
+  return useQuery({
+    queryKey: [{ block_number }, "not_delegating_voting_power"],
+    enabled: api != null,
+    queryFn: () => api!.query.governanceModule?.notDelegatingVotingPower?.(),
+    staleTime: PROPOSALS_STALE_TIME,
+  });
+}
+
+export function useDaoTreasury(at_block: AtBlock | nullish) {
+  const api = at_block?.api;
+  const block_number = at_block?.block_number;
+  return useQuery({
+    queryKey: [{ block_number }, "dao_treasury"],
+    enabled: api != null,
+    queryFn: () => api!.query.governanceModule?.daoTreasuryAddress?.(),
+    staleTime: PROPOSALS_STALE_TIME,
+  });
+}
+
+export function useSubnetUid(at_block: AtBlock | nullish) {
+  const api = at_block?.api;
+  const block_number = at_block?.block_number;
+  return useQuery({
+    queryKey: [{ block_number }, "dao_treasury"],
+    enabled: api != null,
+    queryFn: () => api!.query.subspaceModule?.n?.entries(),
+    staleTime: PROPOSALS_STALE_TIME,
+  });
+}
+
+export function useStakeTo({ at_block }: { at_block: AtBlock | nullish }) {
+  const api = at_block?.api;
+  const block_number = at_block?.block_number;
+  return useQuery({
+    queryKey: [{ block_number }, "dao_treasury"],
+    enabled: api != null,
+    queryFn: () => api!.query.subspaceModule?.stakeTo?.entries(),
+    staleTime: PROPOSALS_STALE_TIME,
+  });
+}
+
+// -> Handling all queries
+
+export function useSubspaceQueries(api: ApiPromise | null) {
+  // Last block with API
+  const last_block_query = useLastBlock(api);
+  const { data: at_block } = last_block_query;
+
+  // Dao Treasury
+  const dao_treasury_query = useDaoTreasury(at_block);
+  const { data: dao_treasury } = dao_treasury_query;
+
+  // Not Delegating Voting Power Set
+  const not_delegating_voting_set_query = useNotDelegatingVotingSet(at_block);
+  const { data: not_delegating_voting_set } = not_delegating_voting_set_query;
+
+  // Netuids
+  const netuids_query = useSubnetUid(at_block);
+  const { data: netuids } = netuids_query;
+
+  // StakeTo
+  const stake_to_query = useStakeTo({ at_block });
+  const { data: stake_to } = stake_to_query;
+
+  // Proposals
+  const proposals_query = useProposals(at_block);
+  const { data: proposal_query, isLoading: is_proposals_loading } =
+    proposals_query;
+  const [proposals, proposals_errs] = handleProposals(proposal_query);
+  for (const err of proposals_errs) {
+    console.error(err);
+    toast.error(err.message);
+  }
+
+  // Daos
+  const daos_query = useDaos(at_block);
+  const { data: dao_query, isLoading: is_dao_loading } = daos_query;
+  const [daos, daos_errs] = handleDaos(dao_query);
+  for (const err of daos_errs) {
+    console.error(err);
+    toast.error(err.message);
+  }
+
+  // Custom Metadata
+  const custom_metadata_query_map = useCustomProposalMetadata(
+    "proposal",
+    at_block,
+    proposals,
+  );
+  for (const entry of custom_metadata_query_map.entries()) {
+    const [id, query] = entry;
+    const { data } = query;
+    if (data == null) {
+      console.info(`Missing custom proposal metadata for proposal ${id}`);
+    }
+  }
+
+  interface ProposalWithMeta extends Proposal {
+    custom_data?: Result<CustomProposalData, CustomDataError>;
+  }
+
+  const proposals_with_meta = proposals.map((proposal): ProposalWithMeta => {
+    const id = proposal.id;
+    const metadata_query = custom_metadata_query_map.get(id);
+    const data = metadata_query?.data;
+    if (data == null) {
+      return proposal;
+    }
+    const [, custom_data] = data;
+    return { ...proposal, custom_data };
+  });
+
+  return {
+    last_block_query,
+    at_block_api: at_block?.api,
+    block_number: at_block?.block_number,
+
+    not_delegating_voting_set_query,
+    not_delegating_voting_set,
+
+    netuids_query,
+    netuids,
+
+    stake_to_query,
+    stake_to,
+
+    proposals_query,
+    is_proposals_loading,
+    proposals,
+
+    daos_query,
+    is_dao_loading,
+    daos,
+
+    dao_treasury_query,
+    dao_treasury,
+
+    custom_metadata_query_map,
+    proposals_with_meta,
+  };
+}
+
+// -> Data processing functions
 
 export async function fetch_custom_metadata(
   kind: "proposal",
@@ -200,96 +350,6 @@ export async function fetch_custom_metadata(
 
   return { Ok: validated.data };
 }
-
-// -> Voting
-
-export function useNotDelegatingVotingSet(at_block: AtBlock | nullish) {
-  const api = at_block?.api;
-  const block_number = at_block?.block_number;
-  return useQuery({
-    queryKey: [{ block_number }, "not_delegating_voting_power"],
-    enabled: api != null,
-    queryFn: () => api!.query.governanceModule?.notDelegatingVotingPower?.(),
-    staleTime: PROPOSALS_STALE_TIME,
-  });
-}
-
-export function useDaoTreasury(at_block: AtBlock | nullish) {
-  const api = at_block?.api;
-  const block_number = at_block?.block_number;
-  return useQuery({
-    queryKey: [{ block_number }, "dao_treasury"],
-    enabled: api != null,
-    queryFn: () => api!.query.governanceModule?.daoTreasuryAddress?.(),
-    staleTime: PROPOSALS_STALE_TIME,
-  });
-}
-
-// -> Handling all queries
-
-export function useSubspaceQueries(api: ApiPromise | null) {
-  // Last API block
-  const last_block_query = useLastBlock(api);
-  const { data: at_block } = last_block_query;
-
-  // Dao Treasury
-  const { data: dao_treasury } = useDaoTreasury(at_block);
-
-  // Not Delegating Voting Power Set
-  const { data: not_delegating_voting_set } =
-    useNotDelegatingVotingSet(at_block);
-
-  // Proposals
-  const { data: proposal_query, isLoading: is_proposal_loading } =
-    useProposals(at_block);
-  const [proposals, proposals_errs] = handleProposals(proposal_query);
-  for (const err of proposals_errs) {
-    console.error(err);
-    toast.error(err.message);
-  }
-
-  // Daos
-  const { data: dao_query, isLoading: is_dao_loading } = useDaos(at_block);
-  const [daos, daos_errs] = handleDaos(dao_query);
-  for (const err of daos_errs) {
-    console.error(err);
-    toast.error(err.message);
-  }
-
-  // Custom Metadata
-  const custom_metadata_query_map = useCustomProposalMetadata(
-    "proposal",
-    at_block,
-    proposals,
-  );
-  for (const entry of custom_metadata_query_map.entries()) {
-    const [id, query] = entry;
-    const { data } = query;
-    if (data == null) {
-      console.warn(`Missing custom proposal metadata for proposal ${id}`);
-    }
-  }
-
-  return {
-    last_block_query,
-    at_block_api: at_block?.api,
-    block_number: at_block?.block_number,
-
-    not_delegating_voting_set,
-
-    dao_treasury,
-
-    proposals,
-    is_proposal_loading,
-
-    custom_metadata_query_map,
-
-    daos,
-    is_dao_loading,
-  };
-}
-
-// -> Data processing functions
 
 function handleEntries<T>(
   rawEntries: Entry<Codec>[] | undefined,
@@ -323,23 +383,3 @@ export function handleDaos(
 ): [Dao[], Error[]] {
   return handleEntries(rawDaos, parse_daos);
 }
-
-// -> Dead code
-
-// async function _handle_custom_proposal() {
-//   const metadata = await handle_custom_proposal_data(proposal);
-//   if (metadata == null) {
-//     console.warn(
-//       `Invalid custom proposal data for proposal ${proposal.id}: ${proposal.metadata}`,
-//     );
-//     return null;
-//   }
-//   const proposal_state: ProposalState = {
-//     ...proposal,
-//     custom_data: metadata,
-//   };
-//   if (handler != null) {
-//     handler(proposal.id, proposal_state);
-//   }
-//   return { id: proposal.id, custom_data: metadata };
-// }
