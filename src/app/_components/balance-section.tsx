@@ -56,7 +56,7 @@ export const BalanceSection = ({ className }: { className?: string }) => {
 
         <div className="flex flex-row items-center justify-between border-b border-gray-500 p-6 pr-6 lg:w-1/3 lg:border-b-0 lg:pr-10">
           <div>
-            {!balance && !isInitialized ? (
+            {!balance && !isInitialized && !selectedAccount?.address ? (
               <Skeleton className="w-1/5 py-3 md:mt-1 lg:w-2/5" />
             ) : (
               <p>
