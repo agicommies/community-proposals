@@ -23,6 +23,8 @@ export default function CardView({ params }: { params: { slug: string[] } }) {
   const contentType = params.slug[0];
   const id = Number(params.slug[1]);
 
+  console.log(`contentType: ${contentType}, id: ${id}`);
+
   return (
     <div className="mx-auto flex max-w-6xl flex-col px-4 ">
       <Link

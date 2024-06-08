@@ -1,13 +1,10 @@
 "use client";
 
-import { usePolkadot } from "~/hooks/polkadot";
-import { MarkdownView } from "../../_components/markdown-view";
-import {
-  handle_custom_dao,
-  handle_proposal,
-} from "../../_components/util.ts/proposal_fields";
 import { notFound } from "next/navigation";
 import { ArrowPathIcon } from "@heroicons/react/20/solid";
+
+import { usePolkadot } from "~/hooks/polkadot";
+
 import type { DaoStatus, ProposalStatus, SS58Address } from "~/subspace/types";
 import { calc_proposal_favorable_percent } from "~/hooks/polkadot/functions/proposals";
 import { format_token, small_address } from "~/utils";
@@ -16,6 +13,12 @@ import { StatusLabel } from "~/app/_components/status-label";
 import { VoteCard } from "~/app/_components/vote-card";
 import { DaoStatusLabel } from "~/app/_components/dao-status-label";
 import { useSubspaceQueries } from "~/subspace/queries";
+import {
+  handle_custom_dao,
+  handle_proposal,
+} from "~/app/_components/util.ts/proposal_fields";
+
+import { MarkdownView } from "~/app/_components/markdown-view";
 
 type ProposalContent = {
   paramId: number;
@@ -93,7 +96,7 @@ const handleUserVotes = ({
 
 export const ExpandedView = (props: ProposalContent) => {
   const { paramId, contentType } = props;
-  console.log("expanded view:", props);
+  console.log(`ExpandedView: ${contentType} ${paramId}`);
 
   const { api, selectedAccount } = usePolkadot();
   const {
@@ -165,10 +168,10 @@ export const ExpandedView = (props: ProposalContent) => {
   const handleIsLoading = (type: string | undefined) => {
     switch (type) {
       case "dao":
-        return !is_dao_loading;
+        return is_dao_loading;
 
       case "proposal":
-        return !is_proposals_loading;
+        return is_proposals_loading;
 
       default:
         return false;

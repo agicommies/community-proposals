@@ -42,7 +42,7 @@ export const DaoCard = (props: DaoCardProps) => {
             <div className="flex w-full flex-col-reverse lg:flex-row lg:items-center">
               <div className="mr-3 w-full py-2 lg:w-auto lg:min-w-fit lg:py-0">
                 <Link
-                  href={`dao/${dao_state.id}`}
+                  href={`/item/dao/${dao_state.id}`}
                   className="min-w-auto flex w-full items-center border border-green-500 px-2 py-2 text-sm text-green-500 hover:border-green-600 hover:bg-green-600/5 hover:text-green-600 lg:w-auto lg:px-4"
                 >
                   Click to view S0 Application
