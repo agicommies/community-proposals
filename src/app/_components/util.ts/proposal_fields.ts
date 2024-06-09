@@ -1,9 +1,10 @@
 import { match } from "rustie";
 import {
-  param_name_to_display_name,
-  type CustomProposalDataState,
   type ProposalState,
-} from "~/hooks/polkadot/functions/types";
+  type CustomProposalDataState,
+  type CustomMetadataState,
+  param_name_to_display_name,
+} from "~/subspace/types";
 
 export type ProposalCardFields = {
   title: string | null;
@@ -12,6 +13,10 @@ export type ProposalCardFields = {
   invalid?: boolean;
 };
 
+export type DAOCardFields = {
+  title: string | null;
+  body: string | null;
+};
 
 const params_to_markdown = (params: Record<string, unknown>): string => {
   const items = [];
@@ -58,6 +63,32 @@ function handle_custom_proposal_data(
   });
 }
 
+export function handle_custom_dao(
+  dao_id: number | null,
+  data_state: CustomMetadataState | null,
+): DAOCardFields {
+  if (data_state == null) {
+    return {
+      title: null,
+      body: null,
+    };
+  }
+  return match(data_state)({
+    Err: function ({ message }): DAOCardFields {
+      return {
+        title: `⚠️😠 Failed fetching proposal data for proposal #${dao_id}`,
+        body: `⚠️😠 Error fetching proposal data for proposal #${dao_id}:  \n${message}`,
+      };
+    },
+    Ok: function (data): DAOCardFields {
+      return {
+        title: data.title ?? null,
+        body: data.body ?? null,
+      };
+    },
+  });
+}
+
 function handle_proposal_params(
   proposal_id: number,
   params: Record<string, unknown>,
@@ -75,32 +106,32 @@ function handle_proposal_params(
 
 export const handle_proposal = (proposal: ProposalState): ProposalCardFields =>
   match(proposal.data)({
-    custom: function (/*raw_data*/): ProposalCardFields {
+    globalCustom: function (/*raw_data*/): ProposalCardFields {
       return handle_custom_proposal_data(
         proposal.id,
         proposal.custom_data ?? null,
         "GLOBAL",
       );
     },
-    subnetCustom: function ({ netuid /*raw_data*/ }): ProposalCardFields {
+    subnetCustom: function ({ subnetId /*raw_data*/ }): ProposalCardFields {
       return handle_custom_proposal_data(
         proposal.id,
         proposal.custom_data ?? null,
-        netuid,
+        subnetId,
       );
     },
     globalParams: function (params): ProposalCardFields {
       return handle_proposal_params(proposal.id, params, "GLOBAL");
     },
-    subnetParams: function ({ netuid, params }): ProposalCardFields {
-      return handle_proposal_params(proposal.id, params, netuid);
+    subnetParams: function ({ subnetId, params }): ProposalCardFields {
+      return handle_proposal_params(proposal.id, params, subnetId);
     },
-    expired: function (): ProposalCardFields {
+    transferDaoTreasury: function (): ProposalCardFields {
       return {
-        title: `Proposal #${proposal.id} has expired`,
-        body: "This proposal has expired.",
+        title: `Transfer proposal #${proposal.id}`,
+        body: `Transfer proposal #${proposal.id} to treasury`,
         netuid: "GLOBAL",
         invalid: true,
       };
-    }
+    },
   });

@@ -6,9 +6,7 @@ type TCardProps = {
 const CardRoot = (props: TCardProps) => {
   const { children, className = "" } = props;
   return (
-    <div
-      className={`border border-gray-500 bg-black/50 ${className}`}
-    >
+    <div className={`border border-gray-500 bg-black/50 ${className}`}>
       {children}
     </div>
   );

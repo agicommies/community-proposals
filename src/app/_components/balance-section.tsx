@@ -1,18 +1,28 @@
 "use client";
-import { format_token } from "~/utils";
+import { format_token, get_balance } from "~/utils";
 import { Skeleton } from "./skeleton";
 import { usePolkadot } from "~/hooks/polkadot";
 import Image from "next/image";
+import { useSubspaceQueries } from "~/subspace/queries";
+import { useEffect, useState } from "react";
 
 export const BalanceSection = ({ className }: { className?: string }) => {
-  const {
-    isInitialized,
-    daosTreasuries,
-    balance,
-    isBalanceLoading,
-    selectedAccount,
-    stake_data,
-  } = usePolkadot();
+  const { api, isInitialized, balance, selectedAccount, stake_data } =
+    usePolkadot();
+
+  const { dao_treasury } = useSubspaceQueries(api);
+
+  const [daosTreasuries, setDaosTreasuries] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (isInitialized && api && dao_treasury) {
+      void get_balance({ api, address: dao_treasury.toHuman() as string }).then(
+        (balance) => {
+          setDaosTreasuries(balance);
+        },
+      );
+    }
+  }, [isInitialized, api, dao_treasury]);
 
   let user_stake_weight: bigint | null = null;
   if (stake_data != null && selectedAccount != null) {
@@ -29,12 +39,12 @@ export const BalanceSection = ({ className }: { className?: string }) => {
       <div className="mx-auto flex w-full flex-col divide-gray-500 lg:max-w-6xl lg:flex-row lg:divide-x lg:px-6">
         <div className="flex flex-row items-center justify-between border-b border-gray-500 p-6 pr-6 lg:w-1/3 lg:border-b-0 lg:pr-10">
           <div>
-            {!isInitialized ? (
+            {!daosTreasuries && !isInitialized ? (
               <Skeleton className="w-1/5 py-3 md:mt-1 lg:w-2/5" />
             ) : (
               <p>
-                {new Intl.NumberFormat().format(daosTreasuries)}{" "}
-                <span className="text-lg text-white">COMAI</span>
+                {daosTreasuries}
+                <span className="text-lg text-white"> COMAI</span>
               </p>
             )}
             <span className="text-base font-thin text-gray-400">
@@ -46,16 +56,16 @@ export const BalanceSection = ({ className }: { className?: string }) => {
 
         <div className="flex flex-row items-center justify-between border-b border-gray-500 p-6 pr-6 lg:w-1/3 lg:border-b-0 lg:pr-10">
           <div>
-            {isBalanceLoading && !isInitialized ? (
+            {!balance || !isInitialized || !selectedAccount?.meta.name ? (
               <Skeleton className="w-1/5 py-3 md:mt-1 lg:w-2/5" />
             ) : (
               <p>
-                {Math.round(Number(balance)).toFixed(2)}{" "}
-                <span className="text-lg text-white">COMAI</span>
+                {balance}
+                <span className="text-lg text-white"> COMAI</span>
               </p>
             )}
             <span className="text-base font-thin text-gray-400">
-              Your on balance
+              Your total free balance
             </span>
           </div>
           <Image
@@ -73,7 +83,7 @@ export const BalanceSection = ({ className }: { className?: string }) => {
             ) : (
               <p>
                 {format_token(user_stake_weight)}{" "}
-                <span className="text-lg text-white">COMAI</span>
+                <span className="text-lg text-white"> COMAI</span>
               </p>
             )}
             <span className="text-base font-thin text-gray-400">

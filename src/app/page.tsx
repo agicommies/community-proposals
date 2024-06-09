@@ -1,121 +1,112 @@
 "use client";
+import { useState } from "react";
+
 import { Container } from "./_components/container";
 import { ProposalListHeader } from "./_components/proposal-list-header";
-import { ProposalCard } from "./_components/proposal-card";
 import { usePolkadot } from "~/hooks/polkadot";
-import {
-  compute_votes,
-  get_proposal_netuid,
-} from "~/hooks/polkadot/functions/proposals";
-import type { SS58Address } from "~/hooks/polkadot/functions/types";
-import { type TVote } from "./_components/vote-label";
-import { useState } from "react";
 import { DaoCard } from "./_components/dao-card";
 import { BalanceSection } from "./_components/balance-section";
 import { CardSkeleton } from "./_components/skeletons/card-skeleton";
+import { useSubspaceQueries } from "~/subspace/queries";
+import { type ProposalStatus, type SS58Address } from "~/subspace/types";
+import { type TVote } from "./_components/vote-label";
+import { ProposalCard } from "./_components/proposal-card";
 
 export default function HomePage() {
-  const { proposals, daos, stake_data, selectedAccount } = usePolkadot();
+  const { api, selectedAccount } = usePolkadot();
+  const {
+    proposals_with_meta,
+    is_proposals_loading,
+    daos_with_meta,
+    is_dao_loading,
+  } = useSubspaceQueries(api);
 
-  const [viewMode, setViewMode] = useState<'proposals' | 'daos'>("proposals");
+  const [viewMode, setViewMode] = useState<"proposals" | "daos">("proposals");
 
-  const handleIsLoading = (type: 'proposals' | 'daos') => {
-    switch (type) {
+  const handleIsLoading = (kind: "proposals" | "daos") => {
+    switch (kind) {
       case "daos":
-        return daos == null;
-
+        return is_dao_loading;
       case "proposals":
-        return proposals == null;
-
+        return is_proposals_loading;
       default:
+        console.error(`Invalid kind`);
         return false;
     }
   };
 
-  const isLoading = handleIsLoading(viewMode)
+  const isLoading = handleIsLoading(viewMode);
 
   const handleUserVotes = ({
-    votesAgainst,
-    votesFor,
+    proposalStatus,
     selectedAccountAddress,
   }: {
-    votesAgainst: Array<string>;
-    votesFor: Array<string>;
+    proposalStatus: ProposalStatus;
     selectedAccountAddress: SS58Address;
   }): TVote => {
-    if (votesAgainst.includes(selectedAccountAddress)) return "AGAINST";
-    if (votesFor.includes(selectedAccountAddress)) return "FAVORABLE";
+    if (!proposalStatus.hasOwnProperty("open")) return "UNVOTED";
+
+    if (
+      "open" in proposalStatus &&
+      proposalStatus.open.votesFor.includes(selectedAccountAddress)
+    ) {
+      return "FAVORABLE";
+    }
+    if (
+      "open" in proposalStatus &&
+      proposalStatus.open.votesAgainst.includes(selectedAccountAddress)
+    ) {
+      return "AGAINST";
+    }
+
     return "UNVOTED";
   };
 
   const renderProposals = () => {
-    const proposalsContent = proposals?.map((proposal) => {
+    const proposalsContent = proposals_with_meta?.map((proposal) => {
       const voted = handleUserVotes({
-        votesAgainst: proposal.votesAgainst,
-        votesFor: proposal.votesFor,
+        proposalStatus: proposal.status,
         selectedAccountAddress: selectedAccount?.address as SS58Address,
       });
 
-      const netuid = get_proposal_netuid(proposal);
-      let proposal_stake_info = null;
-      if (stake_data != null) {
-        const stake_map =
-          netuid != null
-            ? stake_data.stake_out.per_addr_per_net.get(netuid) ??
-            new Map<string, bigint>()
-            : stake_data.stake_out.per_addr;
-        proposal_stake_info = compute_votes(
-          stake_map,
-          proposal.votesFor,
-          proposal.votesAgainst,
-        );
-      }
       return (
         <div key={proposal.id} className="animate-fade-in-down">
           <ProposalCard
             key={proposal.id}
-            proposal={proposal}
-            stake_info={proposal_stake_info}
+            proposal_state={proposal}
             voted={voted}
           />
         </div>
       );
-    })
-    return proposalsContent
-  }
+    });
+    return proposalsContent;
+  };
 
   const renderDaos = () => {
-    console.log(daos)
-
-    const daosContent = daos?.map((dao) => {
+    const daosContent = daos_with_meta?.map((dao) => {
       return (
         <div key={dao.id}>
-          <DaoCard key={dao.id} dao={dao} />
+          <DaoCard key={dao.id} dao_state={dao} />
         </div>
       );
-    })
+    });
 
-    return daosContent
-  }
+    return daosContent;
+  };
 
-  const content = viewMode === 'proposals' ? renderProposals() : renderDaos()
+  const content = viewMode === "proposals" ? renderProposals() : renderDaos();
 
   return (
-    <main className="flex flex-col items-center justify-center w-full">
-      <div className="w-full h-full bg-repeat">
+    <main className="flex w-full flex-col items-center justify-center">
+      <div className="h-full w-full bg-repeat">
         <Container>
           <BalanceSection className="hidden lg:flex" />
 
-          <ProposalListHeader
-            viewMode={viewMode}
-            setViewMode={setViewMode}
-          />
+          <ProposalListHeader viewMode={viewMode} setViewMode={setViewMode} />
 
-          <div className="max-w-6xl px-4 py-8 mx-auto space-y-10">
+          <div className="mx-auto max-w-6xl space-y-10 px-4 py-8">
             {!isLoading && content}
-            {isLoading && (
-              <CardSkeleton />
-            )}
+            {isLoading && <CardSkeleton />}
           </div>
         </Container>
       </div>

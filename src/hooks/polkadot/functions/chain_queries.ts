@@ -1,8 +1,7 @@
 import "@polkadot/api-augment";
-import { type ApiPromise } from "@polkadot/api";
 
-import { type Dao, parse_proposal, type Proposal, parse_daos } from "./types";
-import { from_nano } from "~/utils";
+import { type SS58Address } from "~/subspace/types";
+import { type ApiPromise } from "@polkadot/api";
 
 export type DoubleMap<K1, K2, V> = Map<K1, Map<K2, V>>;
 
@@ -76,52 +75,55 @@ export async function __get_all_stake(
   return stake_map;
 }
 
-// export async function delegated_voting_power(
-//   api: ApiPromise,
-// ): Promise<Map<[string, number], bigint>> {
-//   const { api_at_block } = await use_last_block(api);
-//   const delegatedItems =
-//     await api_at_block.query.subspaceModule?.delegatedVotingPower?.entries();
+export async function get_user_total_stake(
+  api: ApiPromise,
+  address: string,
+): Promise<{ address: string; stake: string; netuid: number }[]> {
+  const { api_at_block } = await use_last_block(api);
+  const N_query = await api_at_block.query.subspaceModule?.n?.entries();
 
-//   if (!delegatedItems)
-//     throw new Error("Query to delegatedVotingPower returned nullish");
+  if (!N_query) throw new Error("Query to n returned nullish");
 
-//   const delegatedMap = new Map<[string, number], bigint>();
+  const stakePromises = N_query.map(async ([netuid_raw, _]) => {
+    const netuid = parseInt(netuid_raw.toHuman() as string, 10);
 
-//   for (const [keyRaw, valueRaw] of delegatedItems) {
-//     const [delegated, subnetId, delegatorsRaw] = keyRaw.args;
-//     const delegators = delegatorsRaw.toHuman() as string[];
+    if (!api_at_block.query.subspaceModule?.stakeTo) return null;
 
-//     for (const delegator of delegators) {
-//       const stakesResult =
-//         await api_at_block.query.subspaceModule?.stakeTo?.tryGet(
-//           subnetId.toPrimitive(),
-//           delegator,
-//         );
-//       if (!stakesResult) continue;
+    const stake = await api_at_block.query.subspaceModule.stakeTo(
+      netuid,
+      address,
+    );
 
-//       const stakes = stakesResult.toPrimitive() as Record<string, bigint>;
-//       const stake = stakes[delegated.toPrimitive()];
+    const stakeHuman = stake.toHuman();
 
-//       if (stake !== undefined) {
-//         const key = [delegator, subnetId.toPrimitive()] as [string, number];
-//         const currentStake = delegatedMap.get(key) || 0n;
-//         delegatedMap.set(key, currentStake + stake);
-//       }
-//     }
-//   }
+    if (!stakeHuman) return null;
 
-//   return delegatedMap;
-// }
+    return {
+      address,
+      stake: stakeHuman,
+      netuid,
+    };
+  });
+
+  const stakes = await Promise.all(stakePromises);
+
+  // Filter out any null results
+  return stakes.filter((stake) => stake !== null) as {
+    address: string;
+    stake: string;
+    netuid: number;
+  }[];
+}
 
 export async function get_all_stake_out(api: ApiPromise) {
   const { api_at_block, block_number, block_hash_hex } =
     await use_last_block(api);
   console.debug(`Querying StakeTo at block ${block_number}`);
   // TODO: cache query for specific block
-
+  console.debug(api.runtimeChain);
   const stake_to_query =
     await api_at_block.query.subspaceModule?.stakeTo?.entries();
+
   if (stake_to_query == null)
     throw new Error("Query to stakeTo returned nullish");
 
@@ -159,7 +161,6 @@ export async function get_all_stake_out(api: ApiPromise) {
     for (const module_key in stake_to_map_for_key) {
       const staked_ = stake_to_map_for_key[module_key];
 
-      // TODO: It's possible that this ill turn into a string if the number is too big and we need to convert to a bigint
       if (typeof staked_ !== "number" && typeof staked_ !== "string")
         throw new Error(
           "Invalid stakeTo storage value item, it's not a number or string",
@@ -182,8 +183,6 @@ export async function get_all_stake_out(api: ApiPromise) {
       const old_total_addr_net = map_net.get(from_addr) ?? 0n;
       map_net.set(from_addr, old_total_addr_net + staked);
     }
-
-    // await do_repl({ api, netuid, from_addr, value_raw }); break
   }
 
   return {
@@ -193,53 +192,15 @@ export async function get_all_stake_out(api: ApiPromise) {
   };
 }
 
-export async function get_proposals(api: ApiPromise): Promise<Proposal[]> {
-  const proposals_raw = await api.query.subspaceModule?.proposals?.entries();
-  if (!proposals_raw) throw new Error("No proposals found");
-
-  const proposals = [];
-  for (const proposal_item of proposals_raw) {
-    if (!Array.isArray(proposal_item) || proposal_item.length != 2) {
-      console.error("Invalid proposal item:", proposal_item);
-      continue;
-    }
-    const [, value_raw] = proposal_item;
-    const proposal = parse_proposal(value_raw);
-    if (proposal == null) throw new Error("Invalid proposal");
-    proposals.push(proposal);
+export async function get_delegating_voting_power(
+  api: ApiPromise,
+): Promise<Set<SS58Address>> {
+  const { api_at_block } = await use_last_block(api);
+  if (!api_at_block.query.governanceModule?.notDelegatingVotingPower) {
+    throw new Error("API does not support query for delegatingVotingPower");
   }
-
-  proposals.reverse();
-  return proposals;
-}
-
-export async function get_daos(api: ApiPromise): Promise<Dao[]> {
-  const daos_raw =
-    await api.query.subspaceModule?.curatorApplications?.entries();
-
-  if (!daos_raw) throw new Error("No DAOs found");
-
-  const daos = [];
-  for (const dao_item of daos_raw) {
-    if (!Array.isArray(dao_item) || dao_item.length != 2) {
-      console.error("Invalid DAO item:", dao_item);
-      continue;
-    }
-    const [, value_raw] = dao_item;
-    const dao = parse_daos(value_raw);
-    if (dao == null) throw new Error("Invalid DAO");
-    daos.push(dao);
-  }
-
-  daos.reverse();
-  return daos;
-}
-
-export async function get_dao_treasury(api: ApiPromise) {
-  if (!api.query?.subspaceModule?.globalDaoTreasury) {
-    throw new Error("API does not support query for globalDaoTreasury");
-  }
-  const result = await api.query.subspaceModule.globalDaoTreasury();
-  const parsed_result = JSON.stringify(result);
-  return Math.round(from_nano(BigInt(parsed_result)));
+  const result =
+    await api_at_block.query.governanceModule.notDelegatingVotingPower();
+  const resultArray: string[] = result.toHuman() as string[];
+  return new Set(resultArray) as Set<SS58Address>;
 }
