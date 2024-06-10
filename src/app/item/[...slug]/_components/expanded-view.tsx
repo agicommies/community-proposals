@@ -19,6 +19,7 @@ import {
 } from "~/app/_components/util.ts/proposal_fields";
 
 import { MarkdownView } from "~/app/_components/markdown-view";
+import { VotingPowerButton } from "~/app/_components/voting-power-button";
 
 type ProposalContent = {
   paramId: number;
@@ -181,8 +182,6 @@ export const ExpandedView = (props: ProposalContent) => {
 
   const content = handleContent();
 
-  console.log("uwu", contentType);
-
   if (isLoading)
     return (
       <div className="flex w-full items-center justify-center lg:h-[calc(100svh-203px)]">
@@ -269,6 +268,7 @@ export const ExpandedView = (props: ProposalContent) => {
                   ),
                 )}
             </div>
+            <VotingPowerButton />
           </>
         )}
       </div>
