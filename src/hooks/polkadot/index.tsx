@@ -32,6 +32,10 @@ interface Vote {
   vote: boolean;
 }
 
+interface updateDelegating {
+  boolean: boolean;
+}
+
 interface PolkadotApiState {
   web3Accounts: (() => Promise<InjectedAccountWithMeta[]>) | null;
   web3Enable: ((appName: string) => Promise<InjectedExtension[]>) | null;
@@ -57,6 +61,10 @@ interface PolkadotContextType {
 
   createNewDao: (args: SendDaoData) => void;
   createNewProposal: (args: SendProposalData) => void;
+  updateDelegatingVotingPower: (
+    args: updateDelegating,
+    callback?: (arg: CallbackStatus) => void,
+  ) => void;
 }
 
 const PolkadotContext = createContext<PolkadotContextType | null>(null);
@@ -303,6 +311,87 @@ export const PolkadotProvider: React.FC<PolkadotProviderProps> = ({
       });
   }
 
+  // fn update_delegating_voting_power(delegator: &AccountId, delegating: bool) -> DispatchResult
+
+  async function updateDelegatingVotingPower(
+    { boolean }: updateDelegating,
+    callback?: (vote_status: CallbackStatus) => void,
+  ) {
+    if (
+      !api ||
+      !selectedAccount ||
+      !polkadotApi.web3FromAddress ||
+      !api.tx.governanceModule?.enableVotePowerDelegation ||
+      !api.tx.governanceModule?.disableVotePowerDelegation
+    )
+      return;
+
+    const injector = await polkadotApi.web3FromAddress(selectedAccount.address);
+
+    const txMethod = boolean
+      ? api.tx.governanceModule.enableVotePowerDelegation()
+      : api.tx.governanceModule.disableVotePowerDelegation();
+
+    api.tx.governanceModule;
+    txMethod
+      .signAndSend(
+        selectedAccount.address,
+        { signer: injector.signer },
+        (result: SubmittableResult) => {
+          if (result.status.isInBlock) {
+            callback?.({
+              finalized: false,
+              status: "PENDING",
+              message: "Updating your delegating voting power...",
+            });
+          }
+          if (result.status.isFinalized) {
+            result.events.forEach(({ event }) => {
+              if (api.events.system?.ExtrinsicSuccess?.is(event)) {
+                toast.success("Voting power updated");
+                callback?.({
+                  finalized: true,
+                  status: "SUCCESS",
+                  message: "Updated delegating voting power",
+                });
+                setTimeout(() => {
+                  window.location.reload();
+                }, 2000);
+              } else if (api.events.system?.ExtrinsicFailed?.is(event)) {
+                const [dispatchError] = event.data as unknown as [
+                  DispatchError,
+                ];
+                let msg;
+                if (dispatchError.isModule) {
+                  const mod = dispatchError.asModule;
+                  const error = api.registry.findMetaError(mod);
+
+                  if (error.section && error.name && error.docs) {
+                    const errorMessage = `${error.name}`;
+                    msg = `Updating voting power failed: ${errorMessage}`;
+                  } else {
+                    msg = `Updating voting power failed: Unknown error`;
+                  }
+                } else {
+                  msg = `Updating voting power failed: ${dispatchError.type}`;
+                }
+                toast(msg);
+                callback?.({
+                  finalized: true,
+                  status: "ERROR",
+                  message: msg,
+                });
+              }
+            });
+          }
+        },
+      )
+      .catch((err) => {
+        toast.error(`${err}`);
+        console.error(err);
+      });
+  }
+
   async function createNewProposal({ IpfsHash, callback }: SendProposalData) {
     if (
       !api ||
@@ -466,6 +555,7 @@ export const PolkadotProvider: React.FC<PolkadotProviderProps> = ({
 
         createNewDao,
         createNewProposal,
+        updateDelegatingVotingPower,
       }}
     >
       <WalletModal
