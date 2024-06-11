@@ -164,7 +164,7 @@ export function useCustomMetadata<T extends BaseProposal | BaseDao>(
           const [id] = data;
           outputs.set(id, result);
         } else {
-          console.info(`Missing result for ${kind} metadata query}`);
+          console.info(`Missing result for ${kind} metadata query`);
         }
       });
       return outputs;
