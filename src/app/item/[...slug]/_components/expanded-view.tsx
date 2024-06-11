@@ -182,7 +182,7 @@ export const ExpandedView = (props: ProposalContent) => {
 
   const content = handleContent();
 
-  if (isLoading)
+  if (isLoading || !content)
     return (
       <div className="flex w-full items-center justify-center lg:h-[calc(100svh-203px)]">
         <h1 className="text-2xl text-white">Loading...</h1>
@@ -190,7 +190,7 @@ export const ExpandedView = (props: ProposalContent) => {
       </div>
     );
 
-  if ((!content && !isLoading) || !content) {
+  if (!content) {
     return notFound();
   }
 
