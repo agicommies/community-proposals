@@ -45,10 +45,10 @@ function handle_custom_proposal_data(
     };
   }
   return match(data_state)({
-    Err: function ({ message }): ProposalCardFields {
+    Err: function (): ProposalCardFields {
       return {
-        title: `⚠️😠 Failed fetching proposal data for proposal #${proposal_id}`,
-        body: `⚠️😠 Error fetching proposal data for proposal #${proposal_id}:  \n${message}`,
+        title: `ID: ${proposal_id} | This proposal has no custom metadata`,
+        body: null,
         netuid: netuid,
         invalid: true,
       };
@@ -74,10 +74,10 @@ export function handle_custom_dao(
     };
   }
   return match(data_state)({
-    Err: function ({ message }): DAOCardFields {
+    Err: function (): DAOCardFields {
       return {
-        title: `⚠️😠 Failed fetching proposal data for proposal #${dao_id}`,
-        body: `⚠️😠 Error fetching proposal data for proposal #${dao_id}:  \n${message}`,
+        title: `ID: ${dao_id} | This DAO has no custom metadata`,
+        body: null,
       };
     },
     Ok: function (data): DAOCardFields {
