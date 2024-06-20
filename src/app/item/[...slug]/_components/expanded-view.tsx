@@ -6,7 +6,10 @@ import { ArrowPathIcon } from "@heroicons/react/20/solid";
 import { usePolkadot } from "~/hooks/polkadot";
 
 import type { DaoStatus, ProposalStatus, SS58Address } from "~/subspace/types";
-import { calc_proposal_favorable_percent } from "~/hooks/polkadot/functions/proposals";
+import {
+  calc_proposal_favorable_percent,
+  handle_proposal_stake_voted,
+} from "~/hooks/polkadot/functions/proposals";
 import { format_token, small_address } from "~/utils";
 import { VoteLabel, type TVote } from "~/app/_components/vote-label";
 import { StatusLabel } from "~/app/_components/status-label";
@@ -26,7 +29,10 @@ type ProposalContent = {
   contentType: string;
 };
 
-function render_vote_data(favorable_percent: number | null) {
+function render_vote_data(
+  favorable_percent: number | null,
+  proposalStatus: ProposalStatus,
+) {
   if (favorable_percent === null) return null;
 
   const against_percent = 100 - favorable_percent;
@@ -35,7 +41,9 @@ function render_vote_data(favorable_percent: number | null) {
       <div className="flex justify-between">
         <span className="text-sm font-semibold">Favorable</span>
         <div className="flex items-center gap-2 divide-x">
-          <span className="text-xs">{favorable_percent} COMAI</span>
+          <span className="text-xs">
+            {handle_proposal_stake_voted(proposalStatus)} COMAI
+          </span>
           <span className="pl-2 text-sm font-semibold text-green-500">
             {favorable_percent.toFixed(2)}%
           </span>
@@ -266,6 +274,7 @@ export const ExpandedView = (props: ProposalContent) => {
                   calc_proposal_favorable_percent(
                     content.status as ProposalStatus,
                   ),
+                  content.status as ProposalStatus,
                 )}
             </div>
             <VotingPowerButton />
