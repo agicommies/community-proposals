@@ -9,6 +9,8 @@ import type { DaoStatus, ProposalStatus, SS58Address } from "~/subspace/types";
 import {
   calc_proposal_favorable_percent,
   handle_proposal_stake_voted,
+  handle_proposal_votes_against,
+  handle_proposal_votes_in_favor,
 } from "~/hooks/polkadot/functions/proposals";
 import { format_token, small_address } from "~/utils";
 import { VoteLabel, type TVote } from "~/app/_components/vote-label";
@@ -42,7 +44,7 @@ function render_vote_data(
         <span className="text-sm font-semibold">Favorable</span>
         <div className="flex items-center gap-2 divide-x">
           <span className="text-xs">
-            {handle_proposal_stake_voted(proposalStatus)} COMAI
+            {handle_proposal_votes_in_favor(proposalStatus)} COMAI
           </span>
           <span className="pl-2 text-sm font-semibold text-green-500">
             {favorable_percent.toFixed(2)}%
@@ -60,7 +62,9 @@ function render_vote_data(
       <div className="mt-8 flex justify-between">
         <span className="font-semibold">Against</span>
         <div className="flex items-center gap-2 divide-x">
-          <span className="text-xs">{format_token(against_percent)} COMAI</span>
+          <span className="text-xs">
+            {handle_proposal_votes_against(proposalStatus)} COMAI
+          </span>
           <span className="pl-2 text-sm font-semibold text-red-500">
             {against_percent.toFixed(2)}%
           </span>

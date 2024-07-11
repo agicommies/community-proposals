@@ -170,6 +170,24 @@ export function handle_proposal_stake_voted(proposalStatus: ProposalStatus) {
   });
 }
 
+export function handle_proposal_votes_in_favor(proposalStatus: ProposalStatus) {
+  return match(proposalStatus)({
+    open: ({ stakeFor }) => format_token(Number(stakeFor)),
+    accepted: ({ stakeFor }) => format_token(Number(stakeFor)),
+    refused: ({ stakeFor }) => format_token(Number(stakeFor)),
+    expired: () => "—",
+  });
+}
+
+export function handle_proposal_votes_against(proposalStatus: ProposalStatus) {
+  return match(proposalStatus)({
+    open: ({ stakeAgainst }) => format_token(Number(stakeAgainst)),
+    accepted: ({ stakeAgainst }) => format_token(Number(stakeAgainst)),
+    refused: ({ stakeAgainst }) => format_token(Number(stakeAgainst)),
+    expired: () => "—",
+  });
+}
+
 export function calc_proposal_favorable_percent(
   proposalStatus: ProposalStatus,
 ) {
