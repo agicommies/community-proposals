@@ -8,11 +8,10 @@ import { usePolkadot } from "~/hooks/polkadot";
 import type { DaoStatus, ProposalStatus, SS58Address } from "~/subspace/types";
 import {
   calc_proposal_favorable_percent,
-  handle_proposal_stake_voted,
   handle_proposal_votes_against,
   handle_proposal_votes_in_favor,
 } from "~/hooks/polkadot/functions/proposals";
-import { format_token, small_address } from "~/utils";
+import { small_address } from "~/utils";
 import { VoteLabel, type TVote } from "~/app/_components/vote-label";
 import { StatusLabel } from "~/app/_components/status-label";
 import { VoteCard } from "~/app/_components/vote-card";
