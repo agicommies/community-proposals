@@ -208,6 +208,10 @@ export function CreateProposal() {
                       </div>
                     )}
                   </div>
+                  <p>
+                    Proposal Cost:{" "}
+                    <span className="text-green-500">10,000</span> COMAI
+                  </p>
                   <div className="flex flex-col gap-1">
                     <button
                       className={` relative w-full border px-4 py-2 font-semibold ${isConnected ? "border-green-500 text-green-500 hover:bg-green-500/5 active:top-1" : "border-gray-500 text-gray-500"}`}

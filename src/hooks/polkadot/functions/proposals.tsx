@@ -188,6 +188,15 @@ export function handle_proposal_votes_against(proposalStatus: ProposalStatus) {
   });
 }
 
+export function handle_proposal_finished(proposalStatus: ProposalStatus) {
+  return match(proposalStatus)({
+    open: () => false,
+    accepted: () => true,
+    refused: () => true,
+    expired: () => true,
+  });
+}
+
 export function calc_proposal_favorable_percent(
   proposalStatus: ProposalStatus,
 ) {

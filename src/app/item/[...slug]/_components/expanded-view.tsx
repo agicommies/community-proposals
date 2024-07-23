@@ -8,6 +8,7 @@ import { usePolkadot } from "~/hooks/polkadot";
 import type { DaoStatus, ProposalStatus, SS58Address } from "~/subspace/types";
 import {
   calc_proposal_favorable_percent,
+  handle_proposal_finished,
   handle_proposal_votes_against,
   handle_proposal_votes_in_favor,
 } from "~/hooks/polkadot/functions/proposals";
@@ -264,7 +265,9 @@ export const ExpandedView = (props: ProposalContent) => {
 
         {contentType == "proposal" && (
           <>
-            <VoteCard proposalId={content.id} voted="UNVOTED" />
+            {!handle_proposal_finished(content.status as ProposalStatus) && (
+              <VoteCard proposalId={content.id} voted="UNVOTED" />
+            )}
             <div className="w-full border-gray-500 p-6 lg:border-b ">
               {!content.status && (
                 <span className="flex text-gray-400">
