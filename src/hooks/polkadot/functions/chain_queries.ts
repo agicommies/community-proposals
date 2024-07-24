@@ -11,11 +11,12 @@ export interface StakeData {
   stake_out: {
     total: bigint;
     per_addr: Map<string, bigint>;
-    per_net: Map<number, bigint>;
-    per_addr_per_net: Map<number, Map<string, bigint>>;
+    total_per_addr: {
+      validatorAddress: string;
+      totalStaked: string;
+    }[];
   };
 }
-
 export async function use_last_block(api: ApiPromise) {
   const block_header = await api.rpc.chain.getHeader();
   const block_number = block_header.number.toNumber();
